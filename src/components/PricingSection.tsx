@@ -7,8 +7,8 @@ const PricingSection = () => {
   const tiers = [
     {
       name: "Basic",
-      price: "1,000,000",
-      period: "per year",
+      price: "85,000",
+      period: "per month",
       description: "Perfect for small businesses starting their digital transformation",
       badge: null,
       features: [
@@ -25,8 +25,8 @@ const PricingSection = () => {
     },
     {
       name: "Standard",
-      price: "2,000,000",
-      period: "per year",
+      price: "170,000",
+      period: "per month",
       description: "Ideal for growing SMEs ready for advanced automation",
       badge: "Most Popular",
       features: [
@@ -44,8 +44,8 @@ const PricingSection = () => {
     },
     {
       name: "Premium",
-      price: "5,000,000",
-      period: "per year",
+      price: "420,000",
+      period: "per month",
       description: "Enterprise solution for multi-branch operations",
       badge: "Enterprise",
       features: [
