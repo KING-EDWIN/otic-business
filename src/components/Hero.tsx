@@ -1,9 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight, BarChart3, Smartphone, ShieldCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import heroImage from "@/assets/hero-business.jpg";
 
 const Hero = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleGetStarted = () => {
+    if (user) {
+      navigate('/dashboard');
+    } else {
+      navigate('/signup');
+    }
+  };
+
+  const handleWatchDemo = () => {
+    // For now, just navigate to signup. Later we can add a demo page
+    navigate('/signup');
+  };
+
   return (
     <section className="relative min-h-screen bg-gradient-hero overflow-hidden">
       {/* Background Image with Overlay */}
@@ -37,16 +55,18 @@ const Hero = () => {
                 variant="business" 
                 size="lg"
                 className="text-lg px-8 py-4 h-auto"
+                onClick={handleGetStarted}
               >
-                Start Free Trial
+                {user ? 'Go to Dashboard' : 'Start Free Trial'}
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
               <Button 
                 variant="outline" 
                 size="lg"
                 className="text-lg px-8 py-4 h-auto bg-white/10 border-white/30 text-white hover:bg-white/20"
+                onClick={() => navigate('/demo')}
               >
-                Watch Demo
+                Try Interactive Demo
               </Button>
             </div>
 

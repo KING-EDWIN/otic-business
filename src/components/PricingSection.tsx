@@ -2,12 +2,45 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const PricingSection = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handlePlanSelection = (tier: string) => {
+    if (user) {
+      // User is logged in, redirect to dashboard
+      navigate('/dashboard');
+    } else {
+      // User not logged in, redirect to signup with tier pre-selected
+      navigate('/signup', { state: { selectedTier: tier } });
+    }
+  };
+
   const tiers = [
     {
+      name: "Free Trial",
+      price: "0",
+      period: "14 days free",
+      description: "Try everything for free - no credit card required",
+      badge: "Free",
+      features: [
+        "Full access to all features",
+        "POS system with barcode scanning",
+        "Complete inventory management",
+        "AI analytics and insights",
+        "Multi-user access",
+        "All payment methods",
+        "Priority support during trial"
+      ],
+      buttonText: "Start Free Trial",
+      buttonVariant: "hero" as const
+    },
+    {
       name: "Basic",
-      price: "85,000",
+      price: "1,000,000",
       period: "per month",
       description: "Perfect for small businesses starting their digital transformation",
       badge: null,
@@ -25,7 +58,7 @@ const PricingSection = () => {
     },
     {
       name: "Standard",
-      price: "170,000",
+      price: "3,000,000",
       period: "per month",
       description: "Ideal for growing SMEs ready for advanced automation",
       badge: "Most Popular",
@@ -44,7 +77,7 @@ const PricingSection = () => {
     },
     {
       name: "Premium",
-      price: "420,000",
+      price: "5,000,000",
       period: "per month",
       description: "Enterprise solution for multi-branch operations",
       badge: "Enterprise",
@@ -131,6 +164,7 @@ const PricingSection = () => {
                   variant={tier.buttonVariant} 
                   className="w-full"
                   size="lg"
+                  onClick={() => handlePlanSelection(tier.name.toLowerCase())}
                 >
                   {tier.buttonText}
                 </Button>

@@ -2,6 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-first responsive design */
+@layer base {
+  html {
+    font-size: 14px; /* Base font size for mobile */
+  }
+  
+  @media (min-width: 640px) {
+    html {
+      font-size: 16px; /* Larger font for tablets */
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    html {
+      font-size: 16px; /* Full size for desktop */
+    }
+  }
+}
+
+/* Mobile-specific styles */
+@layer components {
+  .mobile-container {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+  
+  .mobile-text {
+    @apply text-sm sm:text-base;
+  }
+  
+  .mobile-heading {
+    @apply text-lg sm:text-xl md:text-2xl;
+  }
+  
+  .mobile-card {
+    @apply p-3 sm:p-4 md:p-6;
+  }
+  
+  .mobile-button {
+    @apply text-sm sm:text-base px-3 py-2 sm:px-4 sm:py-2;
+  }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

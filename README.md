@@ -1,73 +1,199 @@
-# Welcome to your Lovable project
+# 🚀 Otic Business - AI-Powered SME Management Platform
 
-## Project info
+> **Empowering African SMEs with AI-driven growth, mobile POS, and integrated business management**
 
-**URL**: https://lovable.dev/projects/09f6af00-be16-469b-a81b-8976dc3970a8
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/KING-EDWIN/otic-business)
 
-## How can I edit this code?
+## 🌟 Features
 
-There are several ways of editing your application.
+### 📱 **Mobile-First POS System**
+- Real-time barcode scanning with phone camera
+- Instant receipt generation
+- Multi-payment support (Mobile Money, Cards, Flutterwave)
+- Offline-capable sales processing
 
-**Use Lovable**
+### 📊 **AI-Powered Analytics**
+- Sales forecasting and trend analysis
+- Inventory optimization recommendations
+- Customer behavior insights
+- Fraud detection and anomaly alerts
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/09f6af00-be16-469b-a81b-8976dc3970a8) and start prompting.
+### 🏪 **Inventory Management**
+- Automatic barcode generation
+- Real-time stock tracking
+- Low-stock alerts
+- Supplier management
+- Category organization
 
-Changes made via Lovable will be committed automatically to this repo.
+### 💳 **Integrated Accounting**
+- QuickBooks API integration
+- Automated P&L and balance sheets
+- Tax computation and compliance
+- Financial reporting
 
-**Use your preferred IDE**
+### 🔐 **Tier-Based Subscriptions**
+- **Free Trial**: 14 days full access
+- **Basic Plan**: UGX 1,000,000/month - POS, basic reports
+- **Standard Plan**: UGX 3,000,000/month - + QuickBooks, AI analytics
+- **Premium Plan**: UGX 5,000,000/month - + Multi-branch, forecasting
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Tech Stack
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Frontend**: React 18, TypeScript, Vite
+- **UI**: Tailwind CSS, shadcn/ui, Radix UI
+- **Backend**: Supabase (PostgreSQL, Auth, RLS)
+- **State Management**: React Query, Context API
+- **Barcode Scanning**: ZXing Library
+- **Charts**: Recharts
+- **Deployment**: Vercel
 
-Follow these steps:
+## 🚀 Quick Start
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+- Supabase account
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### Installation
 
-# Step 3: Install the necessary dependencies.
-npm i
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/KING-EDWIN/otic-business.git
+   cd otic-business
+   ```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-**Edit a file directly in GitHub**
+3. **Set up environment variables**
+   ```bash
+   cp env.example .env.local
+   ```
+   
+   Update `.env.local` with your Supabase credentials:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+4. **Set up Supabase database**
+   - Run the SQL files in order:
+     - `database-schema.sql` - Creates all tables
+     - `backend-functions-safe.sql` - Creates backend functions
+     - `seed-demo-data.sql` - Populates demo data
 
-**Use GitHub Codespaces**
+5. **Start development server**
+   ```bash
+   npm run dev
+   ```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+6. **Open your browser**
+   Navigate to `http://localhost:8080`
 
-## What technologies are used for this project?
+## 📱 Demo Account
 
-This project is built with:
+**Email**: `demo@oticbusiness.com`  
+**Password**: `demo123456`
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+This gives you full access to test all features with pre-populated demo data.
 
-## How can I deploy this project?
+## 🚀 Deployment
 
-Simply open [Lovable](https://lovable.dev/projects/09f6af00-be16-469b-a81b-8976dc3970a8) and click on Share -> Publish.
+### Deploy to Vercel (Recommended)
 
-## Can I connect a custom domain to my Lovable project?
+1. **Push to GitHub**
+   ```bash
+   git add .
+   git commit -m "Production ready deployment"
+   git push origin main
+   ```
 
-Yes, you can!
+2. **Deploy to Vercel**
+   - Go to [vercel.com](https://vercel.com)
+   - Sign up with GitHub
+   - Click "New Project"
+   - Import your repository
+   - Add environment variables:
+     - `VITE_SUPABASE_URL`
+     - `VITE_SUPABASE_ANON_KEY`
+   - Click "Deploy"
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+3. **Your app will be live at**: `https://your-app-name.vercel.app`
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Alternative Deployments
+
+- **Netlify**: Similar to Vercel, excellent for React apps
+- **Railway**: Good for full-stack applications
+- **Self-hosted**: Use the provided Docker configuration
+
+## 📊 Database Schema
+
+The app uses PostgreSQL with the following main tables:
+- `user_profiles` - User and business information
+- `products` - Product catalog with barcodes
+- `sales` - Transaction records
+- `sale_items` - Individual sale line items
+- `subscriptions` - User subscription plans
+- `analytics_data` - Business intelligence data
+
+## 🔧 API Endpoints
+
+- **Authentication**: Supabase Auth
+- **Database**: Supabase PostgreSQL
+- **RPC Functions**: Custom business logic
+- **File Storage**: Supabase Storage
+- **Real-time**: Supabase Realtime
+
+## 📱 Mobile Support
+
+- **Responsive Design**: Works on all screen sizes
+- **PWA Ready**: Can be installed as mobile app
+- **Camera Integration**: Barcode scanning with phone camera
+- **Offline Support**: Basic functionality without internet
+
+## 🔐 Security
+
+- **Row Level Security (RLS)**: Database-level access control
+- **JWT Authentication**: Secure user sessions
+- **Input Validation**: All inputs sanitized
+- **HTTPS Only**: Secure data transmission
+
+## 📈 Performance
+
+- **Vite Build**: Lightning-fast development and builds
+- **React Query**: Intelligent caching and data fetching
+- **Code Splitting**: Optimized bundle sizes
+- **CDN**: Global content delivery
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Documentation**: Check the [DEPLOYMENT.md](DEPLOYMENT.md) file
+- **Issues**: Open an issue on GitHub
+- **Email**: Contact the development team
+
+## 🌍 Made for Africa
+
+Built specifically for African SMEs with:
+- Mobile Money integration
+- Local currency support (UGX)
+- Offline-first approach
+- Mobile-optimized interface
+- African business workflows
+
+---
+
+**Built with ❤️ for African SMEs**
