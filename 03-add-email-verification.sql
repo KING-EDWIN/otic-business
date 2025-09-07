@@ -22,7 +22,7 @@ CREATE INDEX IF NOT EXISTS idx_user_profiles_verification_timestamp ON user_prof
 UPDATE user_profiles 
 SET email_verified = TRUE, 
     verification_timestamp = NOW(),
-    verified_by = '00000000-0000-0000-0000-000000000000' -- Admin user ID
+    verified_by = '00000000-0000-0000-0000-000000000000' -- Admin UUID placeholder
 WHERE email_verified IS NULL OR email_verified = FALSE;
 
 -- Create a view for admin to see unverified users

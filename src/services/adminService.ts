@@ -227,7 +227,7 @@ export class AdminService {
         .update({
           status,
           verified_at: new Date().toISOString(),
-          verified_by: 'admin', // In production, use actual admin user ID
+          verified_by: '00000000-0000-0000-0000-000000000000', // Admin UUID placeholder
         })
         .eq('id', requestId)
 
@@ -311,7 +311,7 @@ export class AdminService {
         .update({
           email_verified: true,
           verification_timestamp: new Date().toISOString(),
-          verified_by: 'admin' // In production, use actual admin user ID
+          verified_by: '00000000-0000-0000-0000-000000000000' // Admin UUID placeholder
         })
         .eq('id', userId)
 
