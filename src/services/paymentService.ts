@@ -82,21 +82,39 @@ export class PaymentService {
       if (proofFile) {
         const fileExt = proofFile.name.split('.').pop()
         const fileName = `payment-proof-${userInfo.id}-${Date.now()}.${fileExt}`
-        
+        const filePath = `${userInfo.id}/${fileName}`
+
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('payment-proofs')
-          .upload(fileName, proofFile)
+          .upload(filePath, proofFile, {
+            contentType: proofFile.type
+          })
 
         if (uploadError) {
           console.error('Error uploading proof:', uploadError)
           return { success: false, error: 'Failed to upload payment proof' }
         }
 
-        const { data: { publicUrl } } = supabase.storage
+        // Try public URL first (if bucket is public). Fallback to signed URL.
+        const { data: publicData } = supabase.storage
           .from('payment-proofs')
-          .getPublicUrl(fileName)
+          .getPublicUrl(filePath)
 
-        proofUrl = publicUrl
+        let candidateUrl = publicData?.publicUrl || ''
+        if (!candidateUrl) {
+          const { data: signedData, error: signedError } = await supabase.storage
+            .from('payment-proofs')
+            .createSignedUrl(filePath, 60 * 60 * 24 * 7) // 7 days
+
+          if (signedError) {
+            console.error('Error creating signed URL:', signedError)
+            return { success: false, error: 'Failed to create access URL for proof' }
+          }
+
+          candidateUrl = signedData?.signedUrl || ''
+        }
+
+        proofUrl = candidateUrl
       }
 
       // Create payment request
