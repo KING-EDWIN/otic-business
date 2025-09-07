@@ -73,15 +73,29 @@ const AdminConsole = () => {
       const { error } = await signIn(loginEmail, loginPassword)
       if (error) {
         setAuthError(error.message || 'Failed to sign in')
-      } else {
-        toast.success('Signed in')
+        return
       }
+      // After auth, verify admin membership
+      const sessionUserId = (await import('@/lib/supabase')).supabase.auth.getUser()
+      const { data } = await sessionUserId
+      const uid = data?.user?.id
+      if (!uid) {
+        setAuthError('Unable to fetch session user')
+        return
+      }
+      const ok = await adminService.isAdmin(uid)
+      if (!ok) {
+        setAuthError('This account is not authorized for the Otic Admin Console')
+        ;(await import('@/lib/supabase')).supabase.auth.signOut()
+        return
+      }
+      toast.success('Signed in')
     }
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle>Admin Sign In</CardTitle>
+            <CardTitle>Otic Admin Sign In</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {authError && <p className="text-sm text-red-600">{authError}</p>}
