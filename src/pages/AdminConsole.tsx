@@ -12,7 +12,13 @@ const isDesktop = () => {
 }
 
 const AdminConsole = () => {
-  const [currentAdmin, setCurrentAdmin] = useState<AdminUser | null>(null)
+  // TEMPORARILY DISABLE AUTH - SHOW ADMIN PAGE DIRECTLY
+  const [currentAdmin, setCurrentAdmin] = useState<AdminUser | null>({
+    id: 'temp-admin',
+    email: 'admin@otic.com',
+    role: 'super_admin',
+    created_at: new Date().toISOString()
+  })
   const [loading, setLoading] = useState(false)
   const [resendEmail, setResendEmail] = useState('')
   const [loginEmail, setLoginEmail] = useState('')
