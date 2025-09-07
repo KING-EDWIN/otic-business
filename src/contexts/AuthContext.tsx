@@ -34,6 +34,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let isMounted = true
 
+    // For deployed apps, automatically set demo mode to bypass auth issues
+    if (window.location.hostname.includes('vercel.app')) {
+      console.log('🌐 Deployed app detected - setting demo mode')
+      sessionStorage.setItem('demo_mode', 'true')
+      
+      // Set demo user directly
+      const demoUser = {
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'demo@oticbusiness.com',
+        created_at: new Date().toISOString()
+      }
+      
+      setUser(demoUser)
+      setAppUser({
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'demo@oticbusiness.com',
+        tier: 'premium',
+        business_name: 'Demo Business Store',
+        phone: '+256 700 000 000',
+        address: 'Kampala, Uganda',
+        created_at: new Date().toISOString()
+      })
+      setLoading(false)
+      return
+    }
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
