@@ -73,8 +73,8 @@ const App = () => (
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              {/* Hidden internal admin route - not linked in navigation */}
-              <Route path="/internal-admin-portal" element={<ProtectedRoute><AdminConsole /></ProtectedRoute>} />
+              {/* Hidden internal admin route - renders its own admin login */}
+              <Route path="/internal-admin-portal" element={<AdminConsole />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
