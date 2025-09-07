@@ -128,6 +128,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return
       }
 
+      // Check if email is verified
+      if (data.email_verified === false) {
+        // Email not verified - show verification message
+        setAppUser(data)
+        setLoading(false)
+        return
+      }
+
       setAppUser(data)
       setLoading(false)
     } catch (error) {

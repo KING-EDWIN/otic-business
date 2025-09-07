@@ -15,6 +15,7 @@ import { SubscriptionManager } from '@/components/SubscriptionManager'
 import { AdvancedReports } from '@/components/AdvancedReports'
 import PaymentVerification from '@/components/PaymentVerification'
 import { EmailNotificationSettings } from '@/components/EmailNotificationSettings'
+import LoginStatus from '@/components/LoginStatus'
 import { 
   Building2, 
   ShoppingCart, 
@@ -32,7 +33,8 @@ import {
   Brain,
   RefreshCw,
   FileText,
-  Crown
+  Crown,
+  Clock
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -281,18 +283,7 @@ const Dashboard = () => {
                 </Button>
               </div>
               
-              <Badge className="bg-[#faa51a] text-white text-xs md:text-sm hidden sm:block">
-                {appUser?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan
-              </Badge>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={signOut} 
-                className="text-xs md:text-sm border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
-              >
-                <span className="hidden sm:inline">Sign Out</span>
-                <LogOut className="h-4 w-4 sm:hidden" />
-              </Button>
+              <LoginStatus />
             </div>
           </div>
           
@@ -382,6 +373,23 @@ const Dashboard = () => {
           )}
         </div>
       </header>
+
+      {/* Email Verification Notice */}
+      {appUser && appUser.email_verified === false && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mx-4 mt-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <Clock className="h-5 w-5 text-yellow-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                <strong>Email Verification Required:</strong> Your email address needs to be verified before you can access all features. 
+                Please contact support or wait for admin verification.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
