@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import { adminService } from '@/services/adminService'
+import { adminService, AdminUser } from '@/services/adminService'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -13,9 +12,8 @@ const isDesktop = () => {
 }
 
 const AdminConsole = () => {
-  const { user, signIn } = useAuth()
-  const [allowed, setAllowed] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [currentAdmin, setCurrentAdmin] = useState<AdminUser | null>(null)
+  const [loading, setLoading] = useState(false)
   const [resendEmail, setResendEmail] = useState('')
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -23,26 +21,29 @@ const AdminConsole = () => {
 
   const desktopOnly = useMemo(() => isDesktop(), [])
 
-  useEffect(() => {
-    const run = async () => {
-      if (!desktopOnly) {
-        setLoading(false)
-        return
-      }
-      if (!user) {
-        setLoading(false)
-        return
-      }
-      const ok = await adminService.isAdmin(user.id)
-      setAllowed(ok)
-      if (ok) {
-        await adminService.touchLastLogin(user.id)
-        await adminService.logAction(user.id, 'admin_console_access')
-      }
-      setLoading(false)
+  const handleLogin = async () => {
+    setLoading(true)
+    setAuthError('')
+    
+    const result = await adminService.authenticateAdmin(loginEmail, loginPassword)
+    
+    if (result.success && result.admin) {
+      setCurrentAdmin(result.admin)
+      await adminService.logAction(result.admin.id, 'admin_console_access')
+      toast.success('Welcome back!')
+    } else {
+      setAuthError(result.error || 'Login failed')
     }
-    run()
-  }, [user, desktopOnly])
+    
+    setLoading(false)
+  }
+
+  const handleLogout = () => {
+    setCurrentAdmin(null)
+    setLoginEmail('')
+    setLoginPassword('')
+    setAuthError('')
+  }
 
   if (loading) {
     return (
@@ -67,30 +68,7 @@ const AdminConsole = () => {
     )
   }
 
-  if (!user) {
-    const attemptLogin = async () => {
-      setAuthError('')
-      const { error } = await signIn(loginEmail, loginPassword)
-      if (error) {
-        setAuthError(error.message || 'Failed to sign in')
-        return
-      }
-      // After auth, verify admin membership
-      const sessionUserId = (await import('@/lib/supabase')).supabase.auth.getUser()
-      const { data } = await sessionUserId
-      const uid = data?.user?.id
-      if (!uid) {
-        setAuthError('Unable to fetch session user')
-        return
-      }
-      const ok = await adminService.isAdmin(uid)
-      if (!ok) {
-        setAuthError('This account is not authorized for the Otic Admin Console')
-        ;(await import('@/lib/supabase')).supabase.auth.signOut()
-        return
-      }
-      toast.success('Signed in')
-    }
+  if (!currentAdmin) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
@@ -102,37 +80,29 @@ const AdminConsole = () => {
             {authError && <p className="text-sm text-red-600">{authError}</p>}
             <Input type="email" placeholder="Email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
             <Input type="password" placeholder="Password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
-            <Button className="w-full bg-[#040458] hover:bg-[#030345] text-white" onClick={attemptLogin}>Sign In</Button>
+            <Button 
+              className="w-full bg-[#040458] hover:bg-[#030345] text-white" 
+              onClick={handleLogin}
+              disabled={loading}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </Button>
           </CardContent>
         </Card>
       </div>
     )
   }
 
-  if (!allowed) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <Card className="max-w-lg w-full">
-          <CardHeader>
-            <CardTitle>Admin Console</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600">Access restricted.</p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
 
   const handleResend = async () => {
     if (!resendEmail) return
     const { error } = await adminService.resendEmailConfirmation(resendEmail)
     if (error) {
       toast.error('Failed to resend confirmation')
-      await adminService.logAction(user!.id, 'resend_email_failure', { email: resendEmail, error })
+      await adminService.logAction(currentAdmin!.id, 'resend_email_failure', { email: resendEmail, error })
     } else {
       toast.success('Confirmation email sent')
-      await adminService.logAction(user!.id, 'resend_email_success', { email: resendEmail })
+      await adminService.logAction(currentAdmin!.id, 'resend_email_success', { email: resendEmail })
     }
   }
 
@@ -144,6 +114,12 @@ const AdminConsole = () => {
             <div className="flex items-center space-x-4">
               <h1 className="text-xl font-semibold text-[#040458]">Admin Console</h1>
               <Badge variant="outline" className="text-[#040458] border-[#040458]">Internal</Badge>
+            </div>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-600">Logged in as: {currentAdmin.email}</span>
+              <Button variant="outline" onClick={handleLogout} className="text-[#040458] border-[#040458]">
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>

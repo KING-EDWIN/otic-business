@@ -1,7 +1,9 @@
 import { supabase } from '@/lib/supabase'
+import bcrypt from 'bcryptjs'
 
 export interface AdminUser {
-  user_id: string
+  id: string
+  email: string
   role: 'super_admin' | 'admin'
   last_login_at?: string | null
   created_at?: string
@@ -16,27 +18,44 @@ export interface AdminLogEntry {
 }
 
 export class AdminService {
-  async isAdmin(userId: string): Promise<boolean> {
-    const { data } = await supabase
-      .from('admin_users')
-      .select('user_id')
-      .eq('user_id', userId)
-      .maybeSingle()
-    return Boolean(data?.user_id)
+  async authenticateAdmin(email: string, password: string): Promise<{ success: boolean; admin?: AdminUser; error?: string }> {
+    try {
+      const { data, error } = await supabase
+        .from('admin_auth')
+        .select('*')
+        .eq('email', email)
+        .single()
+
+      if (error || !data) {
+        return { success: false, error: 'Invalid credentials' }
+      }
+
+      const isValidPassword = await bcrypt.compare(password, data.password_hash)
+      if (!isValidPassword) {
+        return { success: false, error: 'Invalid credentials' }
+      }
+
+      // Update last login
+      await this.touchLastLogin(data.id)
+
+      return { success: true, admin: data }
+    } catch (error) {
+      return { success: false, error: 'Authentication failed' }
+    }
   }
 
-  async touchLastLogin(userId: string): Promise<void> {
+  async touchLastLogin(adminId: string): Promise<void> {
     await supabase
-      .from('admin_users')
+      .from('admin_auth')
       .update({ last_login_at: new Date().toISOString() })
-      .eq('user_id', userId)
+      .eq('id', adminId)
   }
 
-  async logAction(adminUserId: string, action: string, metadata?: Record<string, any>): Promise<void> {
+  async logAction(adminId: string, action: string, metadata?: Record<string, any>): Promise<void> {
     await supabase
       .from('admin_logs')
       .insert({
-        admin_user_id: adminUserId,
+        admin_user_id: adminId,
         action,
         metadata: metadata || null
       })
