@@ -108,9 +108,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return
       }
 
-      // Check if email is verified
+      console.log('User profile data:', data)
+      console.log('Email verified status:', data.email_verified)
+
+      // Check if email is verified (handle case where column might not exist)
       if (data.email_verified === false) {
         // Email not verified - show verification message
+        setAppUser(data)
+        setLoading(false)
+        return
+      } else if (data.email_verified === null || data.email_verified === undefined) {
+        // Column doesn't exist or is null - treat as verified for now
+        console.warn('email_verified column not found or null, treating as verified')
         setAppUser(data)
         setLoading(false)
         return
