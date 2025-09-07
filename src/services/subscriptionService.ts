@@ -1,6 +1,7 @@
 // Subscription Service for Tier-based Access Control
 import { supabase } from '@/lib/supabase'
 import { getCurrentUserInfo } from '@/utils/userUtils'
+import { tierService, Tier, UserSubscription as NewUserSubscription } from './tierService'
 
 export interface SubscriptionTier {
   id: string
@@ -355,6 +356,41 @@ export class SubscriptionService {
         maxStorage: tier.maxStorage
       }
     }
+  }
+
+  // New methods that integrate with the tier system
+  async getNewTiers(): Promise<Tier[]> {
+    return await tierService.getTiers()
+  }
+
+  async getNewUserSubscription(userId: string): Promise<NewUserSubscription | null> {
+    return await tierService.getUserSubscription(userId)
+  }
+
+  async hasFeatureAccess(userId: string, featureName: string): Promise<boolean> {
+    return await tierService.hasFeatureAccess(userId, featureName)
+  }
+
+  async createNewSubscription(
+    userId: string,
+    tierId: string,
+    paymentMethod?: string,
+    amountPaid?: number,
+    currency: string = 'UGX'
+  ): Promise<{ success: boolean; subscription?: NewUserSubscription; error?: string }> {
+    return await tierService.createSubscription(userId, tierId, paymentMethod, amountPaid, currency)
+  }
+
+  async getTierComparison(currentUserId?: string) {
+    return await tierService.getTierComparison(currentUserId)
+  }
+
+  async canUpgradeToTier(userId: string, targetTierId: string) {
+    return await tierService.canUpgradeToTier(userId, targetTierId)
+  }
+
+  async trackFeatureUsage(userId: string, featureName: string, increment: number = 1) {
+    return await tierService.trackFeatureUsage(userId, featureName, increment)
   }
 }
 

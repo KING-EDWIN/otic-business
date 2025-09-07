@@ -28,10 +28,13 @@ export interface User {
   id: string
   email: string
   created_at: string
-  tier: 'free_trial' | 'basic' | 'standard' | 'premium'
+  tier: 'free_trial' | 'basic' | 'standard' | 'premium' | 'start_smart' | 'grow_intelligence' | 'enterprise_advantage'
   business_name?: string
   phone?: string
   address?: string
+  email_verified?: boolean
+  verification_timestamp?: string
+  verified_by?: string
 }
 
 export interface Product {

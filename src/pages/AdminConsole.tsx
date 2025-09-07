@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import TierUpgradeRequests from '@/components/TierUpgradeRequests'
-import { Crown } from 'lucide-react'
+import EmailVerificationManager from '@/components/EmailVerificationManager'
+import { Crown, Mail } from 'lucide-react'
 
 const isDesktop = () => {
   if (typeof window === 'undefined') return true
@@ -17,6 +18,7 @@ const AdminConsole = () => {
   // TEMPORARILY DISABLE AUTH - SHOW ADMIN PAGE DIRECTLY
   const [resendEmail, setResendEmail] = useState('')
   const [showTierManagement, setShowTierManagement] = useState(false)
+  const [showEmailVerification, setShowEmailVerification] = useState(false)
 
   const desktopOnly = useMemo(() => isDesktop(), [])
 
@@ -68,14 +70,24 @@ const AdminConsole = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <Card>
           <CardHeader>
-            <CardTitle>Manual User Email Verification</CardTitle>
+            <CardTitle>Email Verification Management</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <Input placeholder="user@example.com" value={resendEmail} onChange={(e) => setResendEmail(e.target.value)} />
-              <Button className="bg-[#040458] hover:bg-[#030345] text-white" onClick={handleResend}>Resend Confirmation</Button>
+            <p className="text-sm text-gray-600">Manage user email verification status and manually verify emails for users who can't receive verification emails.</p>
+            <div className="flex space-x-3">
+              <Button 
+                className="bg-[#040458] hover:bg-[#030345] text-white"
+                onClick={() => setShowEmailVerification(true)}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Manage Email Verification
+              </Button>
+              <div className="flex items-center space-x-3">
+                <Input placeholder="user@example.com" value={resendEmail} onChange={(e) => setResendEmail(e.target.value)} />
+                <Button variant="outline" onClick={handleResend}>Resend Confirmation</Button>
+              </div>
             </div>
-            <p className="text-xs text-gray-500">Use this if users report missing verification emails.</p>
+            <p className="text-xs text-gray-500">Use the management interface to verify emails or resend confirmations for specific users.</p>
           </CardContent>
         </Card>
 
@@ -108,6 +120,11 @@ const AdminConsole = () => {
       <TierUpgradeRequests 
         isOpen={showTierManagement} 
         onClose={() => setShowTierManagement(false)} 
+      />
+
+      <EmailVerificationManager 
+        isOpen={showEmailVerification} 
+        onClose={() => setShowEmailVerification(false)} 
       />
     </div>
   )

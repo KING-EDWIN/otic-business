@@ -49,6 +49,19 @@ export interface TierUpgradeRequest {
   }
 }
 
+export interface UserVerification {
+  id: string
+  email: string
+  business_name?: string
+  phone?: string
+  tier: string
+  email_verified: boolean
+  verification_timestamp?: string
+  verified_by?: string
+  created_at: string
+  verification_status: string
+}
+
 export class AdminService {
   async authenticateAdmin(email: string, password: string): Promise<{ success: boolean; admin?: AdminUser; error?: string }> {
     try {
@@ -269,6 +282,90 @@ export class AdminService {
     } catch (error) {
       console.error('Error verifying payment request:', error)
       return { success: false, error: 'Failed to verify payment request' }
+    }
+  }
+
+  async getUserVerificationStatus(): Promise<UserVerification[]> {
+    try {
+      const { data, error } = await supabase
+        .from('user_verification_status')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching user verification status:', error)
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error fetching user verification status:', error)
+      return []
+    }
+  }
+
+  async verifyUserEmail(userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          email_verified: true,
+          verification_timestamp: new Date().toISOString(),
+          verified_by: 'admin' // In production, use actual admin user ID
+        })
+        .eq('id', userId)
+
+      if (error) {
+        console.error('Error verifying user email:', error)
+        return { success: false, error: 'Failed to verify email' }
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('Error verifying user email:', error)
+      return { success: false, error: 'Failed to verify email' }
+    }
+  }
+
+  async unverifyUserEmail(userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          email_verified: false,
+          verification_timestamp: null,
+          verified_by: null
+        })
+        .eq('id', userId)
+
+      if (error) {
+        console.error('Error unverifying user email:', error)
+        return { success: false, error: 'Failed to remove verification' }
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('Error unverifying user email:', error)
+      return { success: false, error: 'Failed to remove verification' }
+    }
+  }
+
+  async getUnverifiedUsers(): Promise<UserVerification[]> {
+    try {
+      const { data, error } = await supabase
+        .from('unverified_users')
+        .select('*')
+        .order('created_at', { ascending: true })
+
+      if (error) {
+        console.error('Error fetching unverified users:', error)
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error fetching unverified users:', error)
+      return []
     }
   }
 }
