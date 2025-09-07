@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Building2, Eye, EyeOff, Check, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import PrivacyPolicyModal from '@/components/PrivacyPolicyModal'
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -22,12 +23,21 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false)
+  const [privacyAccepted, setPrivacyAccepted] = useState(false)
   
   const { signUp, signUpWithGoogle } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Check if privacy policy has been accepted
+    if (!privacyAccepted) {
+      setShowPrivacyModal(true)
+      return
+    }
+    
     setLoading(true)
     setError('')
 
@@ -62,6 +72,12 @@ const SignUp = () => {
   }
 
   const handleGoogleSignUp = async () => {
+    // Check if privacy policy has been accepted
+    if (!privacyAccepted) {
+      setShowPrivacyModal(true)
+      return
+    }
+    
     setLoading(true)
     setError('')
 
@@ -72,6 +88,11 @@ const SignUp = () => {
       setLoading(false)
     }
     // Note: User will be redirected to complete-profile page on success
+  }
+
+  const handlePrivacyAccept = () => {
+    setPrivacyAccepted(true)
+    setShowPrivacyModal(false)
   }
 
   if (success) {
@@ -294,8 +315,41 @@ const SignUp = () => {
               Sign in
             </Link>
           </div>
+          
+          {/* Privacy Policy Acceptance */}
+          <div className="mt-4 text-center">
+            <div className="flex items-center justify-center space-x-2 text-sm">
+              <span className="text-gray-600">
+                {privacyAccepted ? (
+                  <span className="text-green-600 flex items-center">
+                    <Check className="h-4 w-4 mr-1" />
+                    Privacy Policy Accepted
+                  </span>
+                ) : (
+                  <span className="text-gray-500">
+                    Privacy Policy not accepted
+                  </span>
+                )}
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="link"
+              onClick={() => setShowPrivacyModal(true)}
+              className="text-[#040458] hover:text-[#faa51a] text-sm p-0 h-auto"
+            >
+              {privacyAccepted ? 'Review Privacy Policy' : 'Read Privacy Policy'}
+            </Button>
+          </div>
         </CardContent>
       </Card>
+      
+      {/* Privacy Policy Modal */}
+      <PrivacyPolicyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        onAccept={handlePrivacyAccept}
+      />
     </div>
   )
 }

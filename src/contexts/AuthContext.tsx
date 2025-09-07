@@ -204,19 +204,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      // Set loading to true during sign out
+      setLoading(true)
+      
       // Clear all state
       setUser(null)
       setAppUser(null)
       setSession(null)
-      setLoading(false)
       
       // Then sign out from Supabase
       await supabase.auth.signOut()
+      
+      // Set loading to false after sign out
+      setLoading(false)
       
       // Redirect to home page after sign out
       window.location.href = '/'
     } catch (error) {
       console.error('Error signing out:', error)
+      setLoading(false)
     }
   }
 

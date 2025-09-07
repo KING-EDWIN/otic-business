@@ -1,20 +1,20 @@
-import { useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import FeaturesSection from "@/components/FeaturesSection";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
-import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
-  const { enableDemoMode, user } = useAuth();
+  const { loading } = useAuth();
 
-  useEffect(() => {
-    // Enable demo mode when visiting home page if no real user is logged in
-    if (!user || user.email === 'demo@oticbusiness.com') {
-      enableDemoMode();
-    }
-  }, [enableDemoMode, user]);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
