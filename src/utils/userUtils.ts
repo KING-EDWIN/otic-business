@@ -27,12 +27,29 @@ export const getCurrentUserInfo = async (): Promise<UserInfo | null> => {
     // For deployed app, if no demo mode is set, default to demo user
     // This ensures the app works even without proper authentication setup
     if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
-      console.log('🌐 Deployed app detected - using demo user as fallback')
-      return {
-        id: '00000000-0000-0000-0000-000000000001',
-        email: 'demo@oticbusiness.com',
-        tier: 'premium',
-        isDemo: true
+      console.log('🌐 Deployed app detected - using demo user with Supabase data')
+      // Still try to get profile from Supabase for demo user
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('tier')
+          .eq('id', '00000000-0000-0000-0000-000000000001')
+          .single()
+
+        return {
+          id: '00000000-0000-0000-0000-000000000001',
+          email: 'demo@oticbusiness.com',
+          tier: profile?.tier || 'premium',
+          isDemo: true
+        }
+      } catch (error) {
+        console.warn('Could not fetch demo profile from Supabase:', error)
+        return {
+          id: '00000000-0000-0000-0000-000000000001',
+          email: 'demo@oticbusiness.com',
+          tier: 'premium',
+          isDemo: true
+        }
       }
     }
 
