@@ -74,30 +74,31 @@ const AdminConsole = () => {
     )
   }
 
-  if (!currentAdmin) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle className="text-center text-[#040458]">Welcome back, Otic B Sys Admin</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-center text-sm text-gray-600">Enter your admin credentials to access the panel.</p>
-            {authError && <p className="text-sm text-red-600">{authError}</p>}
-            <Input type="email" placeholder="Email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
-            <Input type="password" placeholder="Password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
-            <Button 
-              className="w-full bg-[#040458] hover:bg-[#030345] text-white" 
-              onClick={handleLogin}
-              disabled={loading}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // TEMPORARILY DISABLED - SHOW ADMIN PAGE DIRECTLY
+  // if (!currentAdmin) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+  //       <Card className="max-w-md w-full">
+  //         <CardHeader>
+  //           <CardTitle className="text-center text-[#040458]">Welcome back, Otic B Sys Admin</CardTitle>
+  //         </CardHeader>
+  //         <CardContent className="space-y-4">
+  //           <p className="text-center text-sm text-gray-600">Enter your admin credentials to access the panel.</p>
+  //           {authError && <p className="text-sm text-red-600">{authError}</p>}
+  //           <Input type="email" placeholder="Email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
+  //           <Input type="password" placeholder="Password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
+  //           <Button 
+  //             className="w-full bg-[#040458] hover:bg-[#030345] text-white" 
+  //             onClick={handleLogin}
+  //             disabled={loading}
+  //           >
+  //             {loading ? 'Signing in...' : 'Sign In'}
+  //           </Button>
+  //         </CardContent>
+  //       </Card>
+  //     </div>
+  //   )
+  // }
 
 
   const handleResend = async () => {
