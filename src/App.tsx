@@ -17,6 +17,7 @@ import Inventory from "./pages/Inventory";
 import Analytics from "./pages/Analytics";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
+import AdminConsole from "./pages/AdminConsole";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +73,8 @@ const App = () => (
               <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
               <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              {/* Hidden internal admin route - not linked in navigation */}
+              <Route path="/internal-admin-portal" element={<ProtectedRoute><AdminConsole /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
