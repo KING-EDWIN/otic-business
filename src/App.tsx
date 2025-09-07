@@ -17,7 +17,7 @@ import Inventory from "./pages/Inventory";
 import Analytics from "./pages/Analytics";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
-import AdminConsole from "./pages/AdminConsole";
+import AdminApp from "./AdminApp";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,37 +52,42 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   return user ? <Navigate to="/dashboard" /> : <>{children}</>;
 };
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <DemoProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
-              <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
-              <Route path="/complete-profile" element={<CompleteProfile />} />
-              <Route path="/ai-insights" element={<AIInsightsPage />} />
-              <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
-              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
-              <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
-              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-              <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              {/* Hidden internal admin route - renders its own admin login */}
-              <Route path="/internal-admin-portal" element={<AdminConsole />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </DemoProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  // Check if we're on the admin route
+  if (window.location.pathname.startsWith('/internal-admin-portal')) {
+    return <AdminApp />;
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <DemoProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
+                <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
+                <Route path="/complete-profile" element={<CompleteProfile />} />
+                <Route path="/ai-insights" element={<AIInsightsPage />} />
+                <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
+                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
+                <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+                <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+                <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </DemoProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
