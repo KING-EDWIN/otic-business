@@ -10,44 +10,17 @@ export interface UserInfo {
 
 export const getCurrentUserInfo = async (): Promise<UserInfo | null> => {
   try {
-    // Check if we're in demo mode first
-    const isDemo = sessionStorage.getItem('demo_mode') === 'true'
-    
-    if (isDemo) {
-      console.log('🎭 Demo mode detected - using demo user')
-      // Return demo user info
-      return {
-        id: '00000000-0000-0000-0000-000000000001',
-        email: 'demo@oticbusiness.com',
-        tier: 'premium', // Demo has access to all features
-        isDemo: true
-      }
-    }
-
-
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError) {
       console.warn('Auth error:', authError)
-      // If there's an auth error, try demo mode as fallback
-      console.log('🔄 Auth failed, trying demo mode as fallback')
-      return {
-        id: '00000000-0000-0000-0000-000000000001',
-        email: 'demo@oticbusiness.com',
-        tier: 'premium',
-        isDemo: true
-      }
+      return null
     }
     
     if (!user) {
-      console.warn('No authenticated user found - using demo as fallback')
-      return {
-        id: '00000000-0000-0000-0000-000000000001',
-        email: 'demo@oticbusiness.com',
-        tier: 'premium',
-        isDemo: true
-      }
+      console.warn('No authenticated user found')
+      return null
     }
 
     // Get user profile to check tier

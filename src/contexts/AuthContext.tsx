@@ -34,7 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let isMounted = true
 
-    // Get initial session first
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!isMounted) return
       
@@ -45,33 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Real user session found - fetch their profile
         fetchUserProfile(session.user.id)
       } else {
-        // No real session - check if we should use demo mode
-        // Only enable demo mode if no real user session exists
-        if (window.location.hostname.includes('vercel.app') && 
-            !window.location.pathname.startsWith('/internal-admin-portal') &&
-            !sessionStorage.getItem('demo_mode_disabled')) {
-          console.log('🌐 Deployed app detected - setting demo mode as fallback')
-          sessionStorage.setItem('demo_mode', 'true')
-          
-          // Set demo user directly
-          const demoUser = {
-            id: '00000000-0000-0000-0000-000000000001',
-            email: 'demo@oticbusiness.com',
-            created_at: new Date().toISOString()
-          }
-          
-          setUser(demoUser)
-          setAppUser({
-            id: '00000000-0000-0000-0000-000000000001',
-            email: 'demo@oticbusiness.com',
-            tier: 'premium',
-            business_name: 'Demo Business Store',
-            phone: '+256 700 000 000',
-            address: 'Kampala, Uganda',
-            created_at: new Date().toISOString(),
-            email_verified: true
-          })
-        }
+        // No session - just set loading to false
         setLoading(false)
       }
     })
@@ -87,20 +61,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          // Real user session - disable demo mode and fetch profile
-          sessionStorage.removeItem('demo_mode')
-          sessionStorage.setItem('demo_mode_disabled', 'true')
+          // Real user session - fetch profile
           await fetchUserProfile(session.user.id)
         } else {
           // No session - clear user and loading
           setAppUser(null)
           setLoading(false)
-          
-          // Clear demo mode flags on sign out
-          if (event === 'SIGNED_OUT') {
-            sessionStorage.removeItem('demo_mode')
-            sessionStorage.removeItem('demo_mode_disabled')
-          }
         }
       }
     )
@@ -226,80 +192,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      // Check if this is a demo login
-      if (email === 'demo@oticbusiness.com' && password === 'demo123456') {
-        // Create a demo user session without actual auth
-        const demoUser = {
-          id: '00000000-0000-0000-0000-000000000001',
-          email: 'demo@oticbusiness.com',
-          created_at: new Date().toISOString()
-        }
-        
-        // Set the demo user in state
-        setUser(demoUser)
-        
-        // Create demo user profile if it doesn't exist
-        const { data: existingProfile } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', '00000000-0000-0000-0000-000000000001')
-          .single()
-
-        if (!existingProfile) {
-          // Create demo profile
-          const { error: profileError } = await supabase
-            .from('user_profiles')
-            .insert({
-              id: '00000000-0000-0000-0000-000000000001',
-              email: 'demo@oticbusiness.com',
-              tier: 'free_trial',
-              business_name: 'Demo Business Store',
-              phone: '+256 700 000 000',
-              address: 'Kampala, Uganda',
-              created_at: new Date().toISOString()
-            })
-
-          if (profileError) {
-            console.error('Error creating demo profile:', profileError)
-          }
-
-          // Create demo subscription
-          const { error: subscriptionError } = await supabase
-            .from('subscriptions')
-            .insert({
-              id: 'demo-sub-12345',
-              user_id: '00000000-0000-0000-0000-000000000001',
-              tier: 'free_trial',
-              status: 'trial',
-              expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-              created_at: new Date().toISOString()
-            })
-
-          if (subscriptionError) {
-            console.error('Error creating demo subscription:', subscriptionError)
-          }
-        }
-        
-        // Set the demo user profile directly to avoid waiting
-        setAppUser({
-          id: '00000000-0000-0000-0000-000000000001',
-          email: 'demo@oticbusiness.com',
-          tier: 'free_trial',
-          business_name: 'Demo Business Store',
-          phone: '+256 700 000 000',
-          address: 'Kampala, Uganda',
-          created_at: new Date().toISOString()
-        })
-        
-        setLoading(false)
-        
-        return { error: null }
-      }
-      
-      // Disable demo mode when real user tries to log in
-      sessionStorage.removeItem('demo_mode')
-      sessionStorage.setItem('demo_mode_disabled', 'true')
-      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -312,10 +204,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      // Clear demo mode flags first to prevent re-enabling
-      sessionStorage.removeItem('demo_mode')
-      sessionStorage.setItem('demo_mode_disabled', 'true')
-      
       // Clear all state
       setUser(null)
       setAppUser(null)
@@ -355,31 +243,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const enableDemoMode = () => {
-    // Only enable demo mode if no real user is logged in
-    if (!user || user.email === 'demo@oticbusiness.com') {
-      console.log('🌐 Enabling demo mode')
-      sessionStorage.setItem('demo_mode', 'true')
-      
-      const demoUser = {
-        id: '00000000-0000-0000-0000-000000000001',
-        email: 'demo@oticbusiness.com',
-        created_at: new Date().toISOString()
-      }
-      
-      setUser(demoUser)
-      setAppUser({
-        id: '00000000-0000-0000-0000-000000000001',
-        email: 'demo@oticbusiness.com',
-        tier: 'premium',
-        business_name: 'Demo Business Store',
-        phone: '+256 700 000 000',
-        address: 'Kampala, Uganda',
-        created_at: new Date().toISOString(),
-        email_verified: true
-      })
-    }
-  }
 
   const signInWithGoogle = async () => {
     try {
@@ -438,7 +301,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUpWithGoogle,
     signOut,
     updateProfile,
-    enableDemoMode,
   }
 
   return (

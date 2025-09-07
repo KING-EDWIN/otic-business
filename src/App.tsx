@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { DemoProvider, useDemo } from "@/contexts/DemoContext";
 import Index from "./pages/Index";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
@@ -50,12 +49,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  // Only redirect to dashboard if user exists and is not demo user
-  if (user && user.email !== 'demo@oticbusiness.com') {
-    return <Navigate to="/dashboard" />;
-  }
-  
-  return <>{children}</>;
+  return user ? <Navigate to="/dashboard" /> : <>{children}</>;
 };
 
 const App = () => {
@@ -71,8 +65,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <DemoProvider>
-              <Routes>
+            <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
                 <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
@@ -89,7 +82,6 @@ const App = () => {
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </DemoProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

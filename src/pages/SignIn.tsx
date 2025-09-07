@@ -34,21 +34,6 @@ const SignIn = () => {
     setLoading(false)
   }
 
-  const handleDemoLogin = async () => {
-    setLoading(true)
-    setError('')
-
-    // Demo credentials
-    const { error } = await signIn('demo@oticbusiness.com', 'demo123456')
-
-    if (error) {
-      setError('Demo login failed. Please try again.')
-    } else {
-      navigate('/dashboard')
-    }
-
-    setLoading(false)
-  }
 
   const handleGoogleSignIn = async () => {
     setLoading(true)
@@ -166,15 +151,6 @@ const SignIn = () => {
             </div>
           </div>
         
-         <Button 
-            type="button" 
-            variant="outline" 
-            className="w-full mt-4 border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white" 
-            onClick={handleDemoLogin}
-            disabled={loading}
-          >
-            {loading ? 'Loading...' : '🚀 Try Demo Account'}
-          </Button> 
 
           <Button 
             type="button" 
