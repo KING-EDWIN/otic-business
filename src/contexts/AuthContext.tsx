@@ -34,24 +34,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let isMounted = true
 
-    // For deployed apps, set demo mode but still use Supabase
-    if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
-      console.log('🌐 Deployed app detected - setting demo mode with Supabase data')
-      sessionStorage.setItem('demo_mode', 'true')
-      
-      // Set demo user directly but still fetch from Supabase
-      const demoUser = {
-        id: '00000000-0000-0000-0000-000000000001',
-        email: 'demo@oticbusiness.com',
-        created_at: new Date().toISOString()
-      }
-      
-      setUser(demoUser)
-      
-      // Fetch demo user profile from Supabase
-      fetchUserProfile('00000000-0000-0000-0000-000000000001')
-      return
-    }
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
