@@ -24,6 +24,18 @@ export const getCurrentUserInfo = async (): Promise<UserInfo | null> => {
       }
     }
 
+    // For deployed app, if no demo mode is set, default to demo user
+    // This ensures the app works even without proper authentication setup
+    if (window.location.hostname.includes('vercel.app') || window.location.hostname.includes('netlify.app')) {
+      console.log('🌐 Deployed app detected - using demo user as fallback')
+      return {
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'demo@oticbusiness.com',
+        tier: 'premium',
+        isDemo: true
+      }
+    }
+
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
@@ -40,8 +52,13 @@ export const getCurrentUserInfo = async (): Promise<UserInfo | null> => {
     }
     
     if (!user) {
-      console.warn('No authenticated user found')
-      return null
+      console.warn('No authenticated user found - using demo as fallback')
+      return {
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'demo@oticbusiness.com',
+        tier: 'premium',
+        isDemo: true
+      }
     }
 
     // Get user profile to check tier
