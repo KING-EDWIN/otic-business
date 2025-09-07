@@ -165,7 +165,7 @@ const SignIn = () => {
               </div>
             </div>
           </div>
-         {/* commented this out for now 
+        
          <Button 
             type="button" 
             variant="outline" 
@@ -174,7 +174,7 @@ const SignIn = () => {
             disabled={loading}
           >
             {loading ? 'Loading...' : '🚀 Try Demo Account'}
-          </Button> */}
+          </Button> 
 
           <Button 
             type="button" 
