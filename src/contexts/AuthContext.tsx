@@ -92,35 +92,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           sessionStorage.setItem('demo_mode_disabled', 'true')
           await fetchUserProfile(session.user.id)
         } else {
-          // No session - clear user and re-enable demo mode if appropriate
+          // No session - clear user and loading
           setAppUser(null)
-          sessionStorage.removeItem('demo_mode_disabled')
-          
-          // Re-enable demo mode for deployed apps if no real session
-          if (window.location.hostname.includes('vercel.app') && 
-              !window.location.pathname.startsWith('/internal-admin-portal')) {
-            console.log('🌐 No real session - re-enabling demo mode')
-            sessionStorage.setItem('demo_mode', 'true')
-            
-            const demoUser = {
-              id: '00000000-0000-0000-0000-000000000001',
-              email: 'demo@oticbusiness.com',
-              created_at: new Date().toISOString()
-            }
-            
-            setUser(demoUser)
-            setAppUser({
-              id: '00000000-0000-0000-0000-000000000001',
-              email: 'demo@oticbusiness.com',
-              tier: 'premium',
-              business_name: 'Demo Business Store',
-              phone: '+256 700 000 000',
-              address: 'Kampala, Uganda',
-              created_at: new Date().toISOString(),
-              email_verified: true
-            })
-          }
           setLoading(false)
+          
+          // Clear demo mode flags on sign out
+          if (event === 'SIGNED_OUT') {
+            sessionStorage.removeItem('demo_mode')
+            sessionStorage.removeItem('demo_mode_disabled')
+          }
         }
       }
     )
@@ -332,15 +312,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      // Clear all state first
+      // Clear demo mode flags first to prevent re-enabling
+      sessionStorage.removeItem('demo_mode')
+      sessionStorage.setItem('demo_mode_disabled', 'true')
+      
+      // Clear all state
       setUser(null)
       setAppUser(null)
       setSession(null)
       setLoading(false)
-      
-      // Clear demo mode flags
-      sessionStorage.removeItem('demo_mode')
-      sessionStorage.removeItem('demo_mode_disabled')
       
       // Then sign out from Supabase
       await supabase.auth.signOut()
@@ -372,6 +352,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error: null }
     } catch (error) {
       return { error }
+    }
+  }
+
+  const enableDemoMode = () => {
+    // Only enable demo mode if no real user is logged in
+    if (!user || user.email === 'demo@oticbusiness.com') {
+      console.log('🌐 Enabling demo mode')
+      sessionStorage.setItem('demo_mode', 'true')
+      
+      const demoUser = {
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'demo@oticbusiness.com',
+        created_at: new Date().toISOString()
+      }
+      
+      setUser(demoUser)
+      setAppUser({
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'demo@oticbusiness.com',
+        tier: 'premium',
+        business_name: 'Demo Business Store',
+        phone: '+256 700 000 000',
+        address: 'Kampala, Uganda',
+        created_at: new Date().toISOString(),
+        email_verified: true
+      })
     }
   }
 
@@ -432,6 +438,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUpWithGoogle,
     signOut,
     updateProfile,
+    enableDemoMode,
   }
 
   return (
