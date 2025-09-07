@@ -35,7 +35,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let isMounted = true
 
     // For deployed apps, automatically set demo mode to bypass auth issues
-    if (window.location.hostname.includes('vercel.app')) {
+    // BUT never enable demo mode on the internal admin portal
+    if (window.location.hostname.includes('vercel.app') && !window.location.pathname.startsWith('/internal-admin-portal')) {
       console.log('🌐 Deployed app detected - setting demo mode')
       sessionStorage.setItem('demo_mode', 'true')
       

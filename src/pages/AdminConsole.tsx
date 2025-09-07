@@ -13,10 +13,13 @@ const isDesktop = () => {
 }
 
 const AdminConsole = () => {
-  const { user } = useAuth()
+  const { user, signIn } = useAuth()
   const [allowed, setAllowed] = useState(false)
   const [loading, setLoading] = useState(true)
   const [resendEmail, setResendEmail] = useState('')
+  const [loginEmail, setLoginEmail] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [authError, setAuthError] = useState('')
 
   const desktopOnly = useMemo(() => isDesktop(), [])
 
@@ -58,6 +61,33 @@ const AdminConsole = () => {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-gray-600">This page is only accessible on desktop.</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!user) {
+    const attemptLogin = async () => {
+      setAuthError('')
+      const { error } = await signIn(loginEmail, loginPassword)
+      if (error) {
+        setAuthError(error.message || 'Failed to sign in')
+      } else {
+        toast.success('Signed in')
+      }
+    }
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle>Admin Sign In</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {authError && <p className="text-sm text-red-600">{authError}</p>}
+            <Input type="email" placeholder="Email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
+            <Input type="password" placeholder="Password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
+            <Button className="w-full bg-[#040458] hover:bg-[#030345] text-white" onClick={attemptLogin}>Sign In</Button>
           </CardContent>
         </Card>
       </div>
