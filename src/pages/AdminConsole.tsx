@@ -95,9 +95,10 @@ const AdminConsole = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle>Otic Admin Sign In</CardTitle>
+            <CardTitle className="text-center text-[#040458]">Welcome back, Otic B Sys Admin</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <p className="text-center text-sm text-gray-600">Enter your admin credentials to access the panel.</p>
             {authError && <p className="text-sm text-red-600">{authError}</p>}
             <Input type="email" placeholder="Email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
             <Input type="password" placeholder="Password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
