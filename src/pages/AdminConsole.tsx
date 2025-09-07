@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
+import TierUpgradeRequests from '@/components/TierUpgradeRequests'
+import { Crown } from 'lucide-react'
 
 const isDesktop = () => {
   if (typeof window === 'undefined') return true
@@ -14,6 +16,7 @@ const isDesktop = () => {
 const AdminConsole = () => {
   // TEMPORARILY DISABLE AUTH - SHOW ADMIN PAGE DIRECTLY
   const [resendEmail, setResendEmail] = useState('')
+  const [showTierManagement, setShowTierManagement] = useState(false)
 
   const desktopOnly = useMemo(() => isDesktop(), [])
 
@@ -78,6 +81,22 @@ const AdminConsole = () => {
 
         <Card>
           <CardHeader>
+            <CardTitle>Tier Upgrade Management</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-gray-600">Manage customer tier upgrade requests, verify payments, and manually upgrade customer tiers.</p>
+            <Button 
+              className="bg-[#040458] hover:bg-[#030345] text-white"
+              onClick={() => setShowTierManagement(true)}
+            >
+              <Crown className="h-4 w-4 mr-2" />
+              Open Tier Management
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Payment Proofs Verification</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -85,6 +104,11 @@ const AdminConsole = () => {
           </CardContent>
         </Card>
       </div>
+
+      <TierUpgradeRequests 
+        isOpen={showTierManagement} 
+        onClose={() => setShowTierManagement(false)} 
+      />
     </div>
   )
 }
