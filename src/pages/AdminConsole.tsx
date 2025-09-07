@@ -13,50 +13,12 @@ const isDesktop = () => {
 
 const AdminConsole = () => {
   // TEMPORARILY DISABLE AUTH - SHOW ADMIN PAGE DIRECTLY
-  const [currentAdmin, setCurrentAdmin] = useState<AdminUser | null>({
-    id: 'temp-admin',
-    email: 'admin@otic.com',
-    role: 'super_admin',
-    created_at: new Date().toISOString()
-  })
-  const [loading, setLoading] = useState(false)
   const [resendEmail, setResendEmail] = useState('')
-  const [loginEmail, setLoginEmail] = useState('')
-  const [loginPassword, setLoginPassword] = useState('')
-  const [authError, setAuthError] = useState('')
 
   const desktopOnly = useMemo(() => isDesktop(), [])
 
-  const handleLogin = async () => {
-    setLoading(true)
-    setAuthError('')
-    
-    const result = await adminService.authenticateAdmin(loginEmail, loginPassword)
-    
-    if (result.success && result.admin) {
-      setCurrentAdmin(result.admin)
-      await adminService.logAction(result.admin.id, 'admin_console_access')
-      toast.success('Welcome back!')
-    } else {
-      setAuthError(result.error || 'Login failed')
-    }
-    
-    setLoading(false)
-  }
-
   const handleLogout = () => {
-    setCurrentAdmin(null)
-    setLoginEmail('')
-    setLoginPassword('')
-    setAuthError('')
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#040458]"></div>
-      </div>
-    )
+    // TEMPORARILY DISABLED
   }
 
   if (!desktopOnly) {
@@ -74,43 +36,11 @@ const AdminConsole = () => {
     )
   }
 
-  // TEMPORARILY DISABLED - SHOW ADMIN PAGE DIRECTLY
-  // if (!currentAdmin) {
-  //   return (
-  //     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-  //       <Card className="max-w-md w-full">
-  //         <CardHeader>
-  //           <CardTitle className="text-center text-[#040458]">Welcome back, Otic B Sys Admin</CardTitle>
-  //         </CardHeader>
-  //         <CardContent className="space-y-4">
-  //           <p className="text-center text-sm text-gray-600">Enter your admin credentials to access the panel.</p>
-  //           {authError && <p className="text-sm text-red-600">{authError}</p>}
-  //           <Input type="email" placeholder="Email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} />
-  //           <Input type="password" placeholder="Password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
-  //           <Button 
-  //             className="w-full bg-[#040458] hover:bg-[#030345] text-white" 
-  //             onClick={handleLogin}
-  //             disabled={loading}
-  //           >
-  //             {loading ? 'Signing in...' : 'Sign In'}
-  //           </Button>
-  //         </CardContent>
-  //       </Card>
-  //     </div>
-  //   )
-  // }
-
 
   const handleResend = async () => {
     if (!resendEmail) return
-    const { error } = await adminService.resendEmailConfirmation(resendEmail)
-    if (error) {
-      toast.error('Failed to resend confirmation')
-      await adminService.logAction(currentAdmin!.id, 'resend_email_failure', { email: resendEmail, error })
-    } else {
-      toast.success('Confirmation email sent')
-      await adminService.logAction(currentAdmin!.id, 'resend_email_success', { email: resendEmail })
-    }
+    console.log(`Email resend requested for: ${resendEmail}`)
+    toast.success('Email resend requested (logged to console)')
   }
 
   return (
@@ -123,7 +53,7 @@ const AdminConsole = () => {
               <Badge variant="outline" className="text-[#040458] border-[#040458]">Internal</Badge>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">Logged in as: {currentAdmin.email}</span>
+              <span className="text-sm text-gray-600">Logged in as: admin@otic.com (TEMP)</span>
               <Button variant="outline" onClick={handleLogout} className="text-[#040458] border-[#040458]">
                 Sign Out
               </Button>
