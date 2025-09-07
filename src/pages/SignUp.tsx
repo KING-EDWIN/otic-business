@@ -182,7 +182,7 @@ const SignUp = () => {
             variant="outline" 
             className="w-full mb-6 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 bg-white shadow-sm" 
             onClick={handleGoogleSignUp}
-            disabled={loading}
+            disabled={loading || !privacyAccepted}
           >
             <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -190,7 +190,7 @@ const SignUp = () => {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            Continue with Google (Recommended)
+            {!privacyAccepted ? 'Accept Privacy Policy to Continue' : 'Continue with Google (Recommended)'}
           </Button>
 
           <div className="relative mb-6">
@@ -303,9 +303,11 @@ const SignUp = () => {
             <Button 
               type="submit" 
               className="w-full bg-[#faa51a] hover:bg-[#040458] text-white font-semibold" 
-              disabled={loading}
+              disabled={loading || !privacyAccepted}
             >
-              {loading ? 'Creating Account...' : 'Create Account'}
+              {loading ? 'Creating Account...' : 
+               !privacyAccepted ? 'Accept Privacy Policy to Continue' : 
+               'Create Account'}
             </Button>
           </form>
           

@@ -88,8 +88,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async (userId: string) => {
     try {
+      // Use user_verification_status view for consistency with admin system
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('user_verification_status')
         .select('*')
         .eq('id', userId)
         .single()
