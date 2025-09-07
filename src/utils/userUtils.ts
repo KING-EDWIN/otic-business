@@ -14,6 +14,7 @@ export const getCurrentUserInfo = async (): Promise<UserInfo | null> => {
     const isDemo = sessionStorage.getItem('demo_mode') === 'true'
     
     if (isDemo) {
+      console.log('🎭 Demo mode detected - using demo user')
       // Return demo user info
       return {
         id: '00000000-0000-0000-0000-000000000001',
@@ -26,8 +27,20 @@ export const getCurrentUserInfo = async (): Promise<UserInfo | null> => {
     // Get authenticated user
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    if (authError || !user) {
-      console.warn('No authenticated user found:', authError)
+    if (authError) {
+      console.warn('Auth error:', authError)
+      // If there's an auth error, try demo mode as fallback
+      console.log('🔄 Auth failed, trying demo mode as fallback')
+      return {
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'demo@oticbusiness.com',
+        tier: 'premium',
+        isDemo: true
+      }
+    }
+    
+    if (!user) {
+      console.warn('No authenticated user found')
       return null
     }
 
