@@ -88,12 +88,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      // Use user_verification_status view for consistency with admin system
-      const { data, error } = await supabase
+      // Try user_verification_status view first, fallback to user_profiles table
+      let { data, error } = await supabase
         .from('user_verification_status')
         .select('*')
         .eq('id', userId)
         .single()
+
+      // If view doesn't exist, fallback to user_profiles table
+      if (error && error.code === '42P01') {
+        console.log('user_verification_status view not found, falling back to user_profiles table')
+        const fallbackResult = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+        
+        data = fallbackResult.data
+        error = fallbackResult.error
+      }
 
       if (error) {
         console.error('Error fetching user profile:', error)
@@ -111,16 +124,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       console.log('User profile data:', data)
       console.log('Email verified status:', data.email_verified)
+      console.log('Email verified type:', typeof data.email_verified)
+      console.log('Email verified === false:', data.email_verified === false)
+      console.log('Email verified === true:', data.email_verified === true)
 
       // Check if email is verified (handle case where column might not exist)
       if (data.email_verified === false) {
         // Email not verified - show verification message
+        console.log('Email not verified, showing verification message')
         setAppUser(data)
         setLoading(false)
         return
       } else if (data.email_verified === null || data.email_verified === undefined) {
         // Column doesn't exist or is null - treat as verified for now
         console.warn('email_verified column not found or null, treating as verified')
+        setAppUser(data)
+        setLoading(false)
+        return
+      }
+
+      // Temporary fix: if email_verified is not explicitly false, treat as verified
+      if (data.email_verified !== false) {
+        console.log('Email verification passed, user is verified')
         setAppUser(data)
         setLoading(false)
         return

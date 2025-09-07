@@ -60,14 +60,6 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAccept }: PrivacyPolicyModalPro
                 </p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-8 w-8 p-0 text-white hover:bg-white/20"
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </div>
           
           {/* Progress Bar */}
@@ -272,7 +264,7 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAccept }: PrivacyPolicyModalPro
                 className="bg-[#040458] hover:bg-[#030345] text-white disabled:opacity-50 disabled:cursor-not-allowed px-6"
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Accept & Continue
+                Accept Terms & Continue
               </Button>
             </div>
           </div>
