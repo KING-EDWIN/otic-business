@@ -34,23 +34,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let isMounted = true
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!isMounted) return
-      
-      setSession(session)
-      setUser(session?.user ?? null)
-      
-      if (session?.user) {
-        // Real user session found - fetch their profile
-        fetchUserProfile(session.user.id)
-      } else {
-        // No session - just set loading to false
-        setLoading(false)
-      }
-    })
-
-    // Listen for auth changes
+    // Listen for auth changes (this also gets the initial session)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!isMounted) return
@@ -77,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('Auth loading timeout - setting loading to false')
         setLoading(false)
       }
-    }, 15000) // 15 second timeout
+    }, 30000) // 30 second timeout
 
     return () => {
       isMounted = false

@@ -1,17 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
-
-// Create a database-only client for admin operations (no auth)
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://jvgiyscchxxekcbdicco.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8'
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false,
-    detectSessionInUrl: false
-  }
-})
 
 export interface AdminUser {
   id: string
@@ -159,10 +147,10 @@ export class AdminService {
         verified_by: item.verified_by,
         notes: item.notes,
         user_profile: {
-          email: item.user_profiles.email,
-          business_name: item.user_profiles.business_name,
-          phone: item.user_profiles.phone,
-          tier: item.user_profiles.tier
+          email: item.user_profiles?.[0]?.email || '',
+          business_name: item.user_profiles?.[0]?.business_name || '',
+          phone: item.user_profiles?.[0]?.phone || '',
+          tier: item.user_profiles?.[0]?.tier || 'basic'
         }
       })) || []
     } catch (error) {

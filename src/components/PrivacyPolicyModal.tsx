@@ -25,7 +25,17 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAccept }: PrivacyPolicyModalPro
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
-    const progress = (scrollTop / (scrollHeight - clientHeight)) * 100;
+    
+    // Prevent division by zero and invalid calculations
+    if (scrollHeight <= clientHeight) {
+      setScrollProgress(100);
+      if (!hasRead) {
+        setHasRead(true);
+      }
+      return;
+    }
+    
+    const progress = Math.min(100, Math.max(0, (scrollTop / (scrollHeight - clientHeight)) * 100));
     setScrollProgress(progress);
     
     // Auto-mark as read when user scrolls to 80% of the content
@@ -77,8 +87,11 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAccept }: PrivacyPolicyModalPro
           </div>
         </DialogHeader>
         
-        <ScrollArea className="max-h-[60vh] px-6" onScrollCapture={handleScroll}>
-          <div className="prose prose-sm max-w-none py-6">
+        <ScrollArea className="max-h-[60vh] px-6">
+          <div 
+            className="prose prose-sm max-w-none py-6"
+            onScroll={handleScroll}
+          >
             <h1>Privacy Policy</h1>
             <p>Last updated: September 07, 2025</p>
             <p>This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You.</p>
