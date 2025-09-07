@@ -1,0 +1,46 @@
+-- Add demo data for reports to work properly
+-- Run this in your Supabase SQL Editor
+
+-- Add some sample products for the demo user
+INSERT INTO products (id, name, price, cost, stock, min_stock, barcode, category_id, user_id, created_at, updated_at)
+VALUES
+  ('550e8400-e29b-41d4-a716-446655440010', 'Samsung Galaxy S21', 2500000, 2000000, 15, 5, 'SAMSUNG-S21', '11111111-1111-1111-1111-111111111001', '00000000-0000-0000-0000-000000000001', NOW(), NOW()),
+  ('550e8400-e29b-41d4-a716-446655440011', 'iPhone 13', 3000000, 2400000, 8, 3, 'IPHONE-13', '11111111-1111-1111-1111-111111111001', '00000000-0000-0000-0000-000000000001', NOW(), NOW()),
+  ('550e8400-e29b-41d4-a716-446655440012', 'Nike Air Max', 450000, 300000, 25, 10, 'NIKE-AM', '11111111-1111-1111-1111-111111111002', '00000000-0000-0000-0000-000000000001', NOW(), NOW()),
+  ('550e8400-e29b-41d4-a716-446655440013', 'MacBook Pro', 8000000, 6500000, 5, 2, 'MACBOOK-PRO', '11111111-1111-1111-1111-111111111001', '00000000-0000-0000-0000-000000000001', NOW(), NOW()),
+  ('550e8400-e29b-41d4-a716-446655440014', 'Coffee Maker', 350000, 250000, 12, 5, 'COFFEE-MAKER', '11111111-1111-1111-1111-111111111003', '00000000-0000-0000-0000-000000000001', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- Add some sample sales for the demo user
+INSERT INTO sales (id, user_id, total, payment_method, receipt_number, created_at)
+VALUES 
+  ('550e8400-e29b-41d4-a716-446655440020', '00000000-0000-0000-0000-000000000001', 2500000, 'cash', 'RCP-001', NOW() - INTERVAL '5 days'),
+  ('550e8400-e29b-41d4-a716-446655440021', '00000000-0000-0000-0000-000000000001', 3000000, 'card', 'RCP-002', NOW() - INTERVAL '4 days'),
+  ('550e8400-e29b-41d4-a716-446655440022', '00000000-0000-0000-0000-000000000001', 450000, 'mobile_money', 'RCP-003', NOW() - INTERVAL '3 days'),
+  ('550e8400-e29b-41d4-a716-446655440023', '00000000-0000-0000-0000-000000000001', 8000000, 'card', 'RCP-004', NOW() - INTERVAL '2 days'),
+  ('550e8400-e29b-41d4-a716-446655440024', '00000000-0000-0000-0000-000000000001', 350000, 'cash', 'RCP-005', NOW() - INTERVAL '1 day')
+ON CONFLICT (id) DO NOTHING;
+
+-- Add some sample sale items
+INSERT INTO sale_items (id, sale_id, product_id, quantity, price, created_at)
+VALUES 
+  ('550e8400-e29b-41d4-a716-446655440030', '550e8400-e29b-41d4-a716-446655440020', '550e8400-e29b-41d4-a716-446655440010', 1, 2500000, NOW()),
+  ('550e8400-e29b-41d4-a716-446655440031', '550e8400-e29b-41d4-a716-446655440021', '550e8400-e29b-41d4-a716-446655440011', 1, 3000000, NOW()),
+  ('550e8400-e29b-41d4-a716-446655440032', '550e8400-e29b-41d4-a716-446655440022', '550e8400-e29b-41d4-a716-446655440012', 1, 450000, NOW()),
+  ('550e8400-e29b-41d4-a716-446655440033', '550e8400-e29b-41d4-a716-446655440023', '550e8400-e29b-41d4-a716-446655440013', 1, 8000000, NOW()),
+  ('550e8400-e29b-41d4-a716-446655440034', '550e8400-e29b-41d4-a716-446655440024', '550e8400-e29b-41d4-a716-446655440014', 1, 350000, NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- Add some sample customers
+INSERT INTO customers (id, name, email, phone, address, currency_code, enabled, user_id, created_at, updated_at)
+VALUES 
+  ('550e8400-e29b-41d4-a716-446655440040', 'John Doe', 'john@example.com', '+256 700 123 456', 'Kampala, Uganda', 'UGX', true, '00000000-0000-0000-0000-000000000001', NOW(), NOW()),
+  ('550e8400-e29b-41d4-a716-446655440041', 'Jane Smith', 'jane@example.com', '+256 700 789 012', 'Entebbe, Uganda', 'UGX', true, '00000000-0000-0000-0000-000000000001', NOW(), NOW()),
+  ('550e8400-e29b-41d4-a716-446655440042', 'Mike Johnson', 'mike@example.com', '+256 700 345 678', 'Jinja, Uganda', 'UGX', true, '00000000-0000-0000-0000-000000000001', NOW(), NOW())
+ON CONFLICT (id) DO NOTHING;
+
+-- Verify data was inserted
+SELECT 'DEMO REPORTS DATA ADDED:' as info;
+SELECT 'products' as table_name, COUNT(*) as count FROM products WHERE user_id = '00000000-0000-0000-0000-000000000001';
+SELECT 'sales' as table_name, COUNT(*) as count FROM sales WHERE user_id = '00000000-0000-0000-0000-000000000001';
+SELECT 'customers' as table_name, COUNT(*) as count FROM customers WHERE user_id = '00000000-0000-0000-0000-000000000001';

@@ -1,150 +1,224 @@
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
   Brain, 
   TrendingUp, 
   AlertTriangle, 
+  CheckCircle, 
+  RefreshCw,
   Lightbulb,
   Target,
-  BarChart3
+  BarChart3,
+  Package
 } from 'lucide-react'
+import { AIInsight, AIAnalytics } from '@/services/aiService'
 
 interface AIInsightsProps {
-  tier: 'free_trial' | 'basic' | 'standard' | 'premium'
-  salesData: any
-  inventoryData: any
+  type: 'inventory' | 'sales' | 'financial' | 'general'
+  data: any
+  onRefresh?: () => void
 }
 
-export const AIInsights = ({ tier, salesData, inventoryData }: AIInsightsProps) => {
-  // Simulate AI insights based on tier
-  const getInsights = () => {
-    const insights = []
+const AIInsights: React.FC<AIInsightsProps> = ({ type, data, onRefresh }) => {
+  const [insights, setInsights] = useState<AIInsight[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const generateInsights = async () => {
+    setLoading(true)
+    setError('')
     
-    // Basic insights for all tiers
-    insights.push({
-      type: 'forecast',
-      title: 'Sales Forecast',
-      description: 'AI predicts 15% increase in sales next week',
-      confidence: 85,
-      icon: TrendingUp,
-      color: 'text-green-600'
-    })
-    
-    insights.push({
-      type: 'alert',
-      title: 'Low Stock Alert',
-      description: '3 products need restocking within 2 days',
-      confidence: 95,
-      icon: AlertTriangle,
-      color: 'text-red-600'
-    })
-    
-    // Standard tier insights
-    if (tier === 'standard' || tier === 'premium') {
-      insights.push({
-        type: 'recommendation',
-        title: 'Pricing Optimization',
-        description: 'Increase price of top-selling items by 8%',
-        confidence: 78,
-        icon: Target,
-        color: 'text-blue-600'
-      })
+    try {
+      console.log('AI Insights - Generating insights for type:', type)
+      console.log('AI Insights - Data received:', data)
       
-      insights.push({
-        type: 'trend',
-        title: 'Customer Behavior',
-        description: 'Peak sales time: 2-4 PM on weekdays',
-        confidence: 82,
-        icon: BarChart3,
-        color: 'text-purple-600'
-      })
-    }
-    
-    // Premium tier insights
-    if (tier === 'premium') {
-      insights.push({
-        type: 'anomaly',
-        title: 'Fraud Detection',
-        description: 'Unusual transaction pattern detected',
-        confidence: 92,
-        icon: AlertTriangle,
-        color: 'text-orange-600'
-      })
+      let newInsights: AIInsight[] = []
       
-      insights.push({
-        type: 'optimization',
-        title: 'Inventory Optimization',
-        description: 'Reorder 12 items to maximize profit',
-        confidence: 88,
-        icon: Lightbulb,
-        color: 'text-indigo-600'
-      })
+      switch (type) {
+        case 'inventory':
+          newInsights = await AIAnalytics.generateInventoryInsights(
+            data.products || [], 
+            data.lowStockItems || []
+          )
+          break
+        case 'sales':
+          console.log('AI Insights - Sales data:', {
+            sales: data.sales || [],
+            revenue: data.revenue || 0,
+            growth: data.growth || 0
+          })
+          newInsights = await AIAnalytics.generateSalesInsights(
+            data.sales || [],
+            data.revenue || 0,
+            data.growth || 0
+          )
+          break
+        case 'financial':
+          newInsights = await AIAnalytics.generateFinancialInsights(
+            data.revenue || 0,
+            data.expenses || 0,
+            data.profit || 0
+          )
+          break
+        default:
+          newInsights = []
+      }
+      
+      console.log('AI Insights - Generated insights:', newInsights)
+      setInsights(newInsights)
+    } catch (err) {
+      setError('Failed to generate AI insights. Please try again.')
+      console.error('AI insights error:', err)
+    } finally {
+      setLoading(false)
     }
-    
-    return insights
   }
 
-  const insights = getInsights()
+  useEffect(() => {
+    if (data && Object.keys(data).length > 0) {
+      generateInsights()
+    }
+  }, [type, data])
 
-  if (tier === 'free_trial') {
+  const getInsightIcon = (insightType: string) => {
+    switch (insightType) {
+      case 'inventory':
+        return <Package className="h-4 w-4" />
+      case 'sales':
+        return <TrendingUp className="h-4 w-4" />
+      case 'customer':
+        return <Target className="h-4 w-4" />
+      case 'financial':
+        return <BarChart3 className="h-4 w-4" />
+      default:
+        return <Lightbulb className="h-4 w-4" />
+    }
+  }
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800 border-red-200'
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'low':
+        return 'bg-green-100 text-green-800 border-green-200'
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+  }
+
+  const getConfidenceColor = (confidence: number) => {
+    if (confidence >= 0.8) return 'text-green-600'
+    if (confidence >= 0.6) return 'text-yellow-600'
+    return 'text-red-600'
+  }
+
+  if (error) {
     return (
-      <Card>
+      <Card className="border-red-200">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5 text-primary" />
-            AI Insights
+          <CardTitle className="flex items-center text-red-600">
+            <AlertTriangle className="h-5 w-5 mr-2" />
+            AI Insights Error
           </CardTitle>
-          <CardDescription>
-            Upgrade to Standard or Premium for AI-powered business insights
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">
-            <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">
-              Unlock AI-driven forecasting, anomaly detection, and business optimization
-            </p>
-            <Badge variant="outline" className="text-sm">
-              Available in Standard & Premium
-            </Badge>
-          </div>
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <Button 
+            onClick={generateInsights} 
+            variant="outline" 
+            size="sm" 
+            className="mt-4"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Try Again
+          </Button>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <Card>
+    <Card className="border-[#faa51a]/20">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-primary" />
-          AI Insights
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center text-[#040458]">
+            <Brain className="h-5 w-5 mr-2 text-[#faa51a]" />
+            AI Insights
+          </CardTitle>
+          <Button
+            onClick={generateInsights}
+            disabled={loading}
+            size="sm"
+            variant="outline"
+            className="text-[#040458] border-[#faa51a] hover:bg-[#faa51a] hover:text-white"
+          >
+            {loading ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
         <CardDescription>
-          Powered by machine learning and business intelligence
+          AI-powered insights and recommendations for your business
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {insights.map((insight, index) => {
-          const Icon = insight.icon
-          return (
-            <div key={index} className="flex items-start gap-3 p-3 rounded-lg border bg-card">
-              <Icon className={`h-5 w-5 mt-0.5 ${insight.color}`} />
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium text-sm">{insight.title}</h4>
-                  <Badge variant="secondary" className="text-xs">
-                    {insight.confidence}% confidence
-                  </Badge>
+      <CardContent>
+        {loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-full"></div>
+              </div>
+            ))}
+          </div>
+        ) : insights.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Brain className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p>No insights available. Click refresh to generate AI insights.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {insights.map((insight) => (
+              <div
+                key={insight.id}
+                className="p-3 border border-gray-200 rounded-lg hover:border-[#faa51a]/30 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    {getInsightIcon(insight.type)}
+                    <h4 className="font-semibold text-[#040458] text-sm">{insight.title}</h4>
+                    {insight.actionable && (
+                      <CheckCircle className="h-3 w-3 text-green-500" />
+                    )}
+                  </div>
+                  <div className="flex space-x-1">
+                    <Badge className={`text-xs ${getPriorityColor(insight.priority)}`}>
+                      {insight.priority}
+                    </Badge>
+                    <span className={`text-xs ${getConfidenceColor(insight.confidence)}`}>
+                      {Math.round(insight.confidence * 100)}%
+                    </span>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">
                   {insight.description}
                 </p>
               </div>
-            </div>
-          )
-        })}
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
 }
+
+export default AIInsights

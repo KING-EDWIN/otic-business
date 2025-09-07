@@ -9,6 +9,8 @@ interface AuthContextType {
   loading: boolean
   signUp: (email: string, password: string, businessName: string, tier?: 'free_trial' | 'basic' | 'standard' | 'premium') => Promise<{ error: any }>
   signIn: (email: string, password: string) => Promise<{ error: any }>
+  signInWithGoogle: () => Promise<{ error: any }>
+  signUpWithGoogle: () => Promise<{ error: any }>
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<AppUser>) => Promise<{ error: any }>
 }
@@ -30,8 +32,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let isMounted = true
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return
+      
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
@@ -44,6 +50,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!isMounted) return
+        
         setSession(session)
         setUser(session?.user ?? null)
         
@@ -56,7 +64,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     )
 
-    return () => subscription.unsubscribe()
+    // Add a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (isMounted && loading) {
+        console.warn('Auth loading timeout - setting loading to false')
+        setLoading(false)
+      }
+    }, 15000) // 15 second timeout
+
+    return () => {
+      isMounted = false
+      clearTimeout(timeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const fetchUserProfile = async (userId: string) => {
@@ -69,14 +89,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error fetching user profile:', error)
-        // Don't set loading to false here, let the component handle it
+        // If no profile found, user might be OAuth user who needs to complete profile
+        if (error.code === 'PGRST116') {
+          // No profile found - redirect to complete profile
+          setLoading(false) // Set loading to false before redirect
+          window.location.href = '/complete-profile'
+          return
+        }
+        // For other errors, set loading to false
+        setLoading(false)
         return
       }
 
       setAppUser(data)
+      setLoading(false)
     } catch (error) {
       console.error('Error fetching user profile:', error)
-    } finally {
       setLoading(false)
     }
   }
@@ -116,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               user_id: data.user.id,
               tier: 'free_trial',
               status: 'trial',
-              expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+              expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
             })
 
           if (subscriptionError) {
@@ -194,7 +222,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               user_id: '00000000-0000-0000-0000-000000000001',
               tier: 'free_trial',
               status: 'trial',
-              expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
               created_at: new Date().toISOString()
             })
 
@@ -231,6 +259,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      // Clear all state first
+      setUser(null)
+      setAppUser(null)
+      setSession(null)
+      setLoading(false)
+      
+      // Then sign out from Supabase
       await supabase.auth.signOut()
     } catch (error) {
       console.error('Error signing out:', error)
@@ -260,6 +295,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  const signInWithGoogle = async () => {
+    try {
+      console.log('Initiating Google sign-in...')
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`
+        }
+      })
+      
+      if (error) {
+        console.error('Google sign-in error:', error)
+      } else {
+        console.log('Google sign-in initiated successfully:', data)
+      }
+      
+      return { error }
+    } catch (error) {
+      console.error('Google sign-in exception:', error)
+      return { error }
+    }
+  }
+
+  const signUpWithGoogle = async () => {
+    try {
+      console.log('Initiating Google sign-up...')
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/complete-profile`
+        }
+      })
+      
+      if (error) {
+        console.error('Google sign-up error:', error)
+      } else {
+        console.log('Google sign-up initiated successfully:', data)
+      }
+      
+      return { error }
+    } catch (error) {
+      console.error('Google sign-up exception:', error)
+      return { error }
+    }
+  }
+
   const value = {
     user,
     appUser,
@@ -267,6 +348,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     signUp,
     signIn,
+    signInWithGoogle,
+    signUpWithGoogle,
     signOut,
     updateProfile,
   }

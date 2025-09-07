@@ -1,382 +1,310 @@
-// =====================================================
-// PAYMENT SERVICE - REAL PAYMENT INTEGRATION
-// Flutterwave, Mobile Money, and other payment methods
-// =====================================================
+// Payment Service for handling payments and subscriptions
+import { supabase } from '@/lib/supabase'
+import { getCurrentUserInfo } from '@/utils/userUtils'
 
 export interface PaymentRequest {
+  id?: string
+  user_id: string
+  tier: 'basic' | 'standard' | 'premium'
   amount: number
-  currency: string
-  customer_email: string
-  customer_name: string
-  customer_phone: string
-  description: string
-  reference: string
-  payment_method: 'card' | 'mobile_money' | 'bank_transfer' | 'cash'
+  payment_method: string
+  payment_proof_url?: string
+  status: 'pending' | 'verified' | 'rejected'
+  created_at?: string
+  verified_at?: string
+  verified_by?: string
+  notes?: string
 }
 
-export interface PaymentResponse {
-  success: boolean
-  transaction_id?: string
-  reference?: string
-  status: 'pending' | 'success' | 'failed'
-  message: string
-  payment_url?: string
-  verification_url?: string
+export interface PaymentMethod {
+  id: string
+  name: string
+  type: 'mobile_money' | 'bank_transfer'
+  merchantCode?: string
+  accountNumber?: string
+  bankName?: string
+  branch?: string
 }
-
-export interface MobileMoneyRequest {
-  amount: number
-  currency: string
-  phone_number: string
-  network: 'MTN' | 'Airtel' | 'Vodafone'
-  reference: string
-  description: string
-}
-
-// =====================================================
-// FLUTTERWAVE PAYMENT INTEGRATION
-// =====================================================
-
-class FlutterwaveService {
-  private static readonly API_URL = 'https://api.flutterwave.com/v3'
-  private static readonly PUBLIC_KEY = process.env.VITE_FLUTTERWAVE_PUBLIC_KEY || 'FLWPUBK_TEST-demo-key'
-  private static readonly SECRET_KEY = process.env.VITE_FLUTTERWAVE_SECRET_KEY || 'FLWSECK_TEST-demo-key'
-
-  // Initialize payment
-  static async initializePayment(paymentData: PaymentRequest): Promise<PaymentResponse> {
-    try {
-      const response = await fetch(`${this.API_URL}/payments`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.SECRET_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          tx_ref: paymentData.reference,
-          amount: paymentData.amount,
-          currency: paymentData.currency,
-          redirect_url: `${window.location.origin}/payment/callback`,
-          customer: {
-            email: paymentData.customer_email,
-            name: paymentData.customer_name,
-            phone_number: paymentData.customer_phone
-          },
-          customizations: {
-            title: 'Otic Business Payment',
-            description: paymentData.description,
-            logo: `${window.location.origin}/logo.png`
-          },
-          payment_options: paymentData.payment_method === 'mobile_money' ? 'mobilemoney' : 'card'
-        })
-      })
-
-      const data = await response.json()
-
-      if (data.status === 'success') {
-        return {
-          success: true,
-          transaction_id: data.data.id,
-          reference: paymentData.reference,
-          status: 'pending',
-          message: 'Payment initialized successfully',
-          payment_url: data.data.link
-        }
-      } else {
-        return {
-          success: false,
-          status: 'failed',
-          message: data.message || 'Payment initialization failed'
-        }
-      }
-    } catch (error) {
-      console.error('Flutterwave payment error:', error)
-      return {
-        success: false,
-        status: 'failed',
-        message: 'Payment service unavailable'
-      }
-    }
-  }
-
-  // Verify payment
-  static async verifyPayment(transactionId: string): Promise<PaymentResponse> {
-    try {
-      const response = await fetch(`${this.API_URL}/transactions/${transactionId}/verify`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.SECRET_KEY}`,
-          'Content-Type': 'application/json'
-        }
-      })
-
-      const data = await response.json()
-
-      if (data.status === 'success' && data.data.status === 'successful') {
-        return {
-          success: true,
-          transaction_id: transactionId,
-          reference: data.data.tx_ref,
-          status: 'success',
-          message: 'Payment verified successfully'
-        }
-      } else {
-        return {
-          success: false,
-          status: 'failed',
-          message: 'Payment verification failed'
-        }
-      }
-    } catch (error) {
-      console.error('Flutterwave verification error:', error)
-      return {
-        success: false,
-        status: 'failed',
-        message: 'Payment verification failed'
-      }
-    }
-  }
-}
-
-// =====================================================
-// MOBILE MONEY SERVICE (UGANDA)
-// =====================================================
-
-class MobileMoneyService {
-  // MTN Mobile Money
-  static async processMTNPayment(request: MobileMoneyRequest): Promise<PaymentResponse> {
-    try {
-      // Simulate MTN Mobile Money API call
-      // In production, you'd integrate with MTN MoMo API
-      const response = await fetch('/api/mobile-money/mtn', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          amount: request.amount,
-          currency: request.currency,
-          phone_number: request.phone_number,
-          reference: request.reference,
-          description: request.description
-        })
-      })
-
-      const data = await response.json()
-
-      return {
-        success: data.success,
-        transaction_id: data.transaction_id,
-        reference: request.reference,
-        status: data.success ? 'success' : 'failed',
-        message: data.message
-      }
-    } catch (error) {
-      console.error('MTN Mobile Money error:', error)
-      return {
-        success: false,
-        status: 'failed',
-        message: 'Mobile Money service unavailable'
-      }
-    }
-  }
-
-  // Airtel Money
-  static async processAirtelPayment(request: MobileMoneyRequest): Promise<PaymentResponse> {
-    try {
-      // Simulate Airtel Money API call
-      const response = await fetch('/api/mobile-money/airtel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          amount: request.amount,
-          currency: request.currency,
-          phone_number: request.phone_number,
-          reference: request.reference,
-          description: request.description
-        })
-      })
-
-      const data = await response.json()
-
-      return {
-        success: data.success,
-        transaction_id: data.transaction_id,
-        reference: request.reference,
-        status: data.success ? 'success' : 'failed',
-        message: data.message
-      }
-    } catch (error) {
-      console.error('Airtel Money error:', error)
-      return {
-        success: false,
-        status: 'failed',
-        message: 'Airtel Money service unavailable'
-      }
-    }
-  }
-}
-
-// =====================================================
-// MAIN PAYMENT SERVICE
-// =====================================================
 
 export class PaymentService {
-  // Process payment based on method
-  static async processPayment(paymentData: PaymentRequest): Promise<PaymentResponse> {
-    try {
-      switch (paymentData.payment_method) {
-        case 'card':
-        case 'bank_transfer':
-          return await FlutterwaveService.initializePayment(paymentData)
-        
-        case 'mobile_money':
-          // Extract phone number and network from customer phone
-          const phoneNumber = paymentData.customer_phone.replace(/\D/g, '')
-          const network = this.detectMobileNetwork(phoneNumber)
-          
-          const mobileRequest: MobileMoneyRequest = {
-            amount: paymentData.amount,
-            currency: paymentData.currency,
-            phone_number: phoneNumber,
-            network: network,
-            reference: paymentData.reference,
-            description: paymentData.description
-          }
+  private tierPricing = {
+    basic: 50000,
+    standard: 150000,
+    premium: 300000
+  }
 
-          if (network === 'MTN') {
-            return await MobileMoneyService.processMTNPayment(mobileRequest)
-          } else if (network === 'Airtel') {
-            return await MobileMoneyService.processAirtelPayment(mobileRequest)
-          } else {
-            return {
-              success: false,
-              status: 'failed',
-              message: 'Unsupported mobile network'
-            }
-          }
-        
-        case 'cash':
-          // Cash payments are always successful
-          return {
-            success: true,
-            transaction_id: `CASH_${Date.now()}`,
-            reference: paymentData.reference,
-            status: 'success',
-            message: 'Cash payment recorded'
-          }
-        
-        default:
-          return {
-            success: false,
-            status: 'failed',
-            message: 'Unsupported payment method'
-          }
+  private paymentMethods: PaymentMethod[] = [
+    {
+      id: 'mtn',
+      name: 'MTN Mobile Money',
+      type: 'mobile_money',
+      merchantCode: '720504'
+    },
+    {
+      id: 'airtel',
+      name: 'Airtel Money',
+      type: 'mobile_money',
+      merchantCode: '4379529'
+    },
+    {
+      id: 'bank',
+      name: 'Bank Transfer',
+      type: 'bank_transfer',
+      accountNumber: '9030025213237',
+      bankName: 'Stanbic Bank',
+      branch: 'Garden City'
+    }
+  ]
+
+  async getPaymentMethods(): Promise<PaymentMethod[]> {
+    return this.paymentMethods
+  }
+
+  async getTierPricing() {
+    return this.tierPricing
+  }
+
+  async createPaymentRequest(
+    tier: 'basic' | 'standard' | 'premium',
+    paymentMethod: string,
+    proofFile?: File
+  ): Promise<{ success: boolean; paymentId?: string; error?: string }> {
+    try {
+      const userInfo = await getCurrentUserInfo()
+      if (!userInfo) {
+        return { success: false, error: 'User not authenticated' }
       }
+
+      const amount = this.tierPricing[tier]
+      let proofUrl = ''
+
+      // Upload proof file if provided
+      if (proofFile) {
+        const fileExt = proofFile.name.split('.').pop()
+        const fileName = `payment-proof-${userInfo.id}-${Date.now()}.${fileExt}`
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('payment-proofs')
+          .upload(fileName, proofFile)
+
+        if (uploadError) {
+          console.error('Error uploading proof:', uploadError)
+          return { success: false, error: 'Failed to upload payment proof' }
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('payment-proofs')
+          .getPublicUrl(fileName)
+
+        proofUrl = publicUrl
+      }
+
+      // Create payment request
+      const { data, error } = await supabase
+        .from('payment_requests')
+        .insert({
+          user_id: userInfo.id,
+          tier,
+          amount,
+          payment_method: paymentMethod,
+          payment_proof_url: proofUrl,
+          status: 'pending'
+        })
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error creating payment request:', error)
+        return { success: false, error: 'Failed to create payment request' }
+      }
+
+      return { success: true, paymentId: data.id }
     } catch (error) {
-      console.error('Payment processing error:', error)
-      return {
-        success: false,
-        status: 'failed',
-        message: 'Payment processing failed'
-      }
+      console.error('Error in createPaymentRequest:', error)
+      return { success: false, error: 'An unexpected error occurred' }
     }
   }
 
-  // Verify payment
-  static async verifyPayment(transactionId: string, paymentMethod: string): Promise<PaymentResponse> {
+  async getPaymentRequests(): Promise<PaymentRequest[]> {
     try {
-      if (paymentMethod === 'card' || paymentMethod === 'bank_transfer') {
-        return await FlutterwaveService.verifyPayment(transactionId)
-      } else {
-        // For mobile money and cash, assume success
-        return {
-          success: true,
-          transaction_id: transactionId,
-          status: 'success',
-          message: 'Payment verified'
+      const userInfo = await getCurrentUserInfo()
+      if (!userInfo) {
+        return []
+      }
+
+      const { data, error } = await supabase
+        .from('payment_requests')
+        .select('*')
+        .eq('user_id', userInfo.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching payment requests:', error)
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getPaymentRequests:', error)
+      return []
+    }
+  }
+
+  async getPaymentStatus(paymentId: string): Promise<PaymentRequest | null> {
+    try {
+      const { data, error } = await supabase
+        .from('payment_requests')
+        .select('*')
+        .eq('id', paymentId)
+        .single()
+
+      if (error) {
+        console.error('Error fetching payment status:', error)
+        return null
+      }
+
+      return data
+    } catch (error) {
+      console.error('Error in getPaymentStatus:', error)
+      return null
+    }
+  }
+
+  async getAllPaymentRequests(): Promise<PaymentRequest[]> {
+    try {
+      const { data, error } = await supabase
+        .from('payment_requests')
+        .select(`
+          *,
+          user_profiles!inner(email, business_name)
+        `)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching all payment requests:', error)
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getAllPaymentRequests:', error)
+      return []
+    }
+  }
+
+  async verifyPayment(
+    paymentId: string,
+    status: 'verified' | 'rejected',
+    notes?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Update payment request
+      const { error: updateError } = await supabase
+        .from('payment_requests')
+        .update({
+          status,
+          verified_at: new Date().toISOString(),
+          verified_by: 'admin', // In production, use actual admin user ID
+          notes
+        })
+        .eq('id', paymentId)
+
+      if (updateError) {
+        console.error('Error updating payment request:', updateError)
+        return { success: false, error: 'Failed to update payment request' }
+      }
+
+      // If verified, update user's subscription
+      if (status === 'verified') {
+        const { data: payment, error: fetchError } = await supabase
+          .from('payment_requests')
+          .select('user_id, tier, amount, payment_method')
+          .eq('id', paymentId)
+          .single()
+
+        if (fetchError) {
+          console.error('Error fetching payment details:', fetchError)
+          return { success: false, error: 'Failed to fetch payment details' }
+        }
+
+        // Update user profile tier
+        const { error: profileError } = await supabase
+          .from('user_profiles')
+          .update({ tier: payment.tier })
+          .eq('id', payment.user_id)
+
+        if (profileError) {
+          console.error('Error updating user profile:', profileError)
+          return { success: false, error: 'Failed to update user profile' }
+        }
+
+        // Create/update subscription
+        const { error: subError } = await supabase
+          .from('user_subscriptions')
+          .upsert({
+            user_id: payment.user_id,
+            tier: payment.tier,
+            status: 'active',
+            expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
+            payment_method: payment.payment_method,
+            amount: payment.amount
+          })
+
+        if (subError) {
+          console.error('Error creating subscription:', subError)
+          return { success: false, error: 'Failed to create subscription' }
+        }
+
+        // Add to payment history
+        const { error: historyError } = await supabase
+          .from('payment_history')
+          .insert({
+            user_id: payment.user_id,
+            payment_request_id: paymentId,
+            tier: payment.tier,
+            amount: payment.amount,
+            payment_method: payment.payment_method,
+            status: 'completed',
+            processed_at: new Date().toISOString()
+          })
+
+        if (historyError) {
+          console.error('Error adding to payment history:', historyError)
+          // Don't fail the whole operation for this
         }
       }
+
+      return { success: true }
     } catch (error) {
-      console.error('Payment verification error:', error)
-      return {
-        success: false,
-        status: 'failed',
-        message: 'Payment verification failed'
+      console.error('Error in verifyPayment:', error)
+      return { success: false, error: 'An unexpected error occurred' }
+    }
+  }
+
+  async getPaymentHistory(): Promise<any[]> {
+    try {
+      const userInfo = await getCurrentUserInfo()
+      if (!userInfo) {
+        return []
       }
+
+      const { data, error } = await supabase
+        .from('payment_history')
+        .select('*')
+        .eq('user_id', userInfo.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching payment history:', error)
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error in getPaymentHistory:', error)
+      return []
     }
-  }
-
-  // Detect mobile network from phone number
-  private static detectMobileNetwork(phoneNumber: string): 'MTN' | 'Airtel' | 'Vodafone' {
-    // Remove country code and check prefixes
-    const cleanNumber = phoneNumber.replace(/^\+256/, '').replace(/^256/, '')
-    
-    if (cleanNumber.startsWith('70') || cleanNumber.startsWith('77') || cleanNumber.startsWith('78')) {
-      return 'MTN'
-    } else if (cleanNumber.startsWith('75') || cleanNumber.startsWith('76')) {
-      return 'Airtel'
-    } else if (cleanNumber.startsWith('71') || cleanNumber.startsWith('72')) {
-      return 'Vodafone'
-    } else {
-      return 'MTN' // Default to MTN
-    }
-  }
-
-  // Generate payment reference
-  static generatePaymentReference(): string {
-    const timestamp = Date.now().toString()
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
-    return `OTIC_${timestamp}_${random}`
-  }
-
-  // Format amount for display
-  static formatAmount(amount: number, currency: string = 'UGX'): string {
-    return new Intl.NumberFormat('en-UG', {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 0
-    }).format(amount)
-  }
-
-  // Validate payment data
-  static validatePaymentData(paymentData: PaymentRequest): { valid: boolean; errors: string[] } {
-    const errors: string[] = []
-
-    if (!paymentData.amount || paymentData.amount <= 0) {
-      errors.push('Amount must be greater than 0')
-    }
-
-    if (!paymentData.customer_email || !this.isValidEmail(paymentData.customer_email)) {
-      errors.push('Valid customer email is required')
-    }
-
-    if (!paymentData.customer_phone || !this.isValidPhone(paymentData.customer_phone)) {
-      errors.push('Valid customer phone number is required')
-    }
-
-    if (!paymentData.reference) {
-      errors.push('Payment reference is required')
-    }
-
-    return {
-      valid: errors.length === 0,
-      errors
-    }
-  }
-
-  // Validate email
-  private static isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
-  }
-
-  // Validate phone number (Uganda format)
-  private static isValidPhone(phone: string): boolean {
-    const phoneRegex = /^(\+256|0)[0-9]{9}$/
-    return phoneRegex.test(phone.replace(/\s/g, ''))
   }
 }
 
-export default PaymentService
+export const paymentService = new PaymentService()

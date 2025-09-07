@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Akaunting API</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .step { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .code { background: #000; color: #0f0; padding: 10px; border-radius: 3px; font-family: monospace; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Akaunting API Test</h1>
+    
+    <div class="step">
+        <h3>Step 1: Get Akaunting API Credentials</h3>
+        <p>1. Go to <a href="https://akaunting.com" target="_blank">https://akaunting.com</a></p>
+        <p>2. Sign up for FREE account</p>
+        <p>3. Go to Settings → API</p>
+        <p>4. Create new API token</p>
+        <p>5. Copy your API key and company ID</p>
+    </div>
+
+    <div class="step">
+        <h3>Step 2: Test Your API Connection</h3>
+        <p>Enter your Akaunting details below:</p>
+        
+        <label>Your Akaunting URL:</label><br>
+        <input type="text" id="url" placeholder="https://your-company.akaunting.com" style="width: 300px; padding: 5px;"><br><br>
+        
+        <label>API Key:</label><br>
+        <input type="text" id="apiKey" placeholder="ak_1234567890abcdef" style="width: 300px; padding: 5px;"><br><br>
+        
+        <label>Company ID:</label><br>
+        <input type="text" id="companyId" placeholder="1" style="width: 100px; padding: 5px;"><br><br>
+        
+        <button onclick="testAPI()" style="padding: 10px 20px; background: #007cba; color: white; border: none; border-radius: 3px; cursor: pointer;">Test API Connection</button>
+    </div>
+
+    <div id="result" class="step" style="display: none;">
+        <h3>API Test Result:</h3>
+        <div id="resultContent"></div>
+    </div>
+
+    <div class="step">
+        <h3>Step 3: Add to Your App</h3>
+        <p>Once your API test works, add these to your <code>.env</code> file:</p>
+        <div class="code">
+VITE_AKAUNTING_URL=https://your-company.akaunting.com<br>
+VITE_AKAUNTING_API_KEY=your_api_key_here<br>
+VITE_AKAUNTING_COMPANY_ID=1
+        </div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const url = document.getElementById('url').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const companyId = document.getElementById('companyId').value;
+            
+            if (!url || !apiKey || !companyId) {
+                alert('Please fill in all fields');
+                return;
+            }
+            
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultDiv.style.display = 'block';
+            resultContent.innerHTML = 'Testing API connection...';
+            
+            try {
+                const response = await fetch(`${url}/api/customers`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Company': companyId
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultContent.innerHTML = `
+                        <div class="success">✅ API Connection Successful!</div>
+                        <p>Found ${data.data ? data.data.length : 0} customers in your Akaunting account.</p>
+                        <p>Your API is working correctly. You can now use these credentials in your Otic Business app.</p>
+                    `;
+                } else {
+                    resultContent.innerHTML = `
+                        <div class="error">❌ API Connection Failed</div>
+                        <p>Error: ${response.status} ${response.statusText}</p>
+                        <p>Please check your URL, API key, and company ID.</p>
+                    `;
+                }
+            } catch (error) {
+                resultContent.innerHTML = `
+                    <div class="error">❌ API Connection Failed</div>
+                    <p>Error: ${error.message}</p>
+                    <p>Please check your URL and make sure it's accessible.</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

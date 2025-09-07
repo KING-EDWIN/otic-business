@@ -8,7 +8,9 @@ import { DemoProvider, useDemo } from "@/contexts/DemoContext";
 import Index from "./pages/Index";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
-import Demo from "./pages/Demo";
+import CompleteProfile from "./pages/CompleteProfile";
+import AIInsightsPage from "./pages/AIInsights";
+import AIChat from "./pages/AIChat";
 import Dashboard from "./pages/Dashboard";
 import POS from "./pages/POS";
 import Inventory from "./pages/Inventory";
@@ -59,9 +61,11 @@ const App = () => (
           <DemoProvider>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/demo" element={<Demo />} />
               <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
               <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
+              <Route path="/complete-profile" element={<CompleteProfile />} />
+              <Route path="/ai-insights" element={<AIInsightsPage />} />
+              <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
               <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />

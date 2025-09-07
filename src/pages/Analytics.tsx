@@ -22,6 +22,9 @@ import {
   ArrowLeft
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
+import AIInsights from '@/components/AIInsights'
+import AIPredictions from '@/components/AIPredictions'
+import AIChatBot from '@/components/AIChatBot'
 
 interface AnalyticsData {
   totalSales: number
@@ -239,15 +242,15 @@ const Analytics = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#faa51a]"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-border">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -255,15 +258,15 @@ const Analytics = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
               >
                 <ArrowLeft className="h-4 w-4" />
                 <span>Back to Dashboard</span>
               </Button>
-              <BarChart3 className="h-8 w-8 text-primary" />
+              <BarChart3 className="h-8 w-8 text-[#faa51a]" />
               <div>
-                <h1 className="text-2xl font-bold text-primary">Analytics & AI Insights</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="text-2xl font-bold text-[#040458]">Analytics & AI Insights</h1>
+                <p className="text-sm text-gray-600">
                   AI-powered business intelligence and forecasting
                 </p>
               </div>
@@ -302,8 +305,8 @@ const Analytics = () => {
               {aiInsights.map((insight, index) => (
                 <div key={index} className="p-4 border rounded-lg">
                   <div className="flex items-start space-x-3">
-                    <div className="bg-primary/10 p-2 rounded-full">
-                      <Target className="h-4 w-4 text-primary" />
+                    <div className="bg-[#faa51a]/10 p-2 rounded-full">
+                      <Target className="h-4 w-4 text-[#faa51a]" />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium">{insight.message}</p>
@@ -386,10 +389,32 @@ const Analytics = () => {
 
         {/* Charts */}
         <Tabs defaultValue="sales" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="sales">Sales Trends</TabsTrigger>
-            <TabsTrigger value="products">Top Products</TabsTrigger>
-            <TabsTrigger value="revenue">Revenue Analysis</TabsTrigger>
+          <TabsList className="bg-gray-100">
+            <TabsTrigger 
+              value="sales"
+              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Sales Trends
+            </TabsTrigger>
+            <TabsTrigger 
+              value="products"
+              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Top Products
+            </TabsTrigger>
+            <TabsTrigger 
+              value="revenue"
+              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Revenue Analysis
+            </TabsTrigger>
+            <TabsTrigger 
+              value="ai"
+              className="data-[state=active]:bg-[#faa51a] data-[state=active]:text-white text-[#faa51a]"
+            >
+              <Brain className="h-4 w-4 mr-2" />
+              AI Insights
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="sales" className="space-y-6">
@@ -500,6 +525,57 @@ const Analytics = () => {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="ai" className="space-y-6">
+            {/* AI Chat Bot - Full Width */}
+            <AIChatBot 
+              businessData={{
+                sales: analyticsData?.salesByDay || [],
+                products: [], // This would be populated with actual product data
+                revenue: analyticsData?.totalRevenue || 0,
+                growth: analyticsData?.salesGrowth || 0,
+                lowStockItems: [],
+                user: appUser
+              }}
+            />
+            
+            {/* AI Insights Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AIInsights 
+                type="sales" 
+                data={{
+                  sales: analyticsData?.salesByDay || [],
+                  revenue: analyticsData?.totalRevenue || 0,
+                  growth: analyticsData?.salesGrowth || 0
+                }}
+              />
+              <AIInsights 
+                type="financial" 
+                data={{
+                  revenue: analyticsData?.totalRevenue || 0,
+                  expenses: (analyticsData?.totalRevenue || 0) * 0.7, // Estimated expenses
+                  profit: (analyticsData?.totalRevenue || 0) * 0.3 // Estimated profit
+                }}
+              />
+            </div>
+            
+            {/* AI Predictions Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AIPredictions 
+                type="sales_forecast" 
+                data={{
+                  sales: analyticsData?.salesByDay || [],
+                  timeframe: '30 days'
+                }}
+              />
+              <AIPredictions 
+                type="inventory_needs" 
+                data={{
+                  products: [] // This would be populated with actual product data
+                }}
+              />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

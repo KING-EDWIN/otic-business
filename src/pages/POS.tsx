@@ -394,15 +394,15 @@ const POS = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#faa51a]"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-border">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -410,15 +410,15 @@ const POS = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => navigate('/dashboard')}
-                className="mr-2"
+                className="mr-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Dashboard
               </Button>
-              <ShoppingCart className="h-8 w-8 text-primary" />
+              <ShoppingCart className="h-8 w-8 text-[#faa51a]" />
               <div>
-                <h1 className="text-2xl font-bold text-primary">Point of Sale</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="text-2xl font-bold text-[#040458]">Point of Sale</h1>
+                <p className="text-sm text-gray-600">
                   Process sales and manage transactions
                 </p>
               </div>
@@ -467,10 +467,19 @@ const POS = () => {
                         autoFocus
                         className="text-center font-mono"
                       />
-                      <Button onClick={handleBarcodeScan} variant="outline" title="Manual scan">
+                      <Button 
+                        onClick={handleBarcodeScan} 
+                        variant="outline" 
+                        title="Manual scan"
+                        className="border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
+                      >
                         <Package className="h-4 w-4" />
                       </Button>
-                      <Button onClick={handleCameraScan} className="bg-green-600 hover:bg-green-700" title="Camera scan">
+                      <Button 
+                        onClick={handleCameraScan} 
+                        className="bg-[#faa51a] hover:bg-[#040458] text-white" 
+                        title="Camera scan"
+                      >
                         <Camera className="h-4 w-4" />
                       </Button>
                     </div>
@@ -513,7 +522,7 @@ const POS = () => {
                       </p>
                       <Button
                         size="sm"
-                        className="w-full"
+                        className="w-full bg-[#faa51a] hover:bg-[#040458] text-white"
                         onClick={() => addToCart(product)}
                         disabled={product.stock <= 0}
                       >
@@ -567,6 +576,7 @@ const POS = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                              className="border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
@@ -575,6 +585,7 @@ const POS = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                              className="border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
@@ -582,6 +593,7 @@ const POS = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => removeFromCart(item.product.id)}
+                              className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -640,14 +652,14 @@ const POS = () => {
                         <Button
                           variant="outline"
                           onClick={clearCart}
-                          className="flex-1"
+                          className="flex-1 border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
                         >
                           Clear Cart
                         </Button>
                         <Button
                           onClick={processSale}
                           disabled={processing}
-                          className="flex-1"
+                          className="flex-1 bg-[#faa51a] hover:bg-[#040458] text-white"
                         >
                           {processing ? 'Processing...' : 'Complete Sale'}
                         </Button>

@@ -90,24 +90,24 @@ const Settings = () => {
   console.log('Settings component rendering, appUser:', appUser)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-border">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center space-x-4">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate('/dashboard')}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back to Dashboard</span>
             </Button>
-            <SettingsIcon className="h-8 w-8 text-primary" />
+            <SettingsIcon className="h-8 w-8 text-[#faa51a]" />
             <div>
-              <h1 className="text-2xl font-bold text-primary">Settings</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-2xl font-bold text-[#040458]">Settings</h1>
+              <p className="text-sm text-gray-600">
                 Manage your account and business preferences
               </p>
             </div>
@@ -126,12 +126,37 @@ const Settings = () => {
         </div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="business">Business</TabsTrigger>
-            <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
-            <TabsTrigger value="billing">Billing</TabsTrigger>
+          <TabsList className="bg-gray-100">
+            <TabsTrigger 
+              value="profile"
+              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Profile
+            </TabsTrigger>
+            <TabsTrigger 
+              value="business"
+              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Business
+            </TabsTrigger>
+            <TabsTrigger 
+              value="notifications"
+              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Notifications
+            </TabsTrigger>
+            <TabsTrigger 
+              value="security"
+              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Security
+            </TabsTrigger>
+            <TabsTrigger 
+              value="billing"
+              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Billing
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
@@ -179,7 +204,11 @@ const Settings = () => {
                   </div>
                 </div>
 
-                <Button onClick={handleSaveProfile} disabled={loading}>
+                <Button 
+                  onClick={handleSaveProfile} 
+                  disabled={loading}
+                  className="bg-[#faa51a] hover:bg-[#040458] text-white"
+                >
                   {loading ? 'Saving...' : 'Save Changes'}
                 </Button>
               </CardContent>
@@ -255,7 +284,11 @@ const Settings = () => {
                   </div>
                 </div>
 
-                <Button onClick={handleSaveProfile} disabled={loading}>
+                <Button 
+                  onClick={handleSaveProfile} 
+                  disabled={loading}
+                  className="bg-[#faa51a] hover:bg-[#040458] text-white"
+                >
                   {loading ? 'Saving...' : 'Save Changes'}
                 </Button>
               </CardContent>

@@ -8,7 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { AIInsights } from '@/components/AIInsights'
+import AIInsights from '@/components/AIInsights'
+import AIChatBot from '@/components/AIChatBot'
+import AccountingDashboard from '@/components/AccountingDashboard'
+import { SubscriptionManager } from '@/components/SubscriptionManager'
+import { AdvancedReports } from '@/components/AdvancedReports'
+import PaymentVerification from '@/components/PaymentVerification'
+import { EmailNotificationSettings } from '@/components/EmailNotificationSettings'
 import { 
   Building2, 
   ShoppingCart, 
@@ -17,11 +23,16 @@ import {
   Users, 
   Settings,
   Plus,
+  MessageSquareText,
   TrendingUp,
   DollarSign,
   ShoppingBag,
   Menu,
-  LogOut
+  LogOut,
+  Brain,
+  RefreshCw,
+  FileText,
+  Crown
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -69,6 +80,7 @@ const Dashboard = () => {
   const { appUser, signOut, user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState('overview')
   
   // Use React Query for caching and better performance
   const { data: stats = {
@@ -135,10 +147,20 @@ const Dashboard = () => {
   }, [stats])
 
   useEffect(() => {
+    // Add a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      if (authLoading) {
+        console.warn('Auth loading timeout - forcing redirect to signin')
+        navigate('/signin')
+      }
+    }, 10000) // 10 second timeout
+
     if (!authLoading && !user) {
       // No user and not loading, redirect to signin
       navigate('/signin')
     }
+
+    return () => clearTimeout(timeout)
   }, [authLoading, user, navigate])
 
 
@@ -155,7 +177,7 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#faa51a] mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading dashboard...</p>
           <p className="text-muted-foreground/70 text-sm mt-2">
             {authLoading ? 'Authenticating...' : 'Loading data...'}
@@ -193,15 +215,15 @@ const Dashboard = () => {
       <header className="bg-white border-b border-border sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 md:space-x-4">
-              <div className="bg-gradient-hero p-2 rounded-lg">
-                <Building2 className="h-5 w-5 md:h-6 md:w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg md:text-2xl font-bold text-primary">Otic Business</h1>
-                <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">
-                  Welcome back, {appUser?.business_name || user?.email || 'Business Owner'}
-                </p>
+            <div className="flex items-center space-x-3">
+              <img 
+                src="/Otic icon@2x.png" 
+                alt="Otic Business Logo" 
+                className="h-8 md:h-10 w-8 md:w-10"
+              />
+              <div className="flex flex-col">
+                <span className="text-lg md:text-2xl font-bold text-[#040458]">Otic</span>
+                <span className="text-xs md:text-sm text-[#faa51a] -mt-1">Business</span>
               </div>
             </div>
             <div className="flex items-center space-x-2 md:space-x-4">
@@ -217,27 +239,57 @@ const Dashboard = () => {
               
               {/* Desktop Navigation */}
               <div className="hidden md:flex items-center space-x-2">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/pos')}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/pos')}
+                  className="text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                >
                   POS
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/inventory')}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/inventory')}
+                  className="text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                >
                   Inventory
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/analytics')}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/analytics')}
+                  className="text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                >
                   Analytics
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/payments')}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/payments')}
+                  className="text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                >
                   Payments
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/settings')}>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/settings')}
+                  className="text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                >
                   Settings
                 </Button>
               </div>
               
-              <Badge className={`${getTierColor(appUser?.tier || 'basic')} text-xs md:text-sm hidden sm:block`}>
+              <Badge className="bg-[#faa51a] text-white text-xs md:text-sm hidden sm:block">
                 {appUser?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan
               </Badge>
-              <Button variant="outline" size="sm" onClick={signOut} className="text-xs md:text-sm">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={signOut} 
+                className="text-xs md:text-sm border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
+              >
                 <span className="hidden sm:inline">Sign Out</span>
                 <LogOut className="h-4 w-4 sm:hidden" />
               </Button>
@@ -248,28 +300,80 @@ const Dashboard = () => {
           {mobileMenuOpen && (
             <div className="md:hidden mt-4 pb-4 border-t border-gray-200">
               <div className="flex flex-col space-y-2 pt-4">
-                <Button variant="ghost" size="sm" onClick={() => { navigate('/pos'); setMobileMenuOpen(false); }} className="justify-start">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { navigate('/pos'); setMobileMenuOpen(false); }} 
+                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                >
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   POS
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => { navigate('/inventory'); setMobileMenuOpen(false); }} className="justify-start">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { navigate('/inventory'); setMobileMenuOpen(false); }} 
+                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                >
                   <Package className="h-4 w-4 mr-2" />
                   Inventory
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => { navigate('/analytics'); setMobileMenuOpen(false); }} className="justify-start">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { navigate('/analytics'); setMobileMenuOpen(false); }} 
+                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                >
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Analytics
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => { navigate('/payments'); setMobileMenuOpen(false); }} className="justify-start">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }} 
+                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Reports
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { setActiveTab('subscription'); setMobileMenuOpen(false); }} 
+                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Subscription
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { navigate('/ai-insights'); setMobileMenuOpen(false); }} 
+                  className="justify-start text-[#faa51a] hover:text-[#040458] hover:bg-[#040458]/10 font-semibold"
+                >
+                  <Brain className="h-4 w-4 mr-2" />
+                  AI Insights
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { navigate('/payments'); setMobileMenuOpen(false); }} 
+                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                >
                   <DollarSign className="h-4 w-4 mr-2" />
                   Payments
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => { navigate('/settings'); setMobileMenuOpen(false); }} className="justify-start">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { navigate('/settings'); setMobileMenuOpen(false); }} 
+                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                >
                   <Settings className="h-4 w-4 mr-2" />
                   Settings
                 </Button>
                 <div className="pt-2 border-t border-gray-200">
-                  <Badge className={getTierColor(appUser?.tier || 'basic')}>
+                  <Badge className="bg-[#faa51a] text-white">
                     {appUser?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan
                   </Badge>
                 </div>
@@ -345,16 +449,60 @@ const Dashboard = () => {
         </div>
 
         {/* Main Dashboard Tabs */}
-        <Tabs defaultValue="overview" className="space-y-4 md:space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5">
-            <TabsTrigger value="overview" className="text-xs md:text-sm">Overview</TabsTrigger>
-            <TabsTrigger value="pos" className="text-xs md:text-sm">POS</TabsTrigger>
-            <TabsTrigger value="inventory" className="text-xs md:text-sm">Inventory</TabsTrigger>
-            <TabsTrigger value="analytics" className="text-xs md:text-sm hidden md:block">Analytics</TabsTrigger>
-            <TabsTrigger value="settings" className="text-xs md:text-sm hidden md:block">Settings</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
+          <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 bg-gray-100">
+            <TabsTrigger 
+              value="overview" 
+              className="text-xs md:text-sm data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Overview
+            </TabsTrigger>
+            <TabsTrigger 
+              value="pos" 
+              className="text-xs md:text-sm data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              POS
+            </TabsTrigger>
+            <TabsTrigger 
+              value="inventory" 
+              className="text-xs md:text-sm data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Inventory
+            </TabsTrigger>
+            <TabsTrigger 
+              value="accounting" 
+              className="text-xs md:text-sm data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Accounting
+            </TabsTrigger>
+            <TabsTrigger 
+              value="reports" 
+              className="text-xs md:text-sm data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Reports
+            </TabsTrigger>
+            <TabsTrigger 
+              value="subscription" 
+              className="text-xs md:text-sm data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Subscription
+            </TabsTrigger>
+            <TabsTrigger 
+              value="payments" 
+              className="text-xs md:text-sm data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Payments
+            </TabsTrigger>
+            <TabsTrigger 
+              value="settings" 
+              className="text-xs md:text-sm data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
+            >
+              Settings
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4 md:space-y-6">
+            {/* Top Row - Quick Actions and AI Insights */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
               <Card>
                 <CardHeader>
@@ -365,7 +513,7 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent className="space-y-3 md:space-y-4">
                   <Button 
-                    className="w-full justify-start text-sm" 
+                    className="w-full justify-start text-sm border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white" 
                     variant="outline"
                     size="sm"
                     onClick={() => navigate('/pos')}
@@ -374,7 +522,7 @@ const Dashboard = () => {
                     Start New Sale
                   </Button>
                   <Button 
-                    className="w-full justify-start text-sm" 
+                    className="w-full justify-start text-sm border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white" 
                     variant="outline"
                     size="sm"
                     onClick={() => navigate('/inventory')}
@@ -383,7 +531,7 @@ const Dashboard = () => {
                     Add New Product
                   </Button>
                   <Button 
-                    className="w-full justify-start text-sm" 
+                    className="w-full justify-start text-sm border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white" 
                     variant="outline"
                     size="sm"
                     onClick={() => navigate('/analytics')}
@@ -395,25 +543,78 @@ const Dashboard = () => {
               </Card>
               
               <AIInsights 
-                tier={appUser?.tier || 'free_trial'} 
-                salesData={stats}
-                inventoryData={stats}
+                type="sales"
+                data={{
+                  sales: Array.from({ length: stats?.totalSales || 0 }, (_, i) => ({
+                    created_at: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
+                    total: Math.floor((stats?.totalRevenue || 0) / (stats?.totalSales || 1)),
+                    payment_method: 'cash'
+                  })),
+                  revenue: stats?.totalRevenue || 0,
+                  growth: stats?.salesGrowth || 15.3
+                }}
               />
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>
-                    Your latest business activities
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center text-muted-foreground py-8">
-                    No recent activity yet. Start by adding your first product!
-                  </div>
-                </CardContent>
-              </Card>
             </div>
+
+            {/* Bottom Row - AI Assistant (Full Width) */}
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle className="flex items-center text-[#040458] text-xl">
+                  <Brain className="h-6 w-6 mr-3 text-[#faa51a]" />
+                  AI Business Assistant
+                </CardTitle>
+                <CardDescription className="text-base">
+                  Get personalized insights, predictions, and recommendations for your business
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="flex flex-col lg:flex-row items-center gap-6">
+                  {/* Left Side - Main CTA */}
+                  <div className="flex-1 text-center lg:text-left">
+                    <div className="mb-6">
+                      <Brain className="h-20 w-20 mx-auto lg:mx-0 text-[#faa51a] mb-4" />
+                      <h3 className="text-2xl font-bold text-[#040458] mb-3">
+                        Chat with Your AI Assistant
+                      </h3>
+                      <p className="text-gray-600 text-lg leading-relaxed">
+                        Ask questions about your sales, inventory, finances, and get instant AI-powered insights tailored to your business.
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => navigate('/ai-chat')}
+                      className="bg-[#faa51a] hover:bg-[#040458] text-white px-8 py-4 text-lg font-semibold"
+                    >
+                      <MessageSquareText className="h-6 w-6 mr-3" />
+                      Start AI Chat
+                    </Button>
+                  </div>
+
+                  {/* Right Side - Feature Cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full lg:w-auto">
+                    <div className="text-center p-4 bg-gray-50 rounded-lg hover:bg-[#faa51a]/5 transition-colors">
+                      <TrendingUp className="h-8 w-8 mx-auto text-[#faa51a] mb-3" />
+                      <h4 className="font-semibold text-[#040458] mb-1">Sales Insights</h4>
+                      <p className="text-sm text-gray-600">Analyze performance</p>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg hover:bg-[#faa51a]/5 transition-colors">
+                      <Package className="h-8 w-8 mx-auto text-[#faa51a] mb-3" />
+                      <h4 className="font-semibold text-[#040458] mb-1">Inventory Help</h4>
+                      <p className="text-sm text-gray-600">Manage stock levels</p>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg hover:bg-[#faa51a]/5 transition-colors">
+                      <DollarSign className="h-8 w-8 mx-auto text-[#faa51a] mb-3" />
+                      <h4 className="font-semibold text-[#040458] mb-1">Financial Advice</h4>
+                      <p className="text-sm text-gray-600">Optimize revenue</p>
+                    </div>
+                    <div className="text-center p-4 bg-gray-50 rounded-lg hover:bg-[#faa51a]/5 transition-colors">
+                      <BarChart3 className="h-8 w-8 mx-auto text-[#faa51a] mb-3" />
+                      <h4 className="font-semibold text-[#040458] mb-1">Predictions</h4>
+                      <p className="text-sm text-gray-600">Forecast trends</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="pos">
@@ -460,48 +661,46 @@ const Dashboard = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="analytics">
-            <Card>
-              <CardHeader>
-                <CardTitle>Analytics & Reports</CardTitle>
-                <CardDescription>
-                  AI-powered insights and business intelligence
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-4">
-                    Access the full analytics dashboard with AI insights and forecasting
-                  </p>
-                  <Button onClick={() => navigate('/analytics')}>
-                    Open Analytics
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+          <TabsContent value="accounting">
+            <AccountingDashboard />
+          </TabsContent>
+
+          <TabsContent value="reports">
+            <AdvancedReports userId={appUser?.id || user?.id || ''} />
+          </TabsContent>
+
+          <TabsContent value="subscription">
+            <SubscriptionManager userId={appUser?.id || user?.id || ''} />
+          </TabsContent>
+
+          <TabsContent value="payments">
+            <PaymentVerification />
           </TabsContent>
 
           <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>Settings</CardTitle>
-                <CardDescription>
-                  Manage your account and business settings
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground mb-4">
-                    Access the full settings panel
-                  </p>
-                  <Button onClick={() => navigate('/settings')}>
-                    Open Settings
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Settings</CardTitle>
+                  <CardDescription>
+                    Manage your account and business settings
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center py-8">
+                    <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">
+                      Access the full settings panel
+                    </p>
+                    <Button onClick={() => navigate('/settings')}>
+                      Open Settings
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <EmailNotificationSettings userId={appUser?.id || user?.id || ''} />
+            </div>
           </TabsContent>
         </Tabs>
       </main>

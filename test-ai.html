@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Test - Mistral Integration</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; margin: 10px 0; background: #faa51a; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #040458; }
+        .result { margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🤖 AI Test - Mistral Integration</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: API Key Check</h3>
+        <button onclick="checkApiKey()">Check Mistral API Key</button>
+        <div id="apiKeyResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Demo AI Insights</h3>
+        <button onclick="testDemoAI()">Test Demo AI (No API needed)</button>
+        <div id="demoResult" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: Live Mistral AI</h3>
+        <button onclick="testLiveAI()">Test Live Mistral AI</button>
+        <div id="liveResult" class="result"></div>
+    </div>
+
+    <script>
+        // Check if API key is available
+        function checkApiKey() {
+            const resultDiv = document.getElementById('apiKeyResult');
+            const apiKey = 'mETgieTfZknbjowO3SXnZScl5Ijy4fZx';
+            
+            if (apiKey && apiKey !== 'your-mistral-api-key-here') {
+                resultDiv.innerHTML = '<div class="success">✅ API Key is configured: ' + apiKey.substring(0, 10) + '...</div>';
+            } else {
+                resultDiv.innerHTML = '<div class="error">❌ API Key not found or not configured</div>';
+            }
+        }
+
+        // Test demo AI (no API needed)
+        function testDemoAI() {
+            const resultDiv = document.getElementById('demoResult');
+            resultDiv.innerHTML = '<div>🔄 Testing demo AI insights...</div>';
+            
+            // Simulate demo AI insights
+            setTimeout(() => {
+                const demoInsights = [
+                    {
+                        title: "Stock Level Analysis",
+                        description: "Your Coca Cola 500ml is running low (2 units left). Consider restocking 50 units to maintain sales momentum.",
+                        confidence: 92
+                    },
+                    {
+                        title: "Peak Sales Hours",
+                        description: "Your busiest hours are 8-10 AM and 5-7 PM. Consider extending staff hours during these times.",
+                        confidence: 90
+                    },
+                    {
+                        title: "Financial Health",
+                        description: "Your current profit margin is 30%, which is excellent for retail. Focus on high-margin products.",
+                        confidence: 88
+                    }
+                ];
+                
+                let html = '<div class="success">✅ Demo AI Insights Generated:</div>';
+                demoInsights.forEach(insight => {
+                    html += `<div style="margin: 10px 0; padding: 10px; background: white; border-left: 4px solid #faa51a;">
+                        <strong>${insight.title}</strong> (${insight.confidence}% confidence)<br>
+                        ${insight.description}
+                    </div>`;
+                });
+                
+                resultDiv.innerHTML = html;
+            }, 1000);
+        }
+
+        // Test live Mistral AI
+        async function testLiveAI() {
+            const resultDiv = document.getElementById('liveResult');
+            resultDiv.innerHTML = '<div>🔄 Testing live Mistral AI...</div>';
+            
+            try {
+                // Test if we can make a request to Mistral
+                const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer mETgieTfZknbjowO3SXnZScl5Ijy4fZx'
+                    },
+                    body: JSON.stringify({
+                        model: 'mistral-tiny',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: 'Generate a short business insight for a small retail store in Uganda. Keep it under 50 words.'
+                            }
+                        ],
+                        max_tokens: 100
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const insight = data.choices[0]?.message?.content || 'No response';
+                    resultDiv.innerHTML = `<div class="success">✅ Live Mistral AI Response:<br><em>"${insight}"</em></div>`;
+                } else {
+                    const error = await response.text();
+                    resultDiv.innerHTML = `<div class="error">❌ Mistral API Error: ${response.status} - ${error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Network Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth Test</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Google OAuth Test</h1>
+    <button id="testGoogleAuth">Test Google Authentication</button>
+    <div id="result"></div>
+
+    <script>
+        const supabaseUrl = 'https://jvgiyscchxxekcbdicco.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8'
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+        
+        document.getElementById('testGoogleAuth').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('result')
+            resultDiv.innerHTML = 'Testing Google OAuth...'
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/test-google-oauth.html'
+                    }
+                })
+                
+                if (error) {
+                    resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`
+                } else {
+                    resultDiv.innerHTML = `<p style="color: green;">OAuth initiated successfully! Check console for details.</p>`
+                    console.log('OAuth data:', data)
+                }
+            } catch (err) {
+                resultDiv.innerHTML = `<p style="color: red;">Exception: ${err.message}</p>`
+                console.error('OAuth error:', err)
+            }
+        })
+    </script>
+</body>
+</html>

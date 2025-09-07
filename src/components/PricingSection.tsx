@@ -23,7 +23,7 @@ const PricingSection = () => {
     {
       name: "Free Trial",
       price: "0",
-      period: "14 days free",
+      period: "30 days free",
       description: "Try everything for free - no credit card required",
       badge: "Free",
       features: [
@@ -98,14 +98,14 @@ const PricingSection = () => {
   ];
 
   return (
-    <section id="pricing" className="py-24 bg-muted/30">
+    <section id="pricing" className="py-24 bg-gradient-to-b from-gray-50 to-white">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
+          <h2 className="text-4xl lg:text-5xl font-bold text-[#040458]">
             Choose Your Growth Plan
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Transparent pricing designed for African SMEs. Scale your business with the right tools at the right price.
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Transparent pricing designed for African businesses. Scale your business with the right tools at the right price.
           </p>
         </div>
 
@@ -113,8 +113,8 @@ const PricingSection = () => {
           {tiers.map((tier, index) => (
             <Card 
               key={tier.name} 
-              className={`relative shadow-card hover:shadow-business transition-all duration-300 ${
-                tier.badge === "Most Popular" ? "ring-2 ring-primary scale-105" : ""
+              className={`relative shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:border-[#faa51a]/30 ${
+                tier.badge === "Most Popular" ? "ring-2 ring-[#faa51a] scale-105" : ""
               }`}
             >
               {tier.badge && (
@@ -122,8 +122,8 @@ const PricingSection = () => {
                   <Badge 
                     className={`px-4 py-1 ${
                       tier.badge === "Most Popular" 
-                        ? "bg-primary text-primary-foreground" 
-                        : "bg-success text-success-foreground"
+                        ? "bg-[#faa51a] text-white" 
+                        : "bg-[#040458] text-white"
                     }`}
                   >
                     {tier.badge === "Most Popular" && <Star className="w-3 h-3 mr-1" />}
@@ -133,19 +133,19 @@ const PricingSection = () => {
               )}
               
               <CardHeader className="text-center pb-4">
-                <CardTitle className="text-2xl font-bold text-foreground">
+                <CardTitle className="text-2xl font-bold text-[#040458]">
                   {tier.name}
                 </CardTitle>
                 <div className="space-y-2">
                   <div className="flex items-baseline justify-center space-x-1">
-                    <span className="text-4xl font-bold text-primary">
+                    <span className="text-4xl font-bold text-[#faa51a]">
                       {tier.price}
                     </span>
-                    <span className="text-sm text-muted-foreground">UGX</span>
+                    <span className="text-sm text-gray-600">UGX</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">{tier.period}</p>
+                  <p className="text-sm text-gray-600">{tier.period}</p>
                 </div>
-                <p className="text-muted-foreground text-sm mt-4">
+                <p className="text-gray-600 text-sm mt-4">
                   {tier.description}
                 </p>
               </CardHeader>

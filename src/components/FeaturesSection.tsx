@@ -18,61 +18,61 @@ const FeaturesSection = () => {
       icon: <Smartphone className="h-8 w-8" />,
       title: "Mobile POS System",
       description: "Scan barcodes with your phone camera, process sales instantly, and generate digital receipts.",
-      color: "text-primary"
+      color: "text-[#faa51a]"
     },
     {
       icon: <BarChart3 className="h-8 w-8" />,
       title: "AI-Powered Analytics",
       description: "Smart forecasting, trend analysis, and actionable insights to drive business growth.",
-      color: "text-success"
+      color: "text-[#faa51a]"
     },
     {
       icon: <Shield className="h-8 w-8" />,
       title: "Automated Compliance",
       description: "Tax computation, VAT analysis, and regulatory reporting with zero manual effort.",
-      color: "text-accent"
+      color: "text-[#faa51a]"
     },
     {
       icon: <Users className="h-8 w-8" />,
       title: "Multi-User Management",
       description: "Role-based access for business owners, accountants, cashiers, and managers.",
-      color: "text-secondary"
+      color: "text-[#faa51a]"
     },
     {
       icon: <Zap className="h-8 w-8" />,
       title: "Real-Time Inventory",
       description: "Auto-updating stock levels, low-stock alerts, and demand prediction.",
-      color: "text-primary"
+      color: "text-[#faa51a]"
     },
     {
       icon: <Globe className="h-8 w-8" />,
       title: "Multi-Branch Support",
       description: "Synchronize operations across multiple locations with consolidated reporting.",
-      color: "text-success"
+      color: "text-[#faa51a]"
     },
     {
       icon: <CreditCard className="h-8 w-8" />,
       title: "Payment Integration",
       description: "Accept Mobile Money, cards, and digital payments with automated reconciliation.",
-      color: "text-accent"
+      color: "text-[#faa51a]"
     },
     {
       icon: <FileText className="h-8 w-8" />,
       title: "QuickBooks Integration",
       description: "Seamlessly sync with QuickBooks for professional accounting and reporting.",
-      color: "text-secondary"
+      color: "text-[#faa51a]"
     }
   ];
 
   return (
-    <section id="features" className="py-24 bg-background">
+    <section id="features" className="py-24 bg-gradient-to-b from-white to-gray-50">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl lg:text-5xl font-bold text-foreground">
-            Everything Your SME Needs
+          <h2 className="text-4xl lg:text-5xl font-bold text-[#040458]">
+            Everything Your Business Needs
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Replace manual processes with AI-driven automation. 
             One platform for POS, inventory, accounting, and business intelligence.
           </p>
@@ -81,15 +81,15 @@ const FeaturesSection = () => {
         {/* Feature Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
           {features.map((feature, index) => (
-            <Card key={index} className="shadow-card hover:shadow-business transition-all duration-300 group">
+            <Card key={index} className="shadow-lg hover:shadow-2xl transition-all duration-300 group border border-gray-200 hover:border-[#faa51a]/30">
               <CardContent className="p-6 text-center space-y-4">
                 <div className={`${feature.color} flex justify-center group-hover:scale-110 transition-transform duration-300`}>
                   {feature.icon}
                 </div>
-                <h3 className="text-lg font-semibold text-foreground">
+                <h3 className="text-lg font-semibold text-[#040458]">
                   {feature.title}
                 </h3>
-                <p className="text-muted-foreground text-sm">
+                <p className="text-gray-600 text-sm">
                   {feature.description}
                 </p>
               </CardContent>

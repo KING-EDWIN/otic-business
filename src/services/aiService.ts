@@ -1,400 +1,344 @@
-// =====================================================
-// AI SERVICE - FREE LLM INTEGRATION
-// Using Mistral AI and other free LLM services
-// =====================================================
+import { Mistral } from '@mistralai/mistralai'
+import { getDemoAIInsights, getDemoAIPredictions, shouldUseDemoAI } from './aiDemoService'
 
-export interface AIResponse {
-  success: boolean
-  data?: any
-  error?: string
-}
+// Initialize Mistral AI client
+const mistral = new Mistral({
+  apiKey: import.meta.env.VITE_MISTRAL_API_KEY || 'mETgieTfZknbjowO3SXnZScl5Ijy4fZx'
+})
 
-export interface BusinessInsight {
-  type: 'forecast' | 'recommendation' | 'alert' | 'optimization'
+export interface AIInsight {
+  id: string
+  type: 'inventory' | 'sales' | 'customer' | 'financial' | 'general'
   title: string
   description: string
   confidence: number
   actionable: boolean
   priority: 'low' | 'medium' | 'high'
+  createdAt: string
 }
 
-export interface SalesForecast {
-  period: string
-  predicted_sales: number
+export interface AIPrediction {
+  type: 'sales_forecast' | 'inventory_needs' | 'revenue_prediction' | 'customer_trends'
+  title: string
+  prediction: string
   confidence: number
-  factors: string[]
-  recommendations: string[]
+  timeframe: string
+  data: any
 }
-
-export interface InventoryOptimization {
-  product_id: string
-  current_stock: number
-  recommended_stock: number
-  reason: string
-  urgency: 'low' | 'medium' | 'high'
-}
-
-// =====================================================
-// FREE LLM SERVICES
-// =====================================================
-
-class FreeLLMService {
-  // Mistral AI (Free tier available)
-  private static async callMistralAI(prompt: string): Promise<AIResponse> {
-    try {
-      // Note: In production, you'd need to get a free API key from Mistral
-      // For now, we'll simulate the response
-      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.VITE_MISTRAL_API_KEY || 'demo-key'}`
-        },
-        body: JSON.stringify({
-          model: 'mistral-tiny', // Free model
-          messages: [
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          max_tokens: 500,
-          temperature: 0.7
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error(`Mistral API error: ${response.status}`)
-      }
-
-      const data = await response.json()
-      return {
-        success: true,
-        data: data.choices[0].message.content
-      }
-    } catch (error) {
-      console.error('Mistral AI error:', error)
-      return {
-        success: false,
-        error: 'Mistral AI service unavailable'
-      }
-    }
-  }
-
-  // Hugging Face Inference API (Free)
-  private static async callHuggingFace(prompt: string): Promise<AIResponse> {
-    try {
-      const response = await fetch('https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.VITE_HUGGINGFACE_API_KEY || 'demo-key'}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_length: 200,
-            temperature: 0.7
-          }
-        })
-      })
-
-      if (!response.ok) {
-        throw new Error(`Hugging Face API error: ${response.status}`)
-      }
-
-      const data = await response.json()
-      return {
-        success: true,
-        data: data[0]?.generated_text || data
-      }
-    } catch (error) {
-      console.error('Hugging Face error:', error)
-      return {
-        success: false,
-        error: 'Hugging Face service unavailable'
-      }
-    }
-  }
-
-  // Local AI simulation (fallback)
-  private static async simulateAI(prompt: string): Promise<AIResponse> {
-    // Simulate AI processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    // Generate contextual responses based on prompt keywords
-    const lowerPrompt = prompt.toLowerCase()
-    
-    if (lowerPrompt.includes('sales') && lowerPrompt.includes('forecast')) {
-      return {
-        success: true,
-        data: {
-          prediction: 'Sales are expected to increase by 15-20% next month based on current trends',
-          confidence: 85,
-          factors: ['Seasonal patterns', 'Recent growth trend', 'Market conditions']
-        }
-      }
-    }
-
-    if (lowerPrompt.includes('inventory') && lowerPrompt.includes('optimization')) {
-      return {
-        success: true,
-        data: {
-          recommendations: [
-            'Increase stock for top-selling products by 25%',
-            'Reduce slow-moving inventory by 30%',
-            'Reorder 5 critical items immediately'
-          ],
-          priority: 'high'
-        }
-      }
-    }
-
-    if (lowerPrompt.includes('pricing') && lowerPrompt.includes('strategy')) {
-      return {
-        success: true,
-        data: {
-          strategy: 'Implement dynamic pricing with 8-12% increase on high-demand items',
-          reasoning: 'Current prices are below market average, demand is high',
-          expected_impact: 'Revenue increase of 15-20%'
-        }
-      }
-    }
-
-    // Default response
-    return {
-      success: true,
-      data: {
-        insight: 'Based on your business data, consider optimizing your inventory management and pricing strategy for better profitability.',
-        confidence: 75
-      }
-    }
-  }
-
-  // Main AI call with fallbacks
-  static async generateInsight(prompt: string): Promise<AIResponse> {
-    // Try Mistral first
-    let response = await this.callMistralAI(prompt)
-    if (response.success) return response
-
-    // Try Hugging Face
-    response = await this.callHuggingFace(prompt)
-    if (response.success) return response
-
-    // Fallback to simulation
-    return await this.simulateAI(prompt)
-  }
-}
-
-// =====================================================
-// AI BUSINESS ANALYTICS
-// =====================================================
 
 export class AIAnalytics {
-  // Generate sales forecast
-  static async generateSalesForecast(salesData: any[]): Promise<SalesForecast> {
-    const prompt = `Analyze this sales data and provide a forecast for the next month:
-    Sales Data: ${JSON.stringify(salesData.slice(-30))}
-    
-    Provide:
-    1. Predicted sales volume
-    2. Confidence level (0-100)
-    3. Key factors influencing the forecast
-    4. Specific recommendations for improvement`
+  private static async callMistral(prompt: string, context?: any): Promise<string> {
+    try {
+      const response = await mistral.chat.complete({
+        model: 'mistral-tiny',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an AI business analyst for African SMEs. Provide concise, actionable insights in English. Focus on practical recommendations for small businesses in Uganda/East Africa.`
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        maxTokens: 200,
+        temperature: 0.7
+      })
 
-    const response = await FreeLLMService.generateInsight(prompt)
-    
-    if (response.success) {
-      return {
-        period: 'next_month',
-        predicted_sales: Math.floor(Math.random() * 1000) + 500, // Simulated
-        confidence: 85,
-        factors: ['Seasonal trends', 'Historical patterns', 'Market conditions'],
-        recommendations: [
-          'Focus on high-performing products',
-          'Increase marketing during peak hours',
-          'Optimize inventory for predicted demand'
-        ]
+      return response.choices[0]?.message?.content || 'Unable to generate insight'
+    } catch (error) {
+      console.error('Mistral AI error:', error)
+      return 'AI service temporarily unavailable'
+    }
+  }
+
+  // Static method for chat functionality
+  static async callMistralForChat(prompt: string, context?: any): Promise<string> {
+    return this.callMistral(prompt, context)
+  }
+
+  // Generate inventory insights
+  static async generateInventoryInsights(products: any[], lowStockItems: any[]): Promise<AIInsight[]> {
+    // Always try live Mistral AI first
+    try {
+      const context = {
+        totalProducts: products.length,
+        lowStockCount: lowStockItems.length,
+        lowStockItems: lowStockItems.map(item => ({
+          name: item.name,
+          currentStock: item.stock,
+          minStock: item.min_stock || 5
+        }))
       }
-    }
 
-    // Fallback
-    return {
-      period: 'next_month',
-      predicted_sales: 750,
-      confidence: 75,
-      factors: ['Historical data analysis'],
-      recommendations: ['Monitor trends closely', 'Adjust strategy based on results']
-    }
-  }
+      const prompt = `Analyze this inventory data for an African SME:
+      - Total products: ${context.totalProducts}
+      - Low stock items: ${context.lowStockCount}
+      - Low stock details: ${JSON.stringify(context.lowStockItems)}
+      
+      Provide 3 actionable insights about inventory management, stock optimization, and purchasing recommendations.`
 
-  // Generate inventory optimization
-  static async generateInventoryOptimization(products: any[]): Promise<InventoryOptimization[]> {
-    const prompt = `Analyze this inventory data and provide optimization recommendations:
-    Products: ${JSON.stringify(products)}
-    
-    For each product, suggest:
-    1. Optimal stock level
-    2. Reasoning
-    3. Urgency level
-    4. Action required`
-
-    const response = await FreeLLMService.generateInsight(prompt)
-    
-    // Generate recommendations for low stock items
-    const lowStockProducts = products.filter(p => p.stock_quantity <= p.min_stock_level)
-    
-    return lowStockProducts.map(product => ({
-      product_id: product.id,
-      current_stock: product.stock_quantity,
-      recommended_stock: Math.max(product.min_stock_level * 2, 20),
-      reason: 'Low stock alert - prevent stockouts',
-      urgency: product.stock_quantity === 0 ? 'high' : 'medium'
-    }))
-  }
-
-  // Generate business insights
-  static async generateBusinessInsights(
-    salesData: any[], 
-    inventoryData: any[], 
-    tier: string
-  ): Promise<BusinessInsight[]> {
-    const insights: BusinessInsight[] = []
-
-    // Sales forecast insight
-    const salesForecast = await this.generateSalesForecast(salesData)
-    insights.push({
-      type: 'forecast',
-      title: 'Sales Forecast',
-      description: `AI predicts ${salesForecast.predicted_sales} sales next month with ${salesForecast.confidence}% confidence`,
-      confidence: salesForecast.confidence,
-      actionable: true,
-      priority: 'medium'
-    })
-
-    // Inventory optimization
-    const inventoryOpt = await this.generateInventoryOptimization(inventoryData)
-    if (inventoryOpt.length > 0) {
-      insights.push({
-        type: 'alert',
-        title: 'Inventory Optimization',
-        description: `${inventoryOpt.length} products need restocking to prevent stockouts`,
-        confidence: 95,
-        actionable: true,
-        priority: 'high'
-      })
-    }
-
-    // Tier-specific insights
-    if (tier === 'standard' || tier === 'premium') {
-      insights.push({
-        type: 'recommendation',
-        title: 'Pricing Strategy',
-        description: 'Consider 8-12% price increase on top-selling products for better margins',
-        confidence: 78,
-        actionable: true,
-        priority: 'medium'
-      })
-
-      insights.push({
-        type: 'optimization',
-        title: 'Customer Behavior',
-        description: 'Peak sales time detected: 2-4 PM on weekdays. Focus marketing efforts during this period',
-        confidence: 82,
-        actionable: true,
-        priority: 'low'
-      })
-    }
-
-    if (tier === 'premium') {
-      insights.push({
-        type: 'alert',
-        title: 'Fraud Detection',
-        description: 'Unusual transaction pattern detected. Review recent high-value sales',
-        confidence: 92,
-        actionable: true,
-        priority: 'high'
-      })
-    }
-
-    return insights
-  }
-
-  // Generate customer insights
-  static async generateCustomerInsights(salesData: any[]): Promise<any> {
-    const prompt = `Analyze customer behavior from this sales data:
-    ${JSON.stringify(salesData)}
-    
-    Provide insights on:
-    1. Peak sales times
-    2. Popular products
-    3. Customer preferences
-    4. Seasonal patterns`
-
-    const response = await FreeLLMService.generateInsight(prompt)
-    
-    return {
-      peak_hours: '2:00 PM - 4:00 PM',
-      peak_days: 'Tuesday, Wednesday, Thursday',
-      popular_categories: ['Electronics', 'Clothing', 'Food'],
-      seasonal_trends: 'Higher sales in December and June',
-      customer_preferences: 'Mobile payments preferred (65%)'
-    }
-  }
-
-  // Generate pricing recommendations
-  static async generatePricingRecommendations(products: any[]): Promise<any[]> {
-    const recommendations = products
-      .filter(p => p.selling_price > 0)
-      .map(product => {
-        const currentPrice = product.selling_price
-        const recommendedPrice = currentPrice * (1 + (Math.random() * 0.2 - 0.1)) // ±10% variation
-        const change = ((recommendedPrice - currentPrice) / currentPrice) * 100
-
-        return {
-          product_id: product.id,
-          product_name: product.name,
-          current_price: currentPrice,
-          recommended_price: Math.round(recommendedPrice),
-          change_percentage: Math.round(change),
-          reasoning: change > 0 ? 'High demand, low competition' : 'Price too high, reduce for competitiveness',
-          priority: Math.abs(change) > 15 ? 'high' : 'medium'
+      const response = await this.callMistral(prompt, context)
+      
+      return [
+        {
+          id: 'inventory-1',
+          type: 'inventory',
+          title: 'Stock Level Analysis',
+          description: response.split('\n')[0] || 'Review your stock levels regularly',
+          confidence: 0.85,
+          actionable: true,
+          priority: 'high',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'inventory-2',
+          type: 'inventory',
+          title: 'Purchasing Recommendations',
+          description: response.split('\n')[1] || 'Consider bulk purchasing for frequently sold items',
+          confidence: 0.80,
+          actionable: true,
+          priority: 'medium',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'inventory-3',
+          type: 'inventory',
+          title: 'Inventory Optimization',
+          description: response.split('\n')[2] || 'Implement automated reorder points',
+          confidence: 0.75,
+          actionable: true,
+          priority: 'medium',
+          createdAt: new Date().toISOString()
         }
-      })
-
-    return recommendations
-  }
-}
-
-// =====================================================
-// AI CHAT ASSISTANT
-// =====================================================
-
-export class AIChatAssistant {
-  static async askQuestion(question: string, context: any = {}): Promise<string> {
-    const prompt = `You are an AI business assistant for Otic Business Solution, helping African SMEs.
-    
-    Context: ${JSON.stringify(context)}
-    Question: ${question}
-    
-    Provide a helpful, actionable response in 2-3 sentences. Focus on practical business advice.`
-
-    const response = await FreeLLMService.generateInsight(prompt)
-    
-    if (response.success) {
-      return response.data
+      ]
+    } catch (error) {
+      console.error('Mistral AI error, using demo data:', error)
+      // Fallback to demo data only if API fails
+      return getDemoAIInsights('inventory')
     }
+  }
 
-    // Fallback responses
-    const fallbackResponses = [
-      "I'd be happy to help you with that. Could you provide more specific details about your business situation?",
-      "Based on your business data, I recommend focusing on inventory optimization and customer retention strategies.",
-      "For better insights, consider upgrading to our Standard or Premium plan for advanced AI analytics.",
-      "I can help you analyze your sales patterns, optimize inventory, or improve pricing strategies. What would you like to focus on?"
-    ]
+  // Generate sales insights
+  static async generateSalesInsights(sales: any[], revenue: number, growth: number): Promise<AIInsight[]> {
+    // Always try live Mistral AI first
+    try {
+      const context = {
+        totalSales: sales.length,
+        totalRevenue: revenue,
+        growthRate: growth,
+        recentSales: sales.slice(-10).map(sale => ({
+          date: sale.created_at,
+          amount: sale.total,
+          method: sale.payment_method
+        }))
+      }
 
-    return fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)]
+      const prompt = `Analyze this sales data for an African SME business:
+      - Total sales: ${context.totalSales} transactions
+      - Total revenue: UGX ${context.totalRevenue.toLocaleString()}
+      - Growth rate: ${context.growthRate}%
+      - Recent sales: ${JSON.stringify(context.recentSales)}
+      
+      This business has ${context.totalSales} sales generating UGX ${context.totalRevenue.toLocaleString()} in revenue with ${context.growthRate}% growth.
+      
+      Based on this data, provide 3 specific, actionable insights for this business. Focus on:
+      1. Sales performance analysis
+      2. Revenue optimization opportunities  
+      3. Customer behavior insights
+      
+      Keep each insight under 50 words and make them specific to this business's actual data.`
+
+      const response = await this.callMistral(prompt, context)
+      
+      return [
+        {
+          id: 'sales-1',
+          type: 'sales',
+          title: 'Sales Performance',
+          description: response.split('\n')[0] || 'Your sales are performing well',
+          confidence: 0.90,
+          actionable: true,
+          priority: 'high',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'sales-2',
+          type: 'sales',
+          title: 'Revenue Optimization',
+          description: response.split('\n')[1] || 'Consider upselling strategies',
+          confidence: 0.85,
+          actionable: true,
+          priority: 'medium',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'sales-3',
+          type: 'customer',
+          title: 'Customer Insights',
+          description: response.split('\n')[2] || 'Focus on customer retention',
+          confidence: 0.80,
+          actionable: true,
+          priority: 'medium',
+          createdAt: new Date().toISOString()
+        }
+      ]
+    } catch (error) {
+      console.error('Mistral AI error, using demo data:', error)
+      // Fallback to demo data only if API fails
+      return getDemoAIInsights('sales')
+    }
+  }
+
+  // Generate financial insights
+  static async generateFinancialInsights(revenue: number, expenses: number, profit: number): Promise<AIInsight[]> {
+    // Always try live Mistral AI first
+    try {
+      const context = {
+        revenue,
+        expenses,
+        profit,
+        profitMargin: revenue > 0 ? (profit / revenue) * 100 : 0
+      }
+
+      const prompt = `Analyze this financial data for an African SME:
+      - Revenue: UGX ${context.revenue.toLocaleString()}
+      - Expenses: UGX ${context.expenses.toLocaleString()}
+      - Profit: UGX ${context.profit.toLocaleString()}
+      - Profit margin: ${context.profitMargin.toFixed(1)}%
+      
+      Provide 3 actionable insights about financial health, cost optimization, and profit improvement.`
+
+      const response = await this.callMistral(prompt, context)
+      
+      return [
+        {
+          id: 'financial-1',
+          type: 'financial',
+          title: 'Financial Health',
+          description: response.split('\n')[0] || 'Your business is financially stable',
+          confidence: 0.88,
+          actionable: true,
+          priority: 'high',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'financial-2',
+          type: 'financial',
+          title: 'Cost Optimization',
+          description: response.split('\n')[1] || 'Review your operational costs',
+          confidence: 0.82,
+          actionable: true,
+          priority: 'medium',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'financial-3',
+          type: 'financial',
+          title: 'Profit Improvement',
+          description: response.split('\n')[2] || 'Focus on high-margin products',
+          confidence: 0.85,
+          actionable: true,
+          priority: 'high',
+          createdAt: new Date().toISOString()
+        }
+      ]
+    } catch (error) {
+      console.error('Mistral AI error, using demo data:', error)
+      // Fallback to demo data only if API fails
+      return getDemoAIInsights('financial')
+    }
+  }
+
+  // Generate sales forecast
+  static async generateSalesForecast(sales: any[], timeframe: string = '30 days'): Promise<AIPrediction> {
+    // Always try live Mistral AI first
+    try {
+      const context = {
+        historicalSales: sales.slice(-30).map(sale => ({
+          date: sale.created_at,
+          amount: sale.total
+        })),
+        averageDailySales: sales.length > 0 ? sales.reduce((sum, sale) => sum + sale.total, 0) / sales.length : 0
+      }
+
+      const prompt = `Based on this sales history for an African SME, predict sales for the next ${timeframe}:
+      - Historical sales: ${JSON.stringify(context.historicalSales)}
+      - Average daily sales: UGX ${context.averageDailySales.toLocaleString()}
+      
+      Provide a sales forecast with confidence level and key factors.`
+
+      const response = await this.callMistral(prompt, context)
+      
+      return {
+        type: 'sales_forecast',
+        title: `Sales Forecast - Next ${timeframe}`,
+        prediction: response,
+        confidence: 0.75,
+        timeframe,
+        data: context
+      }
+    } catch (error) {
+      console.error('Mistral AI error, using demo data:', error)
+      // Fallback to demo data only if API fails
+      return getDemoAIPredictions('sales_forecast')
+    }
+  }
+
+  // Generate inventory predictions
+  static async generateInventoryPredictions(products: any[]): Promise<AIPrediction> {
+    // Always try live Mistral AI first
+    try {
+      const context = {
+        totalProducts: products.length,
+        lowStockProducts: products.filter(p => p.stock <= 5).length,
+        fastMovingProducts: products.filter(p => p.stock < 10).length
+      }
+
+      const prompt = `Analyze this inventory data and predict what products need restocking:
+      - Total products: ${context.totalProducts}
+      - Low stock products: ${context.lowStockProducts}
+      - Fast moving products: ${context.fastMovingProducts}
+      
+      Provide inventory predictions and restocking recommendations.`
+
+      const response = await this.callMistral(prompt, context)
+      
+      return {
+        type: 'inventory_needs',
+        title: 'Inventory Restocking Predictions',
+        prediction: response,
+        confidence: 0.80,
+        timeframe: '7 days',
+        data: context
+      }
+    } catch (error) {
+      console.error('Mistral AI error, using demo data:', error)
+      // Fallback to demo data only if API fails
+      return getDemoAIPredictions('inventory_needs')
+    }
+  }
+
+  // Generate business summary
+  static async generateBusinessSummary(data: any): Promise<string> {
+    const prompt = `Generate a comprehensive business summary for an African SME with this data:
+    - Sales: ${data.sales || 0} transactions
+    - Revenue: UGX ${(data.revenue || 0).toLocaleString()}
+    - Products: ${data.products || 0} items
+    - Growth: ${data.growth || 0}%
+    
+    Provide a 2-paragraph executive summary highlighting key achievements and recommendations.`
+
+    return await this.callMistral(prompt, data)
   }
 }
 
-export default AIAnalytics
+// Export individual functions for easy use
+export const {
+  generateInventoryInsights,
+  generateSalesInsights,
+  generateFinancialInsights,
+  generateSalesForecast,
+  generateInventoryPredictions,
+  generateBusinessSummary
+} = AIAnalytics

@@ -168,15 +168,15 @@ const Inventory = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#faa51a]"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-border">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -184,32 +184,35 @@ const Inventory = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => navigate('/dashboard')}
-                className="mr-2"
+                className="mr-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Dashboard
               </Button>
-              <Package className="h-8 w-8 text-primary" />
+              <Package className="h-8 w-8 text-[#faa51a]" />
               <div>
-                <h1 className="text-2xl font-bold text-primary">Inventory Management</h1>
-                <p className="text-sm text-muted-foreground">
+                <h1 className="text-2xl font-bold text-[#040458]">Inventory Management</h1>
+                <p className="text-sm text-gray-600">
                   Manage your products and stock levels
                 </p>
               </div>
             </div>
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={() => {
-                  setEditingProduct(null)
-                  setFormData({
-                    name: '',
-                    price: '',
-                    cost: '',
-                    stock: '',
-                    min_stock: '5',
-                    barcode: ''
-                  })
-                }}>
+                <Button 
+                  onClick={() => {
+                    setEditingProduct(null)
+                    setFormData({
+                      name: '',
+                      price: '',
+                      cost: '',
+                      stock: '',
+                      min_stock: '5',
+                      barcode: ''
+                    })
+                  }}
+                  className="bg-[#faa51a] hover:bg-[#040458] text-white"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Product
                 </Button>
@@ -291,17 +294,30 @@ const Inventory = () => {
                         onChange={(e) => setFormData(prev => ({ ...prev, barcode: e.target.value }))}
                         placeholder="Leave empty to auto-generate"
                       />
-                      <Button type="button" variant="outline" onClick={generateBarcode}>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={generateBarcode}
+                        className="border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
+                      >
                         <Barcode className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
 
                   <div className="flex space-x-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="flex-1">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setIsDialogOpen(false)} 
+                      className="flex-1 border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
+                    >
                       Cancel
                     </Button>
-                    <Button type="submit" className="flex-1">
+                    <Button 
+                      type="submit" 
+                      className="flex-1 bg-[#faa51a] hover:bg-[#040458] text-white"
+                    >
                       {editingProduct ? 'Update' : 'Add'} Product
                     </Button>
                   </div>
@@ -435,6 +451,7 @@ const Inventory = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleEdit(product)}
+                            className="border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -442,6 +459,7 @@ const Inventory = () => {
                             size="sm"
                             variant="outline"
                             onClick={() => handleDelete(product.id)}
+                            className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
