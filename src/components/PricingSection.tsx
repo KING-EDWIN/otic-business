@@ -39,8 +39,8 @@ const PricingSection = () => {
       buttonVariant: "hero" as const
     },
     {
-      name: "Basic",
-      price: "1,000,000",
+      name: "Tier 1 – Start Smart",
+      price: "$300",
       period: "per month",
       description: "Perfect for small businesses starting their digital transformation",
       badge: null,
@@ -53,17 +53,17 @@ const PricingSection = () => {
         "CSV/PDF exports",
         "Email support"
       ],
-      buttonText: "Start Basic Plan",
+      buttonText: "Choose Start Smart",
       buttonVariant: "outline" as const
     },
     {
-      name: "Standard",
-      price: "3,000,000",
+      name: "Tier 2 – Grow with Intelligence",
+      price: "$852.45",
       period: "per month",
       description: "Ideal for growing SMEs ready for advanced automation",
       badge: "Most Popular",
       features: [
-        "Everything in Basic",
+        "Everything in Start Smart",
         "QuickBooks API integration",
         "Tax computation & VAT analysis",
         "AI sales trend analytics",
@@ -72,17 +72,17 @@ const PricingSection = () => {
         "Automated financial reports",
         "Priority support"
       ],
-      buttonText: "Choose Standard",
+      buttonText: "Choose Grow with Intelligence",
       buttonVariant: "hero" as const
     },
     {
-      name: "Premium",
-      price: "5,000,000",
+      name: "Tier 3 – Enterprise Advantage",
+      price: "$1,420",
       period: "per month",
       description: "Enterprise solution for multi-branch operations",
       badge: "Enterprise",
       features: [
-        "Everything in Standard",
+        "Everything in Grow with Intelligence",
         "Multi-branch synchronization",
         "AI financial forecasting",
         "Advanced compliance reporting",
@@ -92,7 +92,7 @@ const PricingSection = () => {
         "Dedicated account manager",
         "24/7 phone support"
       ],
-      buttonText: "Go Premium",
+      buttonText: "Choose Enterprise Advantage",
       buttonVariant: "success" as const
     }
   ];
