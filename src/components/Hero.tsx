@@ -3,14 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight, BarChart3, Smartphone, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import VideoModal from "@/components/VideoModal";
-import { useState } from "react";
 import heroImage from "@/assets/hero-business.jpg";
+// Import the woman selling fruits image - add this file to your assets folder
+// import womanSellingFruits from "@/assets/woman-selling-fruits.jpg";
 
 const Hero = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
 
   const handleGetStarted = () => {
     if (user) {
@@ -20,16 +19,29 @@ const Hero = () => {
     }
   };
 
-  const handleWatchDemo = () => {
-    setIsVideoModalOpen(true);
+  const handleGetStartedGuide = () => {
+    // Navigate to get started page
+    navigate('/get-started');
   };
 
   return (
     <section className="relative min-h-screen bg-gradient-to-br from-[#040458] via-[#040458] to-[#faa51a] overflow-hidden">
-      {/* Background Pattern */}
+      {/* Background Image - Woman selling fruits */}
       <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#040458] via-[#040458] to-[#faa51a]"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#040458]/95 to-[#faa51a]/95"></div>
+        {/* Place your woman selling fruits image here */}
+        {/* Replace 'woman-selling-fruits.jpg' with your actual image filename */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            // Uncomment the line below when you add the woman-selling-fruits.jpg image to your assets folder
+            // backgroundImage: `url(${womanSellingFruits})`,
+            // Fallback gradient - this will show until you add the image
+            background: 'linear-gradient(135deg, #040458 0%, #040458 50%, #faa51a 100%)'
+          }}
+        />
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#040458]/90 to-[#faa51a]/90"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#040458]/80 to-[#faa51a]/80"></div>
       </div>
       
       {/* Content */}
@@ -61,9 +73,9 @@ const Hero = () => {
                 variant="outline" 
                 size="lg"
                 className="text-lg px-8 py-4 h-auto border-2 border-white text-white hover:bg-white hover:text-[#040458] font-semibold rounded-lg transition-all duration-300"
-                onClick={handleWatchDemo}
+                onClick={handleGetStartedGuide}
               >
-                Watch Demo
+                Get Started
               </Button>
             </div>
 
@@ -137,12 +149,6 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Video Modal */}
-      <VideoModal
-        isOpen={isVideoModalOpen}
-        onClose={() => setIsVideoModalOpen(false)}
-        videoUrl="https://www.youtube.com/embed/TjCnA74F0gE?autoplay=1&rel=0&modestbranding=1"
-      />
     </section>
   );
 };

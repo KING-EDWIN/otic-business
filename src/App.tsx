@@ -8,6 +8,7 @@ import { DemoProvider, useDemo } from "@/contexts/DemoContext";
 import Index from "./pages/Index";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import GetStarted from "./pages/GetStarted";
 import CompleteProfile from "./pages/CompleteProfile";
 import AIInsightsPage from "./pages/AIInsights";
 import AIChat from "./pages/AIChat";
@@ -49,7 +50,12 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  return user ? <Navigate to="/dashboard" /> : <>{children}</>;
+  // Only redirect to dashboard if user exists and is not demo user
+  if (user && user.email !== 'demo@oticbusiness.com') {
+    return <Navigate to="/dashboard" />;
+  }
+  
+  return <>{children}</>;
 };
 
 const App = () => {
@@ -70,6 +76,7 @@ const App = () => {
                 <Route path="/" element={<Index />} />
                 <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
                 <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
+                <Route path="/get-started" element={<GetStarted />} />
                 <Route path="/complete-profile" element={<CompleteProfile />} />
                 <Route path="/ai-insights" element={<AIInsightsPage />} />
                 <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
