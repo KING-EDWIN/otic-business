@@ -375,10 +375,10 @@ const Dashboard = () => {
       </header>
 
       {/* Debug: Check verification status */}
-      {appUser && console.log('Dashboard - appUser.email_verified:', appUser.email_verified, 'type:', typeof appUser.email_verified, '=== false:', appUser.email_verified === false)}
+      {appUser && console.log('Dashboard - appUser.email_verified:', appUser.email_verified, 'type:', typeof appUser.email_verified, '=== false:', appUser.email_verified === false, 'Boolean conversion:', Boolean(appUser.email_verified))}
 
-      {/* Email Verification Notice */}
-      {appUser && appUser.email_verified === false && (
+      {/* Email Verification Notice - Temporarily disabled for debugging */}
+      {false && appUser && (appUser.email_verified === false || appUser.email_verified === 'false' || appUser.email_verified === 0) && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mx-4 mt-4">
           <div className="flex">
             <div className="flex-shrink-0">

@@ -196,6 +196,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password,
       })
+      
+      // Handle email confirmation error
+      if (error && error.message.includes('email not confirmed')) {
+        // Check if user exists in our database and is verified there
+        const { data: userProfile } = await supabase
+          .from('user_profiles')
+          .select('email_verified')
+          .eq('email', email)
+          .single()
+        
+        if (userProfile?.email_verified) {
+          // User is verified in our system, but not in Supabase auth
+          // Try to resend confirmation email as a workaround
+          console.log('User is verified in our system but not in Supabase auth, resending confirmation...')
+          await supabase.auth.resend({
+            type: 'signup',
+            email: email
+          })
+          
+          return { 
+            error: { 
+              message: 'Email confirmation sent. Please check your email and click the confirmation link, then try signing in again.' 
+            } 
+          }
+        }
+      }
+      
       return { error }
     } catch (error) {
       return { error }
@@ -218,8 +245,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Set loading to false after sign out
       setLoading(false)
       
-      // Redirect to home page after sign out
-      window.location.href = '/'
+      // Redirect to login page after sign out
+      window.location.href = '/signin'
     } catch (error) {
       console.error('Error signing out:', error)
       setLoading(false)
