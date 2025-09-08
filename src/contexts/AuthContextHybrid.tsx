@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { isOfflineMode, getCurrentConfig } from '@/config/storageConfig'
+import { SignupService } from '@/services/signupService'
 
 interface UserProfile {
   id: string
@@ -124,6 +125,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error loading user profile:', error)
+        
+        // If profile doesn't exist, try to complete missing setup
+        if (error.code === 'PGRST116') {
+          console.log('User profile not found, attempting to complete setup...')
+          const setupResult = await SignupService.completeMissingSetup(userId, { email: user?.email })
+          if (setupResult.success) {
+            // Try to load profile again
+            const { data: newData } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('id', userId)
+              .single()
+            
+            if (newData) {
+              setProfile(newData)
+              return
+            }
+          }
+        }
         return
       }
 
@@ -134,76 +154,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const signUp = async (email: string, password: string, businessName: string) => {
-    if (isOffline) {
-      // Offline sign up
-      const newUser = {
-        id: 'offline-user-' + Date.now(),
+    try {
+      console.log('Starting signup process for:', email)
+      
+      // Use the comprehensive signup service
+      const result = await SignupService.completeSignup({
         email,
-        email_confirmed_at: new Date().toISOString(),
-        created_at: new Date().toISOString()
+        password,
+        businessName
+      })
+
+      if (!result.success) {
+        console.error('Signup failed:', result.error)
+        return { error: { message: result.error || 'Signup failed' } }
       }
-      
-      const newProfile = {
-        id: newUser.id,
-        email,
-        business_name: businessName,
-        phone: '',
-        address: '',
-        tier: 'basic' as const,
-        email_verified: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+
+      // Set user data in context
+      if (result.user && result.profile) {
+        setUser(result.user)
+        setProfile(result.profile)
+        setSession({ user: result.user })
       }
-      
-      setUser(newUser)
-      setProfile(newProfile)
-      setSession({ user: newUser })
-      
-      // Save to localStorage
-      localStorage.setItem('otic_user', JSON.stringify(newUser))
-      localStorage.setItem('otic_profile', JSON.stringify(newProfile))
-      
+
+      console.log('Signup completed successfully for:', email)
       return { error: null }
-    } else {
-      // Online sign up with Supabase
-      try {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              business_name: businessName
-            }
-          }
-        })
-
-        if (error) return { error }
-
-        // Create user profile
-        if (data.user) {
-          const { error: profileError } = await supabase
-            .from('user_profiles')
-            .insert({
-              id: data.user.id,
-              email,
-              business_name: businessName,
-              tier: 'basic',
-              email_verified: false,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-
-          if (profileError) {
-            console.error('Error creating user profile:', profileError)
-            return { error: profileError }
-          }
-        }
-
-        return { error: null }
-      } catch (error) {
-        console.error('Sign up error:', error)
-        return { error }
-      }
+    } catch (error) {
+      console.error('Signup error:', error)
+      return { error: { message: 'An unexpected error occurred during signup' } }
     }
   }
 
