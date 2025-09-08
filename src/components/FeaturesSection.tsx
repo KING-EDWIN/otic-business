@@ -33,42 +33,42 @@ const FeaturesSection = () => {
       title: "Automated Compliance",
       description: "Tax computation, VAT analysis, and regulatory reporting with zero manual effort.",
       color: "text-[#faa51a]",
-      image: dashboardImage,
+      image: "https://images.unsplash.com/photo-1554224155-1696413565d3?w=1200&q=60&auto=format&fit=crop", // compliance doc
     },
     {
       icon: <Users className="h-8 w-8" />,
       title: "Multi-User Management",
       description: "Role-based access for business owners, accountants, cashiers, and managers.",
       color: "text-[#faa51a]",
-      image: dashboardImage,
+      image: "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1200&q=60&auto=format&fit=crop", // team
     },
     {
       icon: <Zap className="h-8 w-8" />,
       title: "Real-Time Inventory",
       description: "Auto-updating stock levels, low-stock alerts, and demand prediction.",
       color: "text-[#faa51a]",
-      image: posImage,
+      image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=1200&q=60&auto=format&fit=crop", // warehouse
     },
     {
       icon: <Globe className="h-8 w-8" />,
       title: "Multi-Branch Support",
       description: "Synchronize operations across multiple locations with consolidated reporting.",
       color: "text-[#faa51a]",
-      image: dashboardImage,
+      image: "https://images.unsplash.com/photo-1529101091764-c3526daf38fe?w=1200&q=60&auto=format&fit=crop", // map pins / locations
     },
     {
       icon: <CreditCard className="h-8 w-8" />,
       title: "Payment Integration",
       description: "Accept Mobile Money, cards, and digital payments with automated reconciliation.",
       color: "text-[#faa51a]",
-      image: posImage,
+      image: "https://images.unsplash.com/photo-1556745753-b2904692b3cd?w=1200&q=60&auto=format&fit=crop", // payment terminal/contactless
     },
     {
       icon: <FileText className="h-8 w-8" />,
       title: "QuickBooks Integration",
       description: "Seamlessly sync with QuickBooks for professional accounting and reporting.",
       color: "text-[#faa51a]",
-      image: dashboardImage,
+      image: "https://images.unsplash.com/photo-1554224155-1696413565d3?w=1200&q=60&auto=format&fit=crop", // accounting
     }
   ];
 
