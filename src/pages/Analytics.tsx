@@ -86,62 +86,6 @@ const Analytics = () => {
       // Use DataService for analytics data
       const analyticsData = await DataService.getAnalyticsData(user?.id, timeRange)
       setAnalyticsData(analyticsData)
-      return
-
-      // Calculate analytics
-      const totalSales = salesData?.length || 0
-      const totalRevenue = salesData?.reduce((sum, sale) => sum + sale.total, 0) || 0
-      const totalProducts = productsData?.length || 0
-      const averageOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0
-
-      // Calculate growth (simplified - comparing with previous period)
-      const salesGrowth = calculateGrowth(totalSales, timeRange)
-      const revenueGrowth = calculateGrowth(totalRevenue, timeRange)
-
-      // Top products
-      const productSales = new Map()
-      salesData?.forEach(sale => {
-        sale.sale_items?.forEach((item: any) => {
-          const productName = item.product?.name || 'Unknown'
-          if (productSales.has(productName)) {
-            productSales.set(productName, {
-              sales: productSales.get(productName).sales + item.quantity,
-              revenue: productSales.get(productName).revenue + (item.quantity * item.price)
-            })
-          } else {
-            productSales.set(productName, {
-              sales: item.quantity,
-              revenue: item.quantity * item.price
-            })
-          }
-        })
-      })
-
-      const topProducts = Array.from(productSales.entries())
-        .map(([name, data]) => ({ name, ...data }))
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 5)
-
-      // Sales by day
-      const salesByDay = generateSalesByDay(salesData || [], timeRange)
-      const salesByMonth = generateSalesByMonth(salesData || [], timeRange)
-
-      // Low stock items
-      const lowStockItems = productsData?.filter(product => product.stock <= product.min_stock).length || 0
-
-      setAnalyticsData({
-        totalSales,
-        totalRevenue,
-        totalProducts,
-        averageOrderValue,
-        salesGrowth,
-        revenueGrowth,
-        topProducts,
-        salesByDay,
-        salesByMonth,
-        lowStockItems,
-        aiInsights: []
-      })
     } catch (error) {
       console.error('Error fetching analytics:', error)
     } finally {

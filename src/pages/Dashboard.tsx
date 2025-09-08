@@ -37,6 +37,7 @@ import {
   Clock
 } from 'lucide-react'
 import { DataService } from '@/services/dataService'
+import { supabase } from '@/lib/supabaseClient'
 
 // Helper function for fallback stats fetching
 const fetchStatsIndividually = async (userId: string) => {

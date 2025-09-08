@@ -30,7 +30,7 @@ interface Message {
 }
 
 const AIChat: React.FC = () => {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const navigate = useNavigate()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')
@@ -76,7 +76,7 @@ const AIChat: React.FC = () => {
     }
     
     return {
-      businessName: appUser?.business_name || 'Your Business',
+      businessName: profile?.business_name || 'Your Business',
       totalSales: 0,
       totalRevenue: 0,
       totalProducts: 0,
