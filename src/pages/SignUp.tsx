@@ -131,7 +131,10 @@ const SignUp = () => {
               </div>
               <h2 className="text-2xl font-bold mb-2 text-[#040458]">Account Created!</h2>
               <p className="text-gray-600 mb-4">
-                Your account has been created successfully. Redirecting to dashboard...
+                Your account has been created successfully. Please check your email and click the confirmation link to verify your account.
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                You'll be redirected to the dashboard after verification.
               </p>
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#faa51a] mx-auto"></div>
             </div>

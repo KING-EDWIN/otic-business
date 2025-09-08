@@ -47,6 +47,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session?.user) {
           // Real user session - fetch profile
           await fetchUserProfile(session.user.id)
+          
+          // Check if this is a new email confirmation
+          if (event === 'SIGNED_IN' && session.user.email_confirmed_at) {
+            // User just confirmed their email via Supabase
+            // Update our database to reflect this
+            await updateEmailVerificationStatus(session.user.id, true, 'supabase_email')
+          }
         } else {
           // No session - clear user and loading
           setAppUser(null)
@@ -69,6 +76,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe()
     }
   }, [])
+
+  const updateEmailVerificationStatus = async (userId: string, verified: boolean, verifiedBy: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          email_verified: verified,
+          verification_timestamp: verified ? new Date().toISOString() : null,
+          verified_by: verified ? verifiedBy : null
+        })
+        .eq('id', userId)
+
+      if (error) {
+        console.error('Error updating email verification status:', error)
+      } else {
+        console.log('Email verification status updated:', { userId, verified, verifiedBy })
+      }
+    } catch (error) {
+      console.error('Error updating email verification status:', error)
+    }
+  }
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -128,6 +156,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`
+        }
       })
 
       if (error) {
@@ -135,7 +166,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
-        // Create user profile
+        // Create user profile with pending verification status
         const { error: profileError } = await supabase
           .from('user_profiles')
           .insert({
@@ -143,7 +174,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: data.user.email!,
             business_name: businessName,
             tier: tier,
-            email_verified: true // Set new users as verified
+            email_verified: false, // Will be set to true after email confirmation
+            verification_timestamp: null,
+            verified_by: null
           })
 
         if (profileError) {
@@ -199,17 +232,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Handle email confirmation error
       if (error && error.message.includes('email not confirmed')) {
-        // Check if user exists in our database and is verified there
+        // Check if user exists in our database and is manually verified by admin
         const { data: userProfile } = await supabase
           .from('user_profiles')
-          .select('email_verified')
+          .select('email_verified, verification_timestamp, verified_by')
           .eq('email', email)
           .single()
         
-        if (userProfile?.email_verified) {
-          // User is verified in our system, but not in Supabase auth
-          // Try to resend confirmation email as a workaround
-          console.log('User is verified in our system but not in Supabase auth, resending confirmation...')
+        if (userProfile?.email_verified && userProfile?.verified_by) {
+          // User is manually verified by admin, but not confirmed via Supabase email
+          // This is a hybrid case - admin verified but user didn't click email link
+          return { 
+            error: { 
+              message: 'Your email is verified by admin but you still need to confirm via email. Please check your email and click the confirmation link, or contact support.' 
+            } 
+          }
+        } else {
+          // User is not verified at all - resend confirmation email
+          console.log('User not verified, resending confirmation email...')
           await supabase.auth.resend({
             type: 'signup',
             email: email
@@ -217,7 +257,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           return { 
             error: { 
-              message: 'Email confirmation sent. Please check your email and click the confirmation link, then try signing in again.' 
+              message: 'Email confirmation sent. Please check your email and click the confirmation link to verify your account.' 
             } 
           }
         }

@@ -377,8 +377,8 @@ const Dashboard = () => {
       {/* Debug: Check verification status */}
       {appUser && console.log('Dashboard - appUser.email_verified:', appUser.email_verified, 'type:', typeof appUser.email_verified, '=== false:', appUser.email_verified === false, 'Boolean conversion:', Boolean(appUser.email_verified))}
 
-      {/* Email Verification Notice - Temporarily disabled for debugging */}
-      {false && appUser && (appUser.email_verified === false || appUser.email_verified === 'false' || appUser.email_verified === 0) && (
+      {/* Email Verification Notice - Show if not verified */}
+      {appUser && !appUser.email_verified && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mx-4 mt-4">
           <div className="flex">
             <div className="flex-shrink-0">
@@ -386,8 +386,8 @@ const Dashboard = () => {
             </div>
             <div className="ml-3">
               <p className="text-sm text-yellow-700">
-                <strong>Email Verification Required:</strong> Your email address needs to be verified before you can access all features. 
-                Please contact support or wait for admin verification.
+                <strong>Email Verification Required:</strong> Please check your email and click the confirmation link to verify your account. 
+                If you didn't receive the email, check your spam folder or contact support for manual verification.
               </p>
             </div>
           </div>

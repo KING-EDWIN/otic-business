@@ -294,18 +294,30 @@ export class AdminService {
 
   async verifyUserEmail(userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
+      // Update our database
+      const { error: dbError } = await supabase
         .from('user_profiles')
         .update({
           email_verified: true,
           verification_timestamp: new Date().toISOString(),
-          verified_by: '00000000-0000-0000-0000-000000000000' // Admin UUID placeholder
+          verified_by: 'admin_manual' // Mark as admin verified
         })
         .eq('id', userId)
 
-      if (error) {
-        console.error('Error verifying user email:', error)
-        return { success: false, error: 'Failed to verify email' }
+      if (dbError) {
+        console.error('Error verifying user email in database:', dbError)
+        return { success: false, error: dbError.message }
+      }
+
+      // Also try to confirm the user in Supabase auth (this might fail if they haven't clicked email link)
+      try {
+        const { data: userData } = await supabase.auth.admin.updateUserById(userId, {
+          email_confirm: true
+        })
+        console.log('User confirmed in Supabase auth:', userData)
+      } catch (authError) {
+        console.log('Could not confirm in Supabase auth (user needs to click email link):', authError)
+        // This is not a critical error - our database verification is enough
       }
 
       return { success: true }
