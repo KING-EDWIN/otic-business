@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Camera, X, RotateCcw, Flashlight, FlashlightOff, AlertCircle } from 'lucide-react'
-import Quagga from 'quagga'
+import * as Quagga from 'quagga'
 
 interface QuaggaBarcodeScannerProps {
   onScan: (barcode: string) => void

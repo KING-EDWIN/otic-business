@@ -45,7 +45,7 @@ interface CartItem {
 }
 
 const POS = () => {
-  const { appUser } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [products, setProducts] = useState<Product[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
@@ -67,9 +67,11 @@ const POS = () => {
   const [taxRate] = useState(18) // 18% VAT for Uganda
 
   useEffect(() => {
-    fetchProducts()
+    if (user?.id) {
+      fetchProducts()
+    }
     initializeBarcodeReader()
-  }, [])
+  }, [user?.id])
 
   const initializeBarcodeReader = () => {
     try {
@@ -86,7 +88,7 @@ const POS = () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('user_id', appUser?.id)
+        .eq('user_id', user?.id)
         .order('name')
 
       if (error) throw error
@@ -216,7 +218,7 @@ const POS = () => {
       setProcessing(true)
       
       const saleData = {
-        user_id: appUser?.id,
+        user_id: user?.id,
         customer_name: customerName || null,
         customer_phone: customerPhone || null,
         payment_method: paymentMethod,

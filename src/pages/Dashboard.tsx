@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '@/contexts/AuthContextClean'
+import { useAuth } from '@/contexts/AuthContext'
 import { OticAPI } from '@/services/api'
 import { AIAnalytics } from '@/services/aiService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'

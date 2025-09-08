@@ -182,3 +182,4 @@ GRANT EXECUTE ON FUNCTION public.get_user_subscription TO authenticated;
 
 -- Step 14: Verify the setup
 SELECT 'Fresh authentication system created successfully!' as status;
+

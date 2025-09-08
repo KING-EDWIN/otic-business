@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContextClean'
+import { useAuth } from '@/contexts/AuthContext'
 
 const SignInClean = () => {
   const [email, setEmail] = useState('')
@@ -179,3 +179,4 @@ const SignInClean = () => {
 }
 
 export default SignInClean
+

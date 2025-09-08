@@ -1,5 +1,6 @@
 // User utility functions for proper user data isolation
 import { supabase } from '@/lib/supabase'
+import { User } from '@supabase/supabase-js'
 
 export interface UserInfo {
   id: string
@@ -8,18 +9,33 @@ export interface UserInfo {
   isDemo: boolean
 }
 
+// Helper function to create UserInfo from AuthContext data
+export const createUserInfoFromAuth = (user: User | null, tier: string = 'free_trial'): UserInfo | null => {
+  if (!user) return null
+  
+  return {
+    id: user.id,
+    email: user.email || '',
+    tier: tier as 'free_trial' | 'basic' | 'standard' | 'premium',
+    isDemo: false
+  }
+}
+
 export const getCurrentUserInfo = async (): Promise<UserInfo | null> => {
   try {
-    // Get authenticated user
+    // Get authenticated user with better error handling
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError) {
-      console.warn('Auth error:', authError)
+      // Don't log warnings for missing sessions - this is normal during loading
+      if (authError.message !== 'Auth session missing!') {
+        console.warn('Auth error:', authError)
+      }
       return null
     }
     
     if (!user) {
-      console.warn('No authenticated user found')
+      // Don't log warnings for missing users - this is normal during loading
       return null
     }
 
@@ -48,7 +64,10 @@ export const getCurrentUserInfo = async (): Promise<UserInfo | null> => {
       isDemo: false
     }
   } catch (error) {
-    console.error('Error getting user info:', error)
+    // Don't log errors for missing sessions - this is normal during loading
+    if (error instanceof Error && error.message !== 'Auth session missing!') {
+      console.error('Error getting user info:', error)
+    }
     return null
   }
 }

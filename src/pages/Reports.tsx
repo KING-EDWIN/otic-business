@@ -74,7 +74,7 @@ import { reportsService, Report, ReportSchedule, ReportStats } from '@/services/
 
 const Reports = () => {
   const navigate = useNavigate()
-  const { appUser } = useAuth()
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedReportType, setSelectedReportType] = useState('sales')
   const [timeframe, setTimeframe] = useState('last_30_days')

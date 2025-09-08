@@ -28,7 +28,7 @@ import {
 import { toast } from 'sonner'
 
 const Settings = () => {
-  const { appUser, updateProfile } = useAuth()
+  const { user, profile, updateProfile } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -52,15 +52,15 @@ const Settings = () => {
   })
 
   useEffect(() => {
-    if (appUser) {
+    if (profile) {
       setFormData({
-        business_name: appUser.business_name || '',
-        phone: appUser.phone || '',
-        address: appUser.address || '',
-        email: appUser.email || ''
+        business_name: profile.business_name || '',
+        phone: profile.phone || '',
+        address: profile.address || '',
+        email: profile.email || ''
       })
     }
-  }, [appUser])
+  }, [profile])
 
   const handleSaveProfile = async () => {
     setLoading(true)
@@ -87,7 +87,7 @@ const Settings = () => {
   }
 
   // Debug logging
-  console.log('Settings component rendering, appUser:', appUser)
+  console.log('Settings component rendering, profile:', profile)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -456,7 +456,7 @@ const Settings = () => {
                   <div>
                     <h3 className="font-semibold">Current Plan</h3>
                     <p className="text-sm text-muted-foreground">
-                      {appUser?.tier?.toUpperCase()} Plan - UGX {appUser?.tier === 'basic' ? '1,000,000' : appUser?.tier === 'standard' ? '2,000,000' : '5,000,000'} per month
+                      {profile?.tier?.toUpperCase()} Plan - UGX {profile?.tier === 'basic' ? '1,000,000' : profile?.tier === 'standard' ? '2,000,000' : '5,000,000'} per month
                     </p>
                   </div>
                   <Badge className="bg-green-100 text-green-800">Active</Badge>

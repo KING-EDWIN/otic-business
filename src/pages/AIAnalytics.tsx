@@ -26,7 +26,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { AIAnalytics } from '@/services/aiService'
 
 const AIAnalyticsPage = () => {
-  const { appUser } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [aiResponse, setAiResponse] = useState('')

@@ -60,7 +60,7 @@ interface Customer {
 
 const Customers = () => {
   const navigate = useNavigate()
-  const { appUser } = useAuth()
+  const { user } = useAuth()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
@@ -106,7 +106,7 @@ const Customers = () => {
       const { data: customersData, error: customersError } = await supabase
         .from('customers')
         .select('*')
-        .eq('user_id', appUser?.id)
+        .eq('user_id', user?.id)
         .order('created_at', { ascending: false })
 
       if (customersError) throw customersError
@@ -115,7 +115,7 @@ const Customers = () => {
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
         .select('*')
-        .eq('user_id', appUser?.id)
+        .eq('user_id', user?.id)
 
       if (salesError) throw salesError
 

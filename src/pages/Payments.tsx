@@ -17,7 +17,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const Payments: React.FC = () => {
   const navigate = useNavigate()
-  const { appUser } = useAuth()
+  const { user, profile } = useAuth()
   const [activeTab, setActiveTab] = useState('subscription')
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedTier, setSelectedTier] = useState<'basic' | 'standard' | 'premium' | null>(null)
@@ -34,8 +34,10 @@ const Payments: React.FC = () => {
   const [revenueData, setRevenueData] = useState([])
 
   useEffect(() => {
-    loadPaymentData()
-  }, [])
+    if (user?.id) {
+      loadPaymentStats()
+    }
+  }, [user?.id])
 
   const loadPaymentData = async () => {
     try {
@@ -58,15 +60,23 @@ const Payments: React.FC = () => {
 
   const loadPaymentStats = async () => {
     try {
-      if (!appUser?.id) return
+      if (!user?.id) return
+
+      console.log('Loading payment stats for user:', user.id)
+      setLoading(true)
 
       // Get all payments for this user
       const { data: payments, error } = await supabase
         .from('payments')
         .select('*')
-        .eq('user_id', appUser.id)
+        .eq('user_id', user.id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Payment fetch error:', error)
+        throw error
+      }
+      
+      console.log('Found payments:', payments?.length || 0)
 
       // Calculate statistics
       const totalRevenue = payments?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0
@@ -198,7 +208,7 @@ const Payments: React.FC = () => {
             <div className="flex items-center space-x-4">
               <Badge className="bg-gradient-to-r from-[#faa51a] to-[#ff6b35] text-white border-0 shadow-lg px-4 py-2">
                 <Crown className="h-4 w-4 mr-2" />
-                {appUser?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan
+                {profile?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan
               </Badge>
             </div>
           </div>

@@ -30,7 +30,7 @@ interface Message {
 }
 
 const AIChat: React.FC = () => {
-  const { appUser } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputMessage, setInputMessage] = useState('')

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-link { display: block; margin: 10px 0; padding: 10px; background: #f0f0f0; text-decoration: none; color: #333; border-radius: 5px; }
+        .test-link:hover { background: #e0e0e0; }
+        .status { margin-left: 10px; font-weight: bold; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Otic Business - Page Test</h1>
+    <p>Test all pages to ensure they load properly:</p>
+    
+    <a href="http://localhost:8081/" class="test-link">
+        🏠 Home Page <span class="status">Test</span>
+    </a>
+    
+    <a href="http://localhost:8081/signin" class="test-link">
+        🔐 Sign In Page <span class="status">Test</span>
+    </a>
+    
+    <a href="http://localhost:8081/dashboard" class="test-link">
+        📊 Dashboard <span class="status">Test</span>
+    </a>
+    
+    <a href="http://localhost:8081/inventory" class="test-link">
+        📦 Inventory <span class="status">Test</span>
+    </a>
+    
+    <a href="http://localhost:8081/pos" class="test-link">
+        🛒 POS System <span class="status">Test</span>
+    </a>
+    
+    <a href="http://localhost:8081/analytics" class="test-link">
+        📈 Analytics <span class="status">Test</span>
+    </a>
+    
+    <a href="http://localhost:8081/payments" class="test-link">
+        💳 Payments <span class="status">Test</span>
+    </a>
+    
+    <a href="http://localhost:8081/customers" class="test-link">
+        👥 Customers <span class="status">Test</span>
+    </a>
+    
+    <a href="http://localhost:8081/settings" class="test-link">
+        ⚙️ Settings <span class="status">Test</span>
+    </a>
+    
+    <h2>Test Instructions:</h2>
+    <ol>
+        <li>Click on each link above</li>
+        <li>Verify the page loads without infinite loading</li>
+        <li>Check for any console errors</li>
+        <li>Verify content is displayed (even if empty)</li>
+    </ol>
+    
+    <h2>Expected Results:</h2>
+    <ul>
+        <li>✅ All pages should load within 2-3 seconds</li>
+        <li>✅ No "useAuth must be used within an AuthProvider" errors</li>
+        <li>✅ No infinite loading spinners</li>
+        <li>✅ Content should be visible (even if empty data)</li>
+    </ul>
+</body>
+</html>

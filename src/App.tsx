@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/contexts/AuthContextClean";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import SignIn from "./pages/SignInClean";
 import SignUp from "./pages/SignUpClean";
@@ -22,6 +22,8 @@ import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
 import Customers from "./pages/Customers";
 import Reports from "./pages/Reports";
+import TestAuth from "./pages/TestAuth";
+import SimpleTest from "./pages/SimpleTest";
 import AdminApp from "./AdminApp";
 import About from "./pages/About";
 import Terms from "./pages/Terms";
@@ -54,8 +56,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           <img src="/Otic icon@2x.png" alt="Otic Business Logo" className="h-12 w-12 mx-auto" />
           <h2 className="text-2xl font-bold text-[#040458]">Pending Admin Approval</h2>
           <p className="text-gray-600">
-            Your account was created successfully, but it hasn’t been verified by an admin yet. 
-            Once approved, you’ll be able to access the system.
+            Your account was created successfully, but it hasn't been verified by an admin yet. 
+            Once approved, you'll be able to access the system.
           </p>
           <p className="text-sm text-gray-500">If you believe this is a mistake, please contact your administrator.</p>
           <a
@@ -98,7 +100,12 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true
+          }}
+        >
           <AuthProvider>
             <Routes>
                 <Route path="/" element={<Index />} />
@@ -113,6 +120,7 @@ const App = () => {
                 <Route path="/ai-insights" element={<AIInsightsPage />} />
                 <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/simple-dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
                 <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
@@ -122,6 +130,8 @@ const App = () => {
                 <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/test-auth" element={<TestAuth />} />
+                <Route path="/simple-test" element={<SimpleTest />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

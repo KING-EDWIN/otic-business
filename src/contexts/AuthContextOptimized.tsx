@@ -57,40 +57,56 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let isMounted = true
 
-    // Add a timeout to prevent infinite loading
-    const loadingTimeout = setTimeout(() => {
+    // Quick timeout to prevent long loading
+    const timeout = setTimeout(() => {
       if (isMounted) {
-        console.warn('⚠️ Auth loading timeout - forcing loading to false')
         setLoading(false)
       }
-    }, 5000) // 5 second timeout
+    }, 2000) // 2 second max loading time
 
     // Get initial session
     const getInitialSession = async () => {
       try {
-        console.log('🔍 Getting initial session...')
         const { data: { session }, error } = await supabase.auth.getSession()
         
         if (error) {
-          console.error('❌ Error getting initial session:', error)
+          console.warn('Auth session error:', error.message)
         }
-        
-        console.log('📊 Initial session result:', { session: !!session, user: !!session?.user, error })
         
         if (isMounted) {
           setSession(session)
           setUser(session?.user ?? null)
+          
           if (session?.user) {
-            console.log('👤 User found, fetching user data...')
-            await fetchUserData(session.user.id)
-          } else {
-            console.log('❌ No user in session')
+            // Fetch user data in parallel for better performance
+            const [profileResult, subscriptionResult] = await Promise.allSettled([
+              supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single(),
+              supabase
+                .from('subscriptions')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .single()
+            ])
+            
+            if (profileResult.status === 'fulfilled' && profileResult.value.data) {
+              setProfile(profileResult.value.data)
+            }
+            
+            if (subscriptionResult.status === 'fulfilled' && subscriptionResult.value.data) {
+              setSubscription(subscriptionResult.value.data)
+            }
           }
+          
           setLoading(false)
-          console.log('✅ Auth loading completed')
         }
       } catch (error) {
-        console.error('❌ Error getting initial session:', error)
+        console.error('Auth initialization error:', error)
         if (isMounted) {
           setLoading(false)
         }
@@ -104,71 +120,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         if (!isMounted) return
         
-        console.log('🔄 Auth state change:', event, session?.user?.email)
-        
         setSession(session)
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          console.log('👤 User in state change, fetching data...')
-          await fetchUserData(session.user.id)
+          // Fetch user data in parallel
+          const [profileResult, subscriptionResult] = await Promise.allSettled([
+            supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single(),
+            supabase
+              .from('subscriptions')
+              .select('*')
+              .eq('user_id', session.user.id)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single()
+          ])
+          
+          if (profileResult.status === 'fulfilled' && profileResult.value.data) {
+            setProfile(profileResult.value.data)
+          }
+          
+          if (subscriptionResult.status === 'fulfilled' && subscriptionResult.value.data) {
+            setSubscription(subscriptionResult.value.data)
+          }
         } else {
-          console.log('❌ No user in state change, clearing data')
           setProfile(null)
           setSubscription(null)
         }
         
         setLoading(false)
-        console.log('✅ Auth state change completed')
       }
     )
 
     return () => {
       isMounted = false
-      clearTimeout(loadingTimeout)
+      clearTimeout(timeout)
       subscription.unsubscribe()
     }
   }, [])
-
-  const fetchUserData = async (userId: string) => {
-    try {
-      console.log('🔍 Fetching user data for:', userId)
-      
-      // Fetch user profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-
-      if (profileError) {
-        console.error('❌ Error fetching user profile:', profileError)
-        return
-      }
-
-      console.log('✅ User profile fetched:', profileData)
-      setProfile(profileData)
-
-      // Fetch user subscription
-      const { data: subscriptionData, error: subscriptionError } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (subscriptionError) {
-        console.error('❌ Error fetching subscription:', subscriptionError)
-        return
-      }
-
-      console.log('✅ Subscription fetched:', subscriptionData)
-      setSubscription(subscriptionData)
-    } catch (error) {
-      console.error('❌ Error fetching user data:', error)
-    }
-  }
 
   const signUp = async (email: string, password: string, businessName: string) => {
     try {
@@ -184,19 +177,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error }
       }
 
-      // Update the user profile with business name if user was created
       if (data.user) {
-        // Wait a moment for the trigger to create the profile
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        const { error: updateError } = await supabase
+        // Create user profile
+        await supabase
           .from('user_profiles')
-          .update({ business_name: businessName })
-          .eq('id', data.user.id)
-
-        if (updateError) {
-          console.error('Error updating user profile:', updateError)
-        }
+          .insert({
+            id: data.user.id,
+            email: data.user.email,
+            business_name: businessName,
+            tier: 'free_trial',
+            email_verified: false
+          })
       }
 
       return { error: null }
@@ -240,7 +231,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSubscription(null)
       setSession(null)
       setLoading(false)
-      // Redirect to signin page
       window.location.href = '/signin'
     } catch (error) {
       console.error('Error signing out:', error)
@@ -263,7 +253,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error }
       }
 
-      // Update local state
       setProfile(prev => prev ? { ...prev, ...updates } : null)
       return { error: null }
     } catch (error) {
@@ -290,4 +279,3 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   )
 }
-

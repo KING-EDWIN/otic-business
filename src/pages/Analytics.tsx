@@ -41,7 +41,7 @@ interface AnalyticsData {
 }
 
 const Analytics = () => {
-  const { appUser } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -49,14 +49,17 @@ const Analytics = () => {
   const [aiInsights, setAiInsights] = useState<Array<{ type: string; message: string; confidence: number }>>([])
 
   useEffect(() => {
-    if (appUser) {
+    if (user) {
       fetchAnalyticsData()
       generateAIInsights()
     }
-  }, [appUser, timeRange])
+  }, [user, timeRange])
 
   const fetchAnalyticsData = async () => {
     try {
+      console.log('Fetching analytics data for user:', user?.id)
+      setLoading(true)
+      
       const endDate = new Date()
       const startDate = new Date()
       
@@ -86,7 +89,7 @@ const Analytics = () => {
             product:products (name)
           )
         `)
-        .eq('user_id', appUser?.id)
+        .eq('user_id', user?.id)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString())
 
@@ -94,7 +97,7 @@ const Analytics = () => {
       const { data: productsData } = await supabase
         .from('products')
         .select('*')
-        .eq('user_id', appUser?.id)
+        .eq('user_id', user?.id)
 
       // Calculate analytics
       const totalSales = salesData?.length || 0

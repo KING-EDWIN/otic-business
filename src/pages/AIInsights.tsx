@@ -33,7 +33,7 @@ interface AnalyticsData {
 }
 
 const AIInsightsPage = () => {
-  const { appUser } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -52,7 +52,7 @@ const AIInsightsPage = () => {
       const { data: sales, error: salesError } = await supabase
         .from('sales')
         .select('*')
-        .eq('user_id', appUser?.id || '00000000-0000-0000-0000-000000000001')
+        .eq('user_id', user?.id || '00000000-0000-0000-0000-000000000001')
 
       if (salesError) {
         console.error('Error fetching sales:', salesError)
@@ -62,7 +62,7 @@ const AIInsightsPage = () => {
       const { data: products, error: productsError } = await supabase
         .from('products')
         .select('*')
-        .eq('user_id', appUser?.id || '00000000-0000-0000-0000-000000000001')
+        .eq('user_id', user?.id || '00000000-0000-0000-0000-000000000001')
 
       if (productsError) {
         console.error('Error fetching products:', productsError)

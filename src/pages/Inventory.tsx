@@ -65,7 +65,7 @@ interface LowStockItem {
 }
 
 const Inventory = () => {
-  const { appUser } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -98,7 +98,7 @@ const Inventory = () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('user_id', appUser?.id)
+        .eq('user_id', user?.id)
         .order('name')
 
       if (error) throw error
@@ -130,10 +130,10 @@ const Inventory = () => {
   }
 
   useEffect(() => {
-    if (appUser?.id) {
+    if (user?.id) {
       fetchProducts()
     }
-  }, [appUser?.id])
+  }, [user?.id])
 
   const generateBarcode = (prefix: string = 'OTIC') => {
     const timestamp = Date.now().toString().slice(-6)
@@ -172,7 +172,7 @@ const Inventory = () => {
             updated_at: new Date().toISOString()
           })
           .eq('id', editingProduct.id)
-          .eq('user_id', appUser?.id)
+          .eq('user_id', user?.id)
 
         if (error) throw error
         toast.success('Product updated successfully!')
@@ -204,7 +204,7 @@ const Inventory = () => {
         .from('products')
         .delete()
         .eq('id', productId)
-        .eq('user_id', appUser?.id)
+        .eq('user_id', user?.id)
 
       if (error) throw error
       toast.success('Product deleted successfully!')
