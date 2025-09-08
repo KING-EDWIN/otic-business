@@ -38,9 +38,9 @@ const AccountingDashboard: React.FC = () => {
     
     try {
       const accountingService = getAccountingService()
-      console.log('Fetching accounting stats from Supabase...')
+      // Fetching accounting stats from Supabase
       const data = await accountingService.getDashboardStats()
-      console.log('Accounting stats received:', data)
+      // Accounting stats received
       setStats(data)
     } catch (err) {
       setError('Failed to load accounting data')

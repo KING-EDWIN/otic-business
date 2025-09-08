@@ -12,11 +12,16 @@ import CompleteProfile from "./pages/CompleteProfile";
 import AIInsightsPage from "./pages/AIInsights";
 import AIChat from "./pages/AIChat";
 import Dashboard from "./pages/Dashboard";
+import MainDashboard from "./pages/MainDashboard";
 import POS from "./pages/POS";
 import Inventory from "./pages/Inventory";
 import Analytics from "./pages/Analytics";
+import Accounting from "./pages/Accounting";
+import QuickBooksCallback from "./pages/QuickBooksCallback";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
+import Customers from "./pages/Customers";
+import Reports from "./pages/Reports";
 import AdminApp from "./AdminApp";
 import About from "./pages/About";
 import Terms from "./pages/Terms";
@@ -85,7 +90,11 @@ const App = () => {
                 <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
                 <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+                <Route path="/accounting" element={<ProtectedRoute><Accounting /></ProtectedRoute>} />
+                <Route path="/quickbooks/callback" element={<QuickBooksCallback />} />
                 <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
+                <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
+                <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

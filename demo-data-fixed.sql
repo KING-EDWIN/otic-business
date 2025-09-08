@@ -108,3 +108,4 @@ SELECT
 UNION ALL
 SELECT 
   'Expense Categories' as table_name, COUNT(*) as count FROM expense_categories WHERE user_id = '550e8400-e29b-41d4-a716-446655440000';
+

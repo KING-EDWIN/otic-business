@@ -70,3 +70,4 @@ VALUES (
 SELECT 'EMAIL TABLES CREATED:' as info;
 SELECT 'email_notifications' as table_name, COUNT(*) as count FROM email_notifications;
 SELECT 'notification_settings' as table_name, COUNT(*) as count FROM notification_settings;
+

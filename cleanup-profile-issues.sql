@@ -44,3 +44,4 @@ WHERE created_at IS NULL OR updated_at IS NULL;
 SELECT 'user_profiles' as table_name, COUNT(*) as count FROM user_profiles
 UNION ALL
 SELECT 'user_subscriptions' as table_name, COUNT(*) as count FROM user_subscriptions;
+

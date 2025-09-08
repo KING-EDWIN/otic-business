@@ -11,3 +11,4 @@ ON CONFLICT (id) DO NOTHING;
 -- Check the data
 SELECT 'EXPENSES ADDED:' as info;
 SELECT id, user_id, amount, description FROM expenses WHERE user_id = '00000000-0000-0000-0000-000000000001';
+

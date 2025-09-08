@@ -24,3 +24,4 @@ SELECT id, user_id, amount, description FROM expenses LIMIT 5;
 
 SELECT 'INVOICES DATA:' as info;
 SELECT id, invoice_number, user_id, total FROM invoices LIMIT 5;
+

@@ -59,7 +59,12 @@ export class AIAnalytics {
 
   // Generate inventory insights
   static async generateInventoryInsights(products: any[], lowStockItems: any[]): Promise<AIInsight[]> {
-    // Always try live Mistral AI first
+    // Use demo data for performance - avoid API calls on every load
+    if (shouldUseDemoAI()) {
+      return getDemoAIInsights('inventory', { products, lowStockItems })
+    }
+    
+    // Only use live AI if specifically requested
     try {
       const context = {
         totalProducts: products.length,
@@ -121,7 +126,12 @@ export class AIAnalytics {
 
   // Generate sales insights
   static async generateSalesInsights(sales: any[], revenue: number, growth: number): Promise<AIInsight[]> {
-    // Always try live Mistral AI first
+    // Use demo data for performance - avoid API calls on every load
+    if (shouldUseDemoAI()) {
+      return getDemoAIInsights('sales', { sales, revenue, growth })
+    }
+    
+    // Only use live AI if specifically requested
     try {
       const context = {
         totalSales: sales.length,
@@ -192,7 +202,12 @@ export class AIAnalytics {
 
   // Generate financial insights
   static async generateFinancialInsights(revenue: number, expenses: number, profit: number): Promise<AIInsight[]> {
-    // Always try live Mistral AI first
+    // Use demo data for performance - avoid API calls on every load
+    if (shouldUseDemoAI()) {
+      return getDemoAIInsights('financial', { revenue, expenses, profit })
+    }
+    
+    // Only use live AI if specifically requested
     try {
       const context = {
         revenue,

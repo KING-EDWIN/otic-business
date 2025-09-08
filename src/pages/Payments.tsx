@@ -6,12 +6,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowLeft, CreditCard, Smartphone, Building2, Upload, Check, Copy, Clock, CheckCircle, XCircle, Star, Crown } from 'lucide-react'
+import { ArrowLeft, CreditCard, Smartphone, Building2, Upload, Check, Copy, Clock, CheckCircle, XCircle, Star, Crown, TrendingUp, DollarSign, Users, Calendar, RefreshCw, Download, Eye, MoreVertical } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import PaymentInstructions from '@/components/PaymentInstructions'
 import { paymentService, PaymentRequest } from '@/services/paymentService'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
 
 const Payments: React.FC = () => {
   const navigate = useNavigate()
@@ -21,6 +23,15 @@ const Payments: React.FC = () => {
   const [selectedTier, setSelectedTier] = useState<'basic' | 'standard' | 'premium' | null>(null)
   const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([])
   const [loading, setLoading] = useState(true)
+  const [paymentStats, setPaymentStats] = useState({
+    totalRevenue: 0,
+    monthlyRevenue: 0,
+    totalPayments: 0,
+    pendingPayments: 0,
+    verifiedPayments: 0,
+    rejectedPayments: 0
+  })
+  const [revenueData, setRevenueData] = useState([])
 
   useEffect(() => {
     loadPaymentData()
@@ -29,13 +40,85 @@ const Payments: React.FC = () => {
   const loadPaymentData = async () => {
     try {
       setLoading(true)
+      
+      // Load payment requests
       const requests = await paymentService.getPaymentRequests()
       setPaymentRequests(requests)
+      
+      // Load payment statistics from Supabase
+      await loadPaymentStats()
+      
     } catch (error) {
       console.error('Error loading payment data:', error)
+      toast.error('Failed to load payment data')
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadPaymentStats = async () => {
+    try {
+      if (!appUser?.id) return
+
+      // Get all payments for this user
+      const { data: payments, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('user_id', appUser.id)
+
+      if (error) throw error
+
+      // Calculate statistics
+      const totalRevenue = payments?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0
+      const monthlyRevenue = payments?.filter(payment => {
+        const paymentDate = new Date(payment.created_at)
+        const now = new Date()
+        return paymentDate.getMonth() === now.getMonth() && paymentDate.getFullYear() === now.getFullYear()
+      }).reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0
+
+      const totalPayments = payments?.length || 0
+      const pendingPayments = payments?.filter(p => p.status === 'pending').length || 0
+      const verifiedPayments = payments?.filter(p => p.status === 'verified').length || 0
+      const rejectedPayments = payments?.filter(p => p.status === 'rejected').length || 0
+
+      setPaymentStats({
+        totalRevenue,
+        monthlyRevenue,
+        totalPayments,
+        pendingPayments,
+        verifiedPayments,
+        rejectedPayments
+      })
+
+      // Generate revenue chart data
+      const monthlyData = generateMonthlyRevenueData(payments || [])
+      setRevenueData(monthlyData)
+
+    } catch (error) {
+      console.error('Error loading payment stats:', error)
+    }
+  }
+
+  const generateMonthlyRevenueData = (payments: any[]) => {
+    const monthlyRevenue = new Map<string, number>()
+    
+    payments.forEach(payment => {
+      const month = payment.created_at.substring(0, 7) // YYYY-MM
+      const existing = monthlyRevenue.get(month) || 0
+      monthlyRevenue.set(month, existing + (payment.amount || 0))
+    })
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const currentDate = new Date()
+    
+    return Array.from({ length: 6 }, (_, i) => {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - 5 + i, 1)
+      const monthKey = date.toISOString().substring(0, 7)
+      return {
+        month: months[date.getMonth()],
+        revenue: monthlyRevenue.get(monthKey) || 0
+      }
+    })
   }
 
   const handleUpgrade = (tier: 'basic' | 'standard' | 'premium') => {
@@ -83,50 +166,123 @@ const Payments: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <Button
-                variant="ghost"
-                size="sm"
+      <header className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-lg">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-6">
+              <Button 
+                variant="ghost" 
+                size="sm" 
                 onClick={() => navigate('/dashboard')}
-                className="text-gray-600 hover:text-gray-900"
+                className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10 transition-all duration-200 rounded-lg px-4 py-2"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Dashboard</span>
               </Button>
-              <div className="h-6 w-px bg-gray-300" />
-              <h1 className="text-xl font-semibold text-[#040458]">Payments & Subscriptions</h1>
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-gradient-to-r from-[#faa51a] to-[#ff6b35] rounded-xl shadow-lg">
+                  <CreditCard className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-[#040458] to-[#1e40af] bg-clip-text text-transparent">
+                    Payments & Subscriptions
+                  </h1>
+                  <p className="text-sm text-gray-600 font-medium">
+                    Manage your payments, subscriptions, and billing
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Badge variant="outline" className="bg-[#faa51a] text-white border-[#faa51a]">
+              <Badge className="bg-gradient-to-r from-[#faa51a] to-[#ff6b35] text-white border-0 shadow-lg px-4 py-2">
+                <Crown className="h-4 w-4 mr-2" />
                 {appUser?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan
               </Badge>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-6 py-8">
+        {/* Payment Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-700">Total Revenue</p>
+                  <p className="text-3xl font-bold text-[#040458]">UGX {paymentStats.totalRevenue.toLocaleString()}</p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-md">
+                  <DollarSign className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-700">This Month</p>
+                  <p className="text-3xl font-bold text-green-600">UGX {paymentStats.monthlyRevenue.toLocaleString()}</p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md">
+                  <TrendingUp className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-700">Total Payments</p>
+                  <p className="text-3xl font-bold text-purple-600">{paymentStats.totalPayments}</p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-md">
+                  <CreditCard className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-gray-700">Pending</p>
+                  <p className="text-3xl font-bold text-yellow-600">{paymentStats.pendingPayments}</p>
+                </div>
+                <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg shadow-md">
+                  <Clock className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-gray-100">
-            <TabsTrigger value="subscription" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
-              Subscription
-            </TabsTrigger>
-            <TabsTrigger value="upgrade" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
-              Upgrade Plan
-            </TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
-              Payment History
-            </TabsTrigger>
-            <TabsTrigger value="methods" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
-              Payment Methods
-            </TabsTrigger>
-          </TabsList>
+          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-2 shadow-lg">
+            <TabsList className="bg-transparent border-0">
+              <TabsTrigger value="subscription" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
+                Subscription
+              </TabsTrigger>
+              <TabsTrigger value="upgrade" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
+                Upgrade Plan
+              </TabsTrigger>
+              <TabsTrigger value="history" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
+                Payment History
+              </TabsTrigger>
+              <TabsTrigger value="methods" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
+                Payment Methods
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Subscription Tab */}
           <TabsContent value="subscription">

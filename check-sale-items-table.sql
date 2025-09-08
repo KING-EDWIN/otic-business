@@ -9,3 +9,4 @@ ORDER BY ordinal_position;
 
 -- Also check if the table exists and get a sample row
 SELECT * FROM sale_items LIMIT 1;
+

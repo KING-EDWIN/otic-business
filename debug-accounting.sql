@@ -24,3 +24,4 @@ SELECT 'invoice_items' as table_name, COUNT(*) as count FROM invoice_items;
 -- Check what user_id is being used
 SELECT 'sales user_id' as info, user_id, COUNT(*) as count FROM sales GROUP BY user_id;
 SELECT 'user_profiles' as info, id, email FROM user_profiles LIMIT 3;
+

@@ -88,3 +88,4 @@ If you get errors about missing variables:
 2. Ensure they're added to all environments
 3. Redeploy after adding new variables
 4. Check Vercel build logs for errors
+

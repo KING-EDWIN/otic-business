@@ -68,3 +68,4 @@ VALUES (
 SELECT 'SUBSCRIPTION TABLES CREATED:' as info;
 SELECT 'user_subscriptions' as table_name, COUNT(*) as count FROM user_subscriptions;
 SELECT 'payments' as table_name, COUNT(*) as count FROM payments;
+

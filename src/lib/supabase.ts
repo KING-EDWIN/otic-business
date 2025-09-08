@@ -40,23 +40,36 @@ export interface User {
 export interface Product {
   id: string
   name: string
+  description?: string
   barcode: string
+  wholesale_barcode?: string
   price: number
   cost: number
   stock: number
+  min_stock?: number
+  category?: string
+  supplier?: string
+  unit_type?: 'piece' | 'kg' | 'liter' | 'box' | 'pack'
+  selling_type?: 'retail' | 'wholesale' | 'both'
   category_id?: string
   supplier_id?: string
   user_id: string
   created_at: string
+  updated_at?: string
 }
 
 export interface Sale {
   id: string
   user_id: string
-  total: number
+  customer_name?: string
+  customer_phone?: string
   payment_method: 'cash' | 'mobile_money' | 'card' | 'flutterwave'
-  created_at: string
+  subtotal: number
+  discount: number
+  tax: number
+  total: number
   receipt_number: string
+  created_at: string
 }
 
 export interface SaleItem {
@@ -65,6 +78,8 @@ export interface SaleItem {
   product_id: string
   quantity: number
   price: number
+  subtotal: number
+  created_at: string
   product?: Product
 }
 

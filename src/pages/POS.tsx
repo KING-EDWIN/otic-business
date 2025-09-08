@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { supabase, Product, Sale, SaleItem } from '@/lib/supabase'
 import { OticAPI } from '@/services/api'
 import { BrowserMultiFormatReader } from '@zxing/library'
+import QuaggaBarcodeScanner from '@/components/QuaggaBarcodeScanner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,7 +24,17 @@ import {
   Package,
   Camera,
   QrCode,
-  ArrowLeft
+  ArrowLeft,
+  RefreshCw,
+  User,
+  Phone,
+  Percent,
+  Calculator,
+  CheckCircle,
+  AlertCircle,
+  Zap,
+  TrendingUp,
+  DollarSign
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -44,45 +55,49 @@ const POS = () => {
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
+  const [barcodeReader, setBarcodeReader] = useState<BrowserMultiFormatReader | null>(null)
+  const [isScanning, setIsScanning] = useState(false)
+  
+  // Customer information
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  
+  // Discount and tax
+  const [discount, setDiscount] = useState(0)
+  const [taxRate] = useState(18) // 18% VAT for Uganda
 
   useEffect(() => {
-    if (appUser) {
-      fetchProducts()
+    fetchProducts()
+    initializeBarcodeReader()
+  }, [])
+
+  const initializeBarcodeReader = () => {
+    try {
+      const reader = new BrowserMultiFormatReader()
+      setBarcodeReader(reader)
+    } catch (error) {
+      console.error('Error initializing barcode reader:', error)
     }
-  }, [appUser])
+  }
 
   const fetchProducts = async () => {
     try {
-      if (!appUser?.id) return
-      
-      // Use the real API service
-      const searchResult = await OticAPI.searchProducts(appUser.id, '', undefined, 100)
-      setProducts(searchResult.products || [])
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('user_id', appUser?.id)
+        .order('name')
+
+      if (error) throw error
+      setProducts(data || [])
     } catch (error) {
       console.error('Error fetching products:', error)
-      // Fallback to direct Supabase query
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .eq('user_id', appUser.id)
-          .order('name')
-
-        if (error) throw error
-        setProducts(data || [])
-      } catch (fallbackError) {
-        console.error('Fallback fetch error:', fallbackError)
-        toast.error('Failed to load products')
-      }
+      toast.error('Failed to load products')
     } finally {
       setLoading(false)
     }
   }
-
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.barcode?.includes(searchTerm)
-  )
 
   const addToCart = (product: Product) => {
     const existingItem = cart.find(item => item.product.id === product.id)
@@ -118,227 +133,77 @@ const POS = () => {
 
   const removeFromCart = (productId: string) => {
     setCart(cart.filter(item => item.product.id !== productId))
+    toast.success('Item removed from cart')
   }
 
-  const clearCart = () => {
-    setCart([])
+  const handleBarcodeChange = (value: string) => {
+    setBarcodeInput(value)
   }
 
   const handleBarcodeScan = async () => {
     if (!barcodeInput.trim()) return
 
-    const product = products.find(p => p.barcode === barcodeInput.trim())
-    if (product) {
-      addToCart(product)
-      setBarcodeInput('')
-      toast.success(`Added ${product.name} to cart`)
-    } else {
-      toast.error('Product not found with this barcode')
-    }
-  }
-
-  const handleCameraScan = async () => {
     try {
-      // Check if camera is available
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        toast.error('Camera not available on this device')
-        return
-      }
-
-      // Show camera permission request
-      toast.info('Requesting camera permission...')
+      // Clean the barcode input (remove spaces, dashes, etc.)
+      const cleanBarcode = barcodeInput.trim().replace(/[\s-]/g, '')
       
-      // Create barcode reader
-      const codeReader = new BrowserMultiFormatReader()
+      // Try exact match first
+      let product = products.find(p => p.barcode === cleanBarcode)
       
-      // Request camera access
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment', // Use back camera
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        } 
-      })
-
-      // Create video element for camera preview
-      const video = document.createElement('video')
-      video.srcObject = stream
-      video.play()
-
-      // Create modal for camera view
-      const modal = document.createElement('div')
-      modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.9);
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-      `
-
-      const videoContainer = document.createElement('div')
-      videoContainer.style.cssText = `
-        position: relative;
-        width: 90%;
-        max-width: 500px;
-        height: 60%;
-        border-radius: 10px;
-        overflow: hidden;
-      `
-
-      const closeButton = document.createElement('button')
-      closeButton.innerHTML = '✕ Close'
-      closeButton.style.cssText = `
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: rgba(0,0,0,0.7);
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        border-radius: 5px;
-        cursor: pointer;
-        z-index: 10000;
-      `
-
-      const scanArea = document.createElement('div')
-      scanArea.style.cssText = `
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 200px;
-        height: 100px;
-        border: 2px solid #00ff00;
-        border-radius: 10px;
-        background: transparent;
-        z-index: 10001;
-      `
-
-      const instructions = document.createElement('div')
-      instructions.innerHTML = 'Point camera at barcode'
-      instructions.style.cssText = `
-        color: white;
-        text-align: center;
-        margin-top: 20px;
-        font-size: 18px;
-      `
-
-      videoContainer.appendChild(video)
-      videoContainer.appendChild(closeButton)
-      videoContainer.appendChild(scanArea)
-      modal.appendChild(videoContainer)
-      modal.appendChild(instructions)
-      document.body.appendChild(modal)
-
-      // Real barcode detection using ZXing
-      const scanBarcode = async () => {
-        try {
-          const result = await codeReader.decodeFromVideoDevice(undefined, video, (result, error) => {
-            if (result) {
-              const barcode = result.getText()
-              console.log('Barcode detected:', barcode)
-              
-              // Find product by barcode
-              const product = products.find(p => p.barcode === barcode)
-              if (product) {
-                addToCart(product)
-                toast.success(`📷 Scanned and added ${product.name} to cart`)
-              } else {
-                toast.error(`❌ Product not found with barcode: ${barcode}`)
-              }
-              
-              // Close camera and modal
-              codeReader.reset()
-              stream.getTracks().forEach(track => track.stop())
-              document.body.removeChild(modal)
-            }
-            if (error && !(error instanceof Error && error.name === 'NotFoundException')) {
-              console.error('Barcode scan error:', error)
-            }
-          })
-        } catch (error) {
-          console.error('Barcode reader error:', error)
-          toast.error('Failed to initialize barcode scanner')
-        }
+      // If no exact match, try partial match
+      if (!product) {
+        product = products.find(p => p.barcode?.includes(cleanBarcode) || cleanBarcode.includes(p.barcode || ''))
       }
-
-      // Start barcode scanning
-      scanBarcode()
-
-      // Handle close button
-      closeButton.onclick = () => {
-        codeReader.reset()
-        stream.getTracks().forEach(track => track.stop())
-        document.body.removeChild(modal)
+      
+      if (product) {
+        addToCart(product)
+        setBarcodeInput('')
+        toast.success(`${product.name} added to cart!`)
+      } else {
+        toast.error(`Product not found with barcode: ${cleanBarcode}`)
+        console.log('Available barcodes:', products.map(p => p.barcode).filter(Boolean))
       }
-
-      // Auto-close after 30 seconds
-      const autoClose = setTimeout(() => {
-        codeReader.reset()
-        stream.getTracks().forEach(track => track.stop())
-        if (document.body.contains(modal)) {
-          document.body.removeChild(modal)
-        }
-      }, 30000)
-
-      // Clean up on close
-      closeButton.onclick = () => {
-        clearTimeout(autoClose)
-        codeReader.reset()
-        stream.getTracks().forEach(track => track.stop())
-        document.body.removeChild(modal)
-      }
-
     } catch (error) {
-      console.error('Camera error:', error)
-      toast.error('Failed to access camera. Please try manual barcode entry.')
-      
-      // Fallback to manual barcode input
-      const barcode = prompt('Enter barcode manually:')
-      if (barcode) {
-        handleBarcodeInput(barcode)
-      }
+      console.error('Error scanning barcode:', error)
+      toast.error('Failed to scan barcode')
     }
   }
 
-  const handleBarcodeInput = (barcode: string) => {
-    if (!barcode.trim()) return
-    
-    const product = products.find(p => p.barcode === barcode.trim())
-    if (product) {
-      addToCart(product)
-      toast.success(`✅ Added ${product.name} to cart`)
-      setBarcodeInput('') // Clear input after successful scan
-    } else {
-      toast.error(`❌ Product not found with barcode: ${barcode}`)
-      // Show available barcodes for reference
-      const availableBarcodes = products.slice(0, 3).map(p => p.barcode).join(', ')
-      if (availableBarcodes) {
-        toast.info(`Available barcodes: ${availableBarcodes}...`)
-      }
-    }
+  const handleBarcodeScanFromCamera = (barcode: string) => {
+    setBarcodeInput(barcode)
+    handleBarcodeScan()
+    setShowBarcodeScanner(false)
   }
 
-  // Auto-scan when barcode input changes (for barcode scanners)
-  const handleBarcodeChange = (value: string) => {
-    setBarcodeInput(value)
-    
-    // Auto-scan if input looks like a complete barcode (8+ characters)
-    if (value.length >= 8 && /^\d+$/.test(value)) {
-      setTimeout(() => {
-        handleBarcodeInput(value)
-      }, 100)
-    }
+  const calculateSubtotal = () => {
+    return cart.reduce((sum, item) => sum + item.subtotal, 0)
+  }
+
+  const calculateDiscount = () => {
+    const subtotal = calculateSubtotal()
+    return (subtotal * discount) / 100
+  }
+
+  const calculateTax = () => {
+    const subtotal = calculateSubtotal()
+    const discountAmount = calculateDiscount()
+    const taxableAmount = subtotal - discountAmount
+    return (taxableAmount * taxRate) / 100
   }
 
   const calculateTotal = () => {
-    return cart.reduce((total, item) => total + item.subtotal, 0)
+    const subtotal = calculateSubtotal()
+    const discountAmount = calculateDiscount()
+    const taxAmount = calculateTax()
+    return subtotal - discountAmount + taxAmount
+  }
+
+  const clearCart = () => {
+    setCart([])
+    setCustomerName('')
+    setCustomerPhone('')
+    setDiscount(0)
+    setBarcodeInput('')
   }
 
   const processSale = async () => {
@@ -347,62 +212,62 @@ const POS = () => {
       return
     }
 
-    if (!appUser?.id) {
-      toast.error('User not authenticated')
-      return
-    }
-
-    setProcessing(true)
     try {
-      const total = calculateTotal()
+      setProcessing(true)
       
-      // Prepare cart items for API
-      const cartItems = cart.map(item => ({
-        product_id: item.product.id,
-        quantity: item.quantity,
-        unit_price: item.product.selling_price
-      }))
-
-      // Use the real API service
-      const saleResult = await OticAPI.processSale(
-        appUser.id,
-        cartItems,
-        paymentMethod,
-        undefined, // customer name
-        undefined  // customer phone
-      )
-
-      if (saleResult.success) {
-        toast.success(`Sale completed! Receipt: ${saleResult.receipt_number}`)
-        clearCart()
-        setBarcodeInput('')
-        
-        // Refresh products to update stock
-        await fetchProducts()
-      } else {
-        throw new Error('Sale processing failed')
+      const saleData = {
+        user_id: appUser?.id,
+        customer_name: customerName || null,
+        customer_phone: customerPhone || null,
+        payment_method: paymentMethod,
+        subtotal: calculateSubtotal(),
+        discount: calculateDiscount(),
+        tax: calculateTax(),
+        total: calculateTotal(),
+        items: cart.map(item => ({
+          product_id: item.product.id,
+          quantity: item.quantity,
+          price: item.product.price,
+          subtotal: item.subtotal
+        }))
       }
+
+      const result = await OticAPI.createSale(saleData)
       
+      if (result.success) {
+        toast.success('Sale processed successfully!')
+        clearCart()
+      } else {
+        throw new Error(result.error || 'Failed to process sale')
+      }
     } catch (error) {
       console.error('Error processing sale:', error)
-      toast.error('Failed to process sale')
+      toast.error('Failed to process sale. Please try again.')
     } finally {
       setProcessing(false)
     }
   }
 
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#faa51a]"></div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#faa51a] mx-auto mb-4"></div>
+          <p className="text-lg text-gray-600">Loading POS System...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-lg sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -410,182 +275,186 @@ const POS = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => navigate('/dashboard')}
-                className="mr-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
               >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Dashboard
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Dashboard</span>
               </Button>
-              <ShoppingCart className="h-8 w-8 text-[#faa51a]" />
-              <div>
-                <h1 className="text-2xl font-bold text-[#040458]">Point of Sale</h1>
-                <p className="text-sm text-gray-600">
-                  Process sales and manage transactions
-                </p>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-lg flex items-center justify-center">
+                  <ShoppingCart className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-[#040458]">Point of Sale</h1>
+                  <p className="text-sm text-gray-600">Process sales and manage transactions</p>
+                </div>
               </div>
             </div>
-            <Badge variant="outline" className="text-lg px-4 py-2">
-              {cart.length} items in cart
-            </Badge>
+            <div className="flex items-center space-x-4">
+              <Badge variant="outline" className="text-lg px-4 py-2 bg-[#faa51a]/10 text-[#faa51a] border-[#faa51a]/30">
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                {cart.length} items in cart
+              </Badge>
+            </div>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
           {/* Products Section */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Search and Barcode */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Products</CardTitle>
-                <CardDescription>Search and add products to cart</CardDescription>
+          <div className="xl:col-span-3">
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-[#040458] to-[#faa51a] text-white rounded-t-lg">
+                <CardTitle className="flex items-center text-white">
+                  <Package className="h-6 w-6 mr-3" />
+                  Products
+                </CardTitle>
+                <CardDescription className="text-white/90">Search and add products to cart</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex space-x-4">
-                  <div className="flex-1">
-                    <Label htmlFor="search">Search Products</Label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="search"
-                        placeholder="Search by name or barcode..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  {/* Search and Barcode Input */}
+                  <div className="space-y-4">
+                    <div className="flex space-x-3">
+                      <div className="flex-1 relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Search products by name or barcode..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10 h-12 border-gray-200 focus:border-[#faa51a] focus:ring-[#faa51a]/20"
+                        />
+                      </div>
+                      <Button 
+                        onClick={() => setShowBarcodeScanner(true)} 
+                        className="bg-[#040458] hover:bg-[#040458]/90 text-white h-12 px-6"
+                      >
+                        <Camera className="h-5 w-5 mr-2" />
+                        Scan Barcode
+                      </Button>
                     </div>
-                  </div>
-                  <div className="flex-1">
-                    <Label htmlFor="barcode">Barcode Scanner</Label>
-                    <div className="flex space-x-2">
-                      <Input
-                        id="barcode"
-                        placeholder="Scan or enter barcode..."
-                        value={barcodeInput}
-                        onChange={(e) => handleBarcodeChange(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleBarcodeInput(barcodeInput)}
-                        autoFocus
-                        className="text-center font-mono"
-                      />
+                    
+                    <div className="flex space-x-3">
+                      <div className="flex-1 relative">
+                        <QrCode className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Enter barcode manually (e.g., 6000622620003)..."
+                          value={barcodeInput}
+                          onChange={(e) => handleBarcodeChange(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleBarcodeScan()}
+                          className="pl-10 h-12 border-gray-200 focus:border-[#faa51a] focus:ring-[#faa51a]/20"
+                        />
+                      </div>
                       <Button 
                         onClick={handleBarcodeScan} 
-                        variant="outline" 
-                        title="Manual scan"
-                        className="border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
+                        className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white h-12 px-6"
+                        disabled={!barcodeInput.trim()}
                       >
-                        <Package className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        onClick={handleCameraScan} 
-                        className="bg-[#faa51a] hover:bg-[#040458] text-white" 
-                        title="Camera scan"
-                      >
-                        <Camera className="h-4 w-4" />
+                        <Plus className="h-5 w-5 mr-2" />
+                        Add Product
                       </Button>
                     </div>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <p className="text-xs text-muted-foreground">
-                        📷 Camera scan • ⌨️ Type barcode • 🔍 Auto-detect
-                      </p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => {
-                          const testBarcode = products[0]?.barcode
-                          if (testBarcode) {
-                            setBarcodeInput(testBarcode)
-                            handleBarcodeInput(testBarcode)
-                          }
-                        }}
-                        className="text-xs"
-                      >
-                        Test: {products[0]?.barcode || 'No products'}
-                      </Button>
+                    
+                    {/* Quick Test Barcodes */}
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <p className="text-xs text-blue-700 font-medium mb-2">Quick Test Barcodes:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {products.slice(0, 3).map((product) => (
+                          <Button
+                            key={product.id}
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setBarcodeInput(product.barcode || '')
+                              handleBarcodeScan()
+                            }}
+                            className="text-xs h-8"
+                          >
+                            {product.barcode}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Products Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+                    {filteredProducts.map((product) => (
+                      <Card key={product.id} className="hover:shadow-md transition-all duration-200 border-gray-100 hover:border-[#faa51a]/30">
+                        <CardContent className="p-4">
+                          <div className="space-y-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-gray-900 text-sm line-clamp-2">{product.name}</h3>
+                                <p className="text-xs text-gray-500 mt-1">Stock: {product.stock}</p>
+                                {product.barcode && (
+                                  <p className="text-xs text-gray-400 mt-1">Barcode: {product.barcode}</p>
+                                )}
+                              </div>
+                              <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                UGX {product.price.toLocaleString()}
+                              </Badge>
+                            </div>
+                            <Button
+                              onClick={() => addToCart(product)}
+                              className="w-full bg-[#040458] hover:bg-[#040458]/90 text-white text-sm h-8"
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add to Cart
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Products Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              {filteredProducts.map((product) => (
-                <Card key={product.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-sm truncate">{product.name}</h3>
-                      <p className="text-xs text-muted-foreground">
-                        UGX {product.price.toLocaleString()}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Stock: {product.stock}
-                      </p>
-                      <Button
-                        size="sm"
-                        className="w-full bg-[#faa51a] hover:bg-[#040458] text-white"
-                        onClick={() => addToCart(product)}
-                        disabled={product.stock <= 0}
-                      >
-                        <Plus className="h-3 w-3 mr-1" />
-                        Add to Cart
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {filteredProducts.length === 0 && (
-              <Card>
-                <CardContent className="text-center py-8">
-                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">
-                    {searchTerm ? 'No products found matching your search' : 'No products available. Add some products to get started.'}
-                  </p>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           {/* Cart Section */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Cart</CardTitle>
-                <CardDescription>Review and process your sale</CardDescription>
+          <div className="xl:col-span-1">
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm sticky top-24">
+              <CardHeader className="bg-gradient-to-r from-green-500 to-green-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center text-white">
+                  <ShoppingCart className="h-6 w-6 mr-3" />
+                  Cart ({cart.length})
+                </CardTitle>
+                <CardDescription className="text-white/90">Current transaction</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="p-6">
                 {cart.length === 0 ? (
-                  <div className="text-center py-8">
-                    <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">Cart is empty</p>
+                  <div className="text-center py-12">
+                    <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-sm">Cart is empty</p>
+                    <p className="text-gray-400 text-xs mt-1">Add products to get started</p>
                   </div>
                 ) : (
-                  <>
+                  <div className="space-y-6">
+                    {/* Cart Items */}
                     <div className="space-y-3 max-h-64 overflow-y-auto">
                       {cart.map((item) => (
-                        <div key={item.product.id} className="flex items-center space-x-3 p-2 border rounded">
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{item.product.name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              UGX {item.product.price.toLocaleString()} each
-                            </p>
+                        <div key={item.product.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm text-gray-900 truncate">{item.product.name}</h4>
+                            <p className="text-xs text-gray-500">UGX {item.product.price.toLocaleString()}</p>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                              className="border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
+                              className="h-6 w-6 p-0"
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
-                            <span className="text-sm w-8 text-center">{item.quantity}</span>
+                            <span className="text-sm font-medium w-8 text-center">{item.quantity}</span>
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                              className="border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
+                              className="h-6 w-6 p-0"
                             >
                               <Plus className="h-3 w-3" />
                             </Button>
@@ -593,13 +462,10 @@ const POS = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => removeFromCart(item.product.id)}
-                              className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                              className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
-                          </div>
-                          <div className="text-sm font-medium">
-                            UGX {item.subtotal.toLocaleString()}
                           </div>
                         </div>
                       ))}
@@ -607,71 +473,155 @@ const POS = () => {
 
                     <Separator />
 
-                    <div className="space-y-4">
-                      <div className="flex justify-between text-lg font-bold">
-                        <span>Total:</span>
-                        <span>UGX {calculateTotal().toLocaleString()}</span>
-                      </div>
-
+                    {/* Customer Information */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-gray-900 flex items-center">
+                        <User className="h-4 w-4 mr-2 text-[#faa51a]" />
+                        Customer Info
+                      </h4>
                       <div className="space-y-2">
-                        <Label>Payment Method</Label>
-                        <Select value={paymentMethod} onValueChange={(value: any) => setPaymentMethod(value)}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="cash">
-                              <div className="flex items-center space-x-2">
-                                <CreditCard className="h-4 w-4" />
-                                <span>Cash</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="mobile_money">
-                              <div className="flex items-center space-x-2">
-                                <Smartphone className="h-4 w-4" />
-                                <span>Mobile Money</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="card">
-                              <div className="flex items-center space-x-2">
-                                <CreditCard className="h-4 w-4" />
-                                <span>Card</span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="flutterwave">
-                              <div className="flex items-center space-x-2">
-                                <CreditCard className="h-4 w-4" />
-                                <span>Flutterwave</span>
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          onClick={clearCart}
-                          className="flex-1 border-[#040458] text-[#040458] hover:bg-[#040458] hover:text-white"
-                        >
-                          Clear Cart
-                        </Button>
-                        <Button
-                          onClick={processSale}
-                          disabled={processing}
-                          className="flex-1 bg-[#faa51a] hover:bg-[#040458] text-white"
-                        >
-                          {processing ? 'Processing...' : 'Complete Sale'}
-                        </Button>
+                        <Input
+                          placeholder="Customer name (optional)"
+                          value={customerName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          className="h-10 text-sm"
+                        />
+                        <Input
+                          placeholder="Phone number (optional)"
+                          value={customerPhone}
+                          onChange={(e) => setCustomerPhone(e.target.value)}
+                          className="h-10 text-sm"
+                        />
                       </div>
                     </div>
-                  </>
+
+                    <Separator />
+
+                    {/* Discount */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium flex items-center">
+                        <Percent className="h-4 w-4 mr-2 text-[#faa51a]" />
+                        Discount (%)
+                      </Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={discount}
+                        onChange={(e) => setDiscount(Number(e.target.value))}
+                        className="h-10 text-sm"
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+
+                    <Separator />
+
+                    {/* Summary */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Subtotal:</span>
+                        <span>UGX {calculateSubtotal().toLocaleString()}</span>
+                      </div>
+                      {discount > 0 && (
+                        <div className="flex justify-between text-sm text-green-600">
+                          <span>Discount ({discount}%):</span>
+                          <span>-UGX {calculateDiscount().toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-sm">
+                        <span>VAT ({taxRate}%):</span>
+                        <span>UGX {calculateTax().toLocaleString()}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between font-bold text-lg">
+                        <span>Total:</span>
+                        <span className="text-[#040458]">UGX {calculateTotal().toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Payment Method */}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium flex items-center">
+                        <CreditCard className="h-4 w-4 mr-2 text-[#faa51a]" />
+                        Payment Method
+                      </Label>
+                      <Select value={paymentMethod} onValueChange={(value: any) => setPaymentMethod(value)}>
+                        <SelectTrigger className="h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="cash">
+                            <div className="flex items-center">
+                              <DollarSign className="h-4 w-4 mr-2" />
+                              Cash
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="mobile_money">
+                            <div className="flex items-center">
+                              <Smartphone className="h-4 w-4 mr-2" />
+                              Mobile Money
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="card">
+                            <div className="flex items-center">
+                              <CreditCard className="h-4 w-4 mr-2" />
+                              Card
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="flutterwave">
+                            <div className="flex items-center">
+                              <Zap className="h-4 w-4 mr-2" />
+                              Flutterwave
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-2">
+                      <Button
+                        onClick={processSale}
+                        disabled={processing || cart.length === 0}
+                        className="w-full bg-[#040458] hover:bg-[#040458]/90 text-white h-12 font-semibold"
+                      >
+                        {processing ? (
+                          <>
+                            <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle className="h-5 w-5 mr-2" />
+                            Process Sale
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={clearCart}
+                        variant="outline"
+                        className="w-full h-10 text-gray-600 hover:text-red-600 hover:border-red-300"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Clear Cart
+                      </Button>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
+
+      {/* Barcode Scanner Modal */}
+      <QuaggaBarcodeScanner
+        isOpen={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onScan={handleBarcodeScanFromCamera}
+      />
     </div>
   )
 }

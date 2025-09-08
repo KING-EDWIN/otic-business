@@ -23,3 +23,4 @@ CREATE POLICY "Admins can view all payment proofs" ON storage.objects
 -- Create policy for public access to payment proofs (for admin verification)
 CREATE POLICY "Public access to payment proofs" ON storage.objects
   FOR SELECT USING (bucket_id = 'payment-proofs');
+

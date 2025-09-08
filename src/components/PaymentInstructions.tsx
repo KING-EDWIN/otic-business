@@ -252,3 +252,4 @@ export const PaymentInstructions: React.FC<PaymentInstructionsProps> = ({
 }
 
 export default PaymentInstructions
+

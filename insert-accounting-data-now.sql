@@ -46,3 +46,4 @@ SELECT 'COUNTS:' as info;
 SELECT 'invoices' as table_name, COUNT(*) as count FROM invoices WHERE user_id = '00000000-0000-0000-0000-000000000001'
 UNION ALL
 SELECT 'expenses' as table_name, COUNT(*) as count FROM expenses WHERE user_id = '00000000-0000-0000-0000-000000000001';
+

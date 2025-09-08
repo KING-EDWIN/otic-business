@@ -81,3 +81,4 @@ Add the environment variable in Vercel:
 4. **Deploy to Vercel with the API key**
 
 Your AI integration is ready! 🚀
+

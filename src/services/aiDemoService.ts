@@ -251,3 +251,4 @@ export const shouldUseDemoAI = (): boolean => {
   
   return isDemoMode || !hasApiKey
 }
+

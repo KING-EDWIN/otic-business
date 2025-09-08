@@ -53,3 +53,4 @@ CREATE INDEX IF NOT EXISTS idx_sales_user_id_created_at ON sales(user_id, create
 CREATE INDEX IF NOT EXISTS idx_products_user_id_stock ON products(user_id, stock);
 
 
+

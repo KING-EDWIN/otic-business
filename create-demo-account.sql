@@ -106,3 +106,4 @@ INSERT INTO analytics_data (id, user_id, metric_name, metric_value, date, create
 ON CONFLICT (id) DO NOTHING;
 
 
+

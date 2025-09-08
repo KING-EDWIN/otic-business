@@ -24,3 +24,4 @@ SELECT id, name, user_id FROM customers;
 
 SELECT 'ACCOUNTS DATA:' as info;
 SELECT id, name, user_id FROM accounts;
+

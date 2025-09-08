@@ -58,3 +58,4 @@ SELECT 'expenses' as table_name, COUNT(*) as count FROM expenses;
 SELECT 'invoices' as table_name, COUNT(*) as count FROM invoices;
 SELECT 'customers' as table_name, COUNT(*) as count FROM customers;
 SELECT 'accounts' as table_name, COUNT(*) as count FROM accounts;
+

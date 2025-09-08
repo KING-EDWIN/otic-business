@@ -344,3 +344,4 @@ export const EmailNotificationSettings: React.FC<EmailNotificationSettingsProps>
     </div>
   )
 }
+

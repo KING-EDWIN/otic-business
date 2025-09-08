@@ -57,3 +57,4 @@ After redeploying, visit your Vercel URL and:
 1. Click "Sign In"
 2. Use demo credentials: `demo@oticbusiness.com` / `demo123456`
 3. Check if dashboard loads without errors
+

@@ -31,3 +31,4 @@ ADD CONSTRAINT user_subscriptions_user_id_unique UNIQUE (user_id);
 
 -- Check final state
 SELECT 'user_subscriptions' as table_name, COUNT(*) as count FROM user_subscriptions;
+

@@ -41,3 +41,4 @@ SELECT 'invoices' as table, COUNT(*) as count FROM invoices;
 -- Show the actual data
 SELECT 'EXPENSES:' as info, id, amount, description FROM expenses;
 SELECT 'INVOICES:' as info, id, invoice_number, total FROM invoices;
+

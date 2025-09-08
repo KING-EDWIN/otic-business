@@ -355,3 +355,4 @@ SELECT
 UNION ALL
 SELECT 
   'Invoice Items' as table_name, COUNT(*) as count FROM invoice_items;
+

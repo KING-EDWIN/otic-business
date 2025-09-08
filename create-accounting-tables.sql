@@ -108,3 +108,4 @@ CREATE POLICY "Users can manage own accounts" ON accounts
 
 CREATE POLICY "Users can manage own expense categories" ON expense_categories
   FOR ALL USING (auth.uid() = user_id);
+

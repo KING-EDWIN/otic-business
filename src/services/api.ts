@@ -231,6 +231,106 @@ export class OticAPI {
     }
   }
 
+  // Create a sale (for POS integration)
+  static async createSale(saleData: {
+    user_id: string
+    customer_name?: string
+    customer_phone?: string
+    payment_method: string
+    subtotal: number
+    discount: number
+    tax: number
+    total: number
+    items: Array<{
+      product_id: string
+      quantity: number
+      price: number
+      subtotal: number
+    }>
+  }): Promise<{ success: boolean; sale_id?: string; error?: string }> {
+    try {
+      // First, create the sale record (using the actual database structure)
+      const { data: sale, error: saleError } = await supabase
+        .from('sales')
+        .insert({
+          user_id: saleData.user_id,
+          total: saleData.total,
+          payment_method: saleData.payment_method,
+          receipt_number: `RCP-${Date.now()}`,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (saleError) {
+        console.error('Error creating sale:', saleError)
+        return { success: false, error: saleError.message }
+      }
+
+      // Then, create the sale items
+      const saleItems = saleData.items.map(item => ({
+        sale_id: sale.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price: item.price,
+        created_at: new Date().toISOString()
+      }))
+
+      const { error: itemsError } = await supabase
+        .from('sale_items')
+        .insert(saleItems)
+
+      if (itemsError) {
+        console.error('Error creating sale items:', itemsError)
+        // Rollback the sale if items creation fails
+        await supabase.from('sales').delete().eq('id', sale.id)
+        return { success: false, error: itemsError.message }
+      }
+
+      // Update product stock quantities
+      for (const item of saleData.items) {
+        const { error: stockError } = await supabase
+          .from('products')
+          .update({ 
+            stock: supabase.raw(`stock - ${item.quantity}`)
+          })
+          .eq('id', item.product_id)
+          .eq('user_id', saleData.user_id)
+
+        if (stockError) {
+          console.error('Error updating stock:', stockError)
+          // Note: We don't rollback here as the sale is already recorded
+        }
+      }
+
+      // Store additional sale data in a separate table or as JSON
+      // For now, we'll store customer info and financial details in a separate table
+      if (saleData.customer_name || saleData.customer_phone || saleData.subtotal !== saleData.total) {
+        try {
+          await supabase
+            .from('sale_details')
+            .insert({
+              sale_id: sale.id,
+              customer_name: saleData.customer_name,
+              customer_phone: saleData.customer_phone,
+              subtotal: saleData.subtotal,
+              discount: saleData.discount,
+              tax: saleData.tax,
+              created_at: new Date().toISOString()
+            })
+        } catch (detailError) {
+          console.warn('Could not store sale details:', detailError)
+          // This is not critical, so we continue
+        }
+      }
+
+      return { success: true, sale_id: sale.id }
+    } catch (error) {
+      console.error('Create sale API error:', error)
+      return { success: false, error: 'Failed to create sale' }
+    }
+  }
+
   // Get inventory alerts
   static async getInventoryAlerts(userId: string): Promise<InventoryAlert> {
     try {
@@ -443,3 +543,4 @@ export class OticAPI {
 }
 
 export default OticAPI
+

@@ -30,3 +30,4 @@ SELECT
   THEN 'RPC functions: READY'
   ELSE 'RPC functions: NEED TO BE CREATED'
   END as rpc_status;
+

@@ -63,3 +63,4 @@ lVITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmF
 - Review the [DEPLOYMENT.md](DEPLOYMENT.md) file
 
 **Your Otic Business app is ready for the world! 🌍**
+

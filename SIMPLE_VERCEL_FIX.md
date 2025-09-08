@@ -40,3 +40,4 @@ After adding these 2 variables and redeploying:
 1. Visit your Vercel URL after redeploy
 2. Sign in with demo account: `demo@oticbusiness.com` / `demo123456`
 3. Check if all data loads from Supabase
+

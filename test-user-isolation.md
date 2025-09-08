@@ -72,3 +72,4 @@ Check Supabase to verify:
 - Demo data is only associated with `00000000-0000-0000-0000-000000000001`
 - Real user data is properly isolated
 - RLS policies are working correctly
+

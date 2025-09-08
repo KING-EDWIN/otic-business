@@ -14,3 +14,4 @@ WHERE proname = 'get_dashboard_stats';
 
 -- Test with a simpler query to see if RPC works at all
 SELECT 'RPC test: ' || current_user as rpc_status;
+

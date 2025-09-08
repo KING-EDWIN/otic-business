@@ -248,73 +248,83 @@ const Analytics = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-lg">
+        <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-6">
               <Button 
                 variant="ghost" 
                 size="sm" 
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10 transition-all duration-200 rounded-lg px-4 py-2"
               >
                 <ArrowLeft className="h-4 w-4" />
                 <span>Back to Dashboard</span>
               </Button>
-              <BarChart3 className="h-8 w-8 text-[#faa51a]" />
-              <div>
-                <h1 className="text-2xl font-bold text-[#040458]">Analytics & AI Insights</h1>
-                <p className="text-sm text-gray-600">
-                  AI-powered business intelligence and forecasting
-                </p>
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-gradient-to-r from-[#faa51a] to-[#ff6b35] rounded-xl shadow-lg">
+                  <BarChart3 className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-[#040458] to-[#1e40af] bg-clip-text text-transparent">
+                    Analytics & AI Insights
+                  </h1>
+                  <p className="text-sm text-gray-600 font-medium">
+                    AI-powered business intelligence and forecasting
+                  </p>
+                </div>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7d">Last 7 days</SelectItem>
-                  <SelectItem value="30d">Last 30 days</SelectItem>
-                  <SelectItem value="90d">Last 90 days</SelectItem>
-                  <SelectItem value="1y">Last year</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-1 shadow-md">
+                <Select value={timeRange} onValueChange={setTimeRange}>
+                  <SelectTrigger className="w-40 border-0 bg-transparent focus:ring-2 focus:ring-[#faa51a]/20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white/95 backdrop-blur-md border-white/20">
+                    <SelectItem value="7d">Last 7 days</SelectItem>
+                    <SelectItem value="30d">Last 30 days</SelectItem>
+                    <SelectItem value="90d">Last 90 days</SelectItem>
+                    <SelectItem value="1y">Last year</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-6 py-8">
         {/* AI Insights */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Brain className="h-5 w-5" />
-              <span>AI Insights</span>
+        <Card className="mb-8 bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-[#040458] to-[#1e40af] text-white rounded-t-lg">
+            <CardTitle className="flex items-center space-x-3">
+              <div className="p-2 bg-white/20 rounded-lg">
+                <Brain className="h-6 w-6" />
+              </div>
+              <span className="text-xl font-bold">AI Insights</span>
             </CardTitle>
-            <CardDescription>
-              AI-powered recommendations and predictions
+            <CardDescription className="text-white/90">
+              AI-powered recommendations and predictions powered by Mistral AI
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {aiInsights.map((insight, index) => (
-                <div key={index} className="p-4 border rounded-lg">
-                  <div className="flex items-start space-x-3">
-                    <div className="bg-[#faa51a]/10 p-2 rounded-full">
-                      <Target className="h-4 w-4 text-[#faa51a]" />
+                <div key={index} className="group p-6 bg-gradient-to-br from-white/80 to-white/40 backdrop-blur-sm border border-white/30 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                  <div className="flex items-start space-x-4">
+                    <div className="p-3 bg-gradient-to-r from-[#faa51a] to-[#ff6b35] rounded-xl shadow-md group-hover:scale-110 transition-transform duration-200">
+                      <Target className="h-5 w-5 text-white" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{insight.message}</p>
-                      <div className="flex items-center space-x-2 mt-2">
-                        <Badge variant="secondary" className="text-xs">
+                      <p className="text-sm font-semibold text-gray-800 leading-relaxed">{insight.message}</p>
+                      <div className="flex items-center space-x-3 mt-4">
+                        <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-sm">
                           {Math.round(insight.confidence * 100)}% confidence
                         </Badge>
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="border-[#faa51a] text-[#faa51a] bg-[#faa51a]/5">
                           {insight.type.replace('_', ' ')}
                         </Badge>
                       </div>
@@ -328,128 +338,177 @@ const Analytics = () => {
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
+          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-semibold text-gray-700">Total Sales</CardTitle>
+              <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md">
+                <ShoppingCart className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData?.totalSales || 0}</div>
-              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+              <div className="text-3xl font-bold text-[#040458]">{analyticsData?.totalSales || 0}</div>
+              <div className="flex items-center space-x-2 text-sm mt-2">
                 {analyticsData?.salesGrowth && analyticsData.salesGrowth > 0 ? (
-                  <TrendingUp className="h-3 w-3 text-green-500" />
+                  <TrendingUp className="h-4 w-4 text-green-500" />
                 ) : (
-                  <TrendingDown className="h-3 w-3 text-red-500" />
+                  <TrendingDown className="h-4 w-4 text-red-500" />
                 )}
-                <span>{analyticsData?.salesGrowth || 0}% from last period</span>
+                <span className={`font-medium ${analyticsData?.salesGrowth && analyticsData.salesGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {analyticsData?.salesGrowth || 0}% from last period
+                </span>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-semibold text-gray-700">Total Revenue</CardTitle>
+              <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-md">
+                <DollarSign className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">UGX {(analyticsData?.totalRevenue || 0).toLocaleString()}</div>
-              <div className="flex items-center space-x-1 text-xs text-muted-foreground">
+              <div className="text-3xl font-bold text-[#040458]">UGX {(analyticsData?.totalRevenue || 0).toLocaleString()}</div>
+              <div className="flex items-center space-x-2 text-sm mt-2">
                 {analyticsData?.revenueGrowth && analyticsData.revenueGrowth > 0 ? (
-                  <TrendingUp className="h-3 w-3 text-green-500" />
+                  <TrendingUp className="h-4 w-4 text-green-500" />
                 ) : (
-                  <TrendingDown className="h-3 w-3 text-red-500" />
+                  <TrendingDown className="h-4 w-4 text-red-500" />
                 )}
-                <span>{analyticsData?.revenueGrowth || 0}% from last period</span>
+                <span className={`font-medium ${analyticsData?.revenueGrowth && analyticsData.revenueGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {analyticsData?.revenueGrowth || 0}% from last period
+                </span>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Order</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-semibold text-gray-700">Average Order</CardTitle>
+              <div className="p-2 bg-gradient-to-r from-[#faa51a] to-[#ff6b35] rounded-lg shadow-md">
+                <BarChart3 className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">UGX {(analyticsData?.averageOrderValue || 0).toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">Per transaction</p>
+              <div className="text-3xl font-bold text-[#040458]">UGX {(analyticsData?.averageOrderValue || 0).toLocaleString()}</div>
+              <p className="text-sm text-gray-600 font-medium mt-2">Per transaction</p>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Low Stock Items</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <CardTitle className="text-sm font-semibold text-gray-700">Low Stock Items</CardTitle>
+              <div className="p-2 bg-gradient-to-r from-red-500 to-pink-600 rounded-lg shadow-md">
+                <AlertTriangle className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-destructive">{analyticsData?.lowStockItems || 0}</div>
-              <p className="text-xs text-muted-foreground">Need restocking</p>
+              <div className="text-3xl font-bold text-red-600">{analyticsData?.lowStockItems || 0}</div>
+              <p className="text-sm text-gray-600 font-medium mt-2">Need restocking</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Charts */}
         <Tabs defaultValue="sales" className="space-y-6">
-          <TabsList className="bg-gray-100">
-            <TabsTrigger 
-              value="sales"
-              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
-            >
-              Sales Trends
-            </TabsTrigger>
-            <TabsTrigger 
-              value="products"
-              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
-            >
-              Top Products
-            </TabsTrigger>
-            <TabsTrigger 
-              value="revenue"
-              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
-            >
-              Revenue Analysis
-            </TabsTrigger>
-            <TabsTrigger 
-              value="ai"
-              className="data-[state=active]:bg-[#faa51a] data-[state=active]:text-white text-[#faa51a]"
-            >
-              <Brain className="h-4 w-4 mr-2" />
-              AI Insights
-            </TabsTrigger>
-          </TabsList>
+          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-2 shadow-lg">
+            <TabsList className="bg-transparent border-0">
+              <TabsTrigger 
+                value="sales"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#040458] data-[state=active]:to-[#1e40af] data-[state=active]:text-white text-[#040458] font-semibold rounded-lg transition-all duration-200"
+              >
+                Sales Trends
+              </TabsTrigger>
+              <TabsTrigger 
+                value="products"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#040458] data-[state=active]:to-[#1e40af] data-[state=active]:text-white text-[#040458] font-semibold rounded-lg transition-all duration-200"
+              >
+                Top Products
+              </TabsTrigger>
+              <TabsTrigger 
+                value="revenue"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#040458] data-[state=active]:to-[#1e40af] data-[state=active]:text-white text-[#040458] font-semibold rounded-lg transition-all duration-200"
+              >
+                Revenue Analysis
+              </TabsTrigger>
+              <TabsTrigger 
+                value="ai"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#faa51a] data-[state=active]:to-[#ff6b35] data-[state=active]:text-white text-[#faa51a] font-semibold rounded-lg transition-all duration-200"
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                AI Insights
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="sales" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Sales Over Time</CardTitle>
-                  <CardDescription>Daily sales performance</CardDescription>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center space-x-2">
+                    <BarChart3 className="h-5 w-5" />
+                    <span>Sales Over Time</span>
+                  </CardTitle>
+                  <CardDescription className="text-blue-100">Daily sales performance</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={analyticsData?.salesByDay || []}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="sales" stroke="#8884d8" strokeWidth={2} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="date" stroke="#64748b" />
+                      <YAxis stroke="#64748b" />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: 'none',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="sales" 
+                        stroke="#3b82f6" 
+                        strokeWidth={3}
+                        dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Revenue Over Time</CardTitle>
-                  <CardDescription>Daily revenue performance</CardDescription>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center space-x-2">
+                    <DollarSign className="h-5 w-5" />
+                    <span>Revenue Over Time</span>
+                  </CardTitle>
+                  <CardDescription className="text-green-100">Daily revenue performance</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={analyticsData?.salesByDay || []}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => [`UGX ${value.toLocaleString()}`, 'Revenue']} />
-                      <Line type="monotone" dataKey="revenue" stroke="#82ca9d" strokeWidth={2} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="date" stroke="#64748b" />
+                      <YAxis stroke="#64748b" />
+                      <Tooltip 
+                        formatter={(value) => [`UGX ${value.toLocaleString()}`, 'Revenue']}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: 'none',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="revenue" 
+                        stroke="#10b981" 
+                        strokeWidth={3}
+                        dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -459,30 +518,54 @@ const Analytics = () => {
 
           <TabsContent value="products" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top Products by Revenue</CardTitle>
-                  <CardDescription>Your best performing products</CardDescription>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center space-x-2">
+                    <Package className="h-5 w-5" />
+                    <span>Top Products by Revenue</span>
+                  </CardTitle>
+                  <CardDescription className="text-purple-100">Your best performing products</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={analyticsData?.topProducts || []}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip formatter={(value) => [`UGX ${value.toLocaleString()}`, 'Revenue']} />
-                      <Bar dataKey="revenue" fill="#8884d8" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <XAxis dataKey="name" stroke="#64748b" />
+                      <YAxis stroke="#64748b" />
+                      <Tooltip 
+                        formatter={(value) => [`UGX ${value.toLocaleString()}`, 'Revenue']}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: 'none',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
+                      <Bar 
+                        dataKey="revenue" 
+                        fill="url(#purpleGradient)"
+                        radius={[4, 4, 0, 0]}
+                      />
+                      <defs>
+                        <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#8b5cf6" />
+                          <stop offset="100%" stopColor="#7c3aed" />
+                        </linearGradient>
+                      </defs>
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Product Sales Distribution</CardTitle>
-                  <CardDescription>Sales volume by product</CardDescription>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center space-x-2">
+                    <Target className="h-5 w-5" />
+                    <span>Product Sales Distribution</span>
+                  </CardTitle>
+                  <CardDescription className="text-pink-100">Sales volume by product</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
                       <Pie
@@ -492,14 +575,21 @@ const Analytics = () => {
                         labelLine={false}
                         label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                         outerRadius={80}
-                        fill="#8884d8"
+                        fill="#ec4899"
                         dataKey="sales"
                       >
                         {(analyticsData?.topProducts || []).map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          border: 'none',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -508,19 +598,40 @@ const Analytics = () => {
           </TabsContent>
 
           <TabsContent value="revenue" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Revenue Trends</CardTitle>
-                <CardDescription>Revenue performance over the last 12 months</CardDescription>
+            <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-t-lg">
+                <CardTitle className="flex items-center space-x-2">
+                  <TrendingUp className="h-5 w-5" />
+                  <span>Monthly Revenue Trends</span>
+                </CardTitle>
+                <CardDescription className="text-emerald-100">Revenue performance over the last 12 months</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-6">
                 <ResponsiveContainer width="100%" height={400}>
                   <BarChart data={analyticsData?.salesByMonth || []}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => [`UGX ${value.toLocaleString()}`, 'Revenue']} />
-                    <Bar dataKey="revenue" fill="#82ca9d" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis dataKey="month" stroke="#64748b" />
+                    <YAxis stroke="#64748b" />
+                    <Tooltip 
+                      formatter={(value) => [`UGX ${value.toLocaleString()}`, 'Revenue']}
+                      contentStyle={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        border: 'none',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Bar 
+                      dataKey="revenue" 
+                      fill="url(#emeraldGradient)"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <defs>
+                      <linearGradient id="emeraldGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10b981" />
+                        <stop offset="100%" stopColor="#059669" />
+                      </linearGradient>
+                    </defs>
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -529,52 +640,109 @@ const Analytics = () => {
 
           <TabsContent value="ai" className="space-y-6">
             {/* AI Chat Bot - Full Width */}
-            <AIChatBot 
-              businessData={{
-                sales: analyticsData?.salesByDay || [],
-                products: [], // This would be populated with actual product data
-                revenue: analyticsData?.totalRevenue || 0,
-                growth: analyticsData?.salesGrowth || 0,
-                lowStockItems: [],
-                user: appUser
-              }}
-            />
+            <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader className="bg-gradient-to-r from-[#faa51a] to-[#ff6b35] text-white rounded-t-lg">
+                <CardTitle className="flex items-center space-x-3">
+                  <div className="p-2 bg-white/20 rounded-lg">
+                    <Brain className="h-6 w-6" />
+                  </div>
+                  <span className="text-xl font-bold">AI Business Assistant</span>
+                </CardTitle>
+                <CardDescription className="text-orange-100">
+                  Powered by Mistral AI - Get intelligent insights and recommendations
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <AIChatBot 
+                  businessData={{
+                    sales: analyticsData?.salesByDay || [],
+                    products: [], // This would be populated with actual product data
+                    revenue: analyticsData?.totalRevenue || 0,
+                    growth: analyticsData?.salesGrowth || 0,
+                    lowStockItems: [],
+                    user: appUser
+                  }}
+                />
+              </CardContent>
+            </Card>
             
             {/* AI Insights Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <AIInsights 
-                type="sales" 
-                data={{
-                  sales: analyticsData?.salesByDay || [],
-                  revenue: analyticsData?.totalRevenue || 0,
-                  growth: analyticsData?.salesGrowth || 0
-                }}
-              />
-              <AIInsights 
-                type="financial" 
-                data={{
-                  revenue: analyticsData?.totalRevenue || 0,
-                  expenses: (analyticsData?.totalRevenue || 0) * 0.7, // Estimated expenses
-                  profit: (analyticsData?.totalRevenue || 0) * 0.3 // Estimated profit
-                }}
-              />
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center space-x-2">
+                    <TrendingUp className="h-5 w-5" />
+                    <span>Sales AI Insights</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <AIInsights 
+                    type="sales" 
+                    data={{
+                      sales: analyticsData?.salesByDay || [],
+                      revenue: analyticsData?.totalRevenue || 0,
+                      growth: analyticsData?.salesGrowth || 0
+                    }}
+                  />
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center space-x-2">
+                    <DollarSign className="h-5 w-5" />
+                    <span>Financial AI Insights</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <AIInsights 
+                    type="financial" 
+                    data={{
+                      revenue: analyticsData?.totalRevenue || 0,
+                      expenses: (analyticsData?.totalRevenue || 0) * 0.7, // Estimated expenses
+                      profit: (analyticsData?.totalRevenue || 0) * 0.3 // Estimated profit
+                    }}
+                  />
+                </CardContent>
+              </Card>
             </div>
             
             {/* AI Predictions Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <AIPredictions 
-                type="sales_forecast" 
-                data={{
-                  sales: analyticsData?.salesByDay || [],
-                  timeframe: '30 days'
-                }}
-              />
-              <AIPredictions 
-                type="inventory_needs" 
-                data={{
-                  products: [] // This would be populated with actual product data
-                }}
-              />
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center space-x-2">
+                    <Calendar className="h-5 w-5" />
+                    <span>Sales Forecast</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <AIPredictions 
+                    type="sales_forecast" 
+                    data={{
+                      sales: analyticsData?.salesByDay || [],
+                      timeframe: '30 days'
+                    }}
+                  />
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-rose-500 to-pink-600 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center space-x-2">
+                    <Package className="h-5 w-5" />
+                    <span>Inventory Predictions</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <AIPredictions 
+                    type="inventory_needs" 
+                    data={{
+                      products: [] // This would be populated with actual product data
+                    }}
+                  />
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
         </Tabs>

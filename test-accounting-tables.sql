@@ -23,3 +23,4 @@ SELECT 'expense_categories' as table_name, COUNT(*) as count FROM expense_catego
 SELECT 'expenses user_id' as info, user_id, COUNT(*) as count FROM expenses GROUP BY user_id;
 SELECT 'invoices user_id' as info, user_id, COUNT(*) as count FROM invoices GROUP BY user_id;
 SELECT 'sales user_id' as info, user_id, COUNT(*) as count FROM sales GROUP BY user_id;
+

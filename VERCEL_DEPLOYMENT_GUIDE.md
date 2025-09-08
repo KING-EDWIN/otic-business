@@ -180,3 +180,4 @@ Once deployed, your Otic Business Solution will be live and ready for African SM
 
 **Live URL**: `https://your-project.vercel.app`
 **Admin Demo**: Use `demo@oticbusiness.com` / `demo123456`
+

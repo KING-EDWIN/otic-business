@@ -62,3 +62,4 @@ INSERT INTO payment_requests (user_id, tier, amount, payment_method, status, not
   ('00000000-0000-0000-0000-000000000001', 'premium', 300000, 'mtn_mobile_money', 'verified', 'Demo payment - verified'),
   ('00000000-0000-0000-0000-000000000001', 'standard', 150000, 'bank_transfer', 'verified', 'Demo payment - verified')
 ON CONFLICT DO NOTHING;
+

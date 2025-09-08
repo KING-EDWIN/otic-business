@@ -77,3 +77,4 @@ ALTER TYPE user_tier ADD VALUE IF NOT EXISTS 'free_trial';
 ALTER TYPE subscription_status ADD VALUE IF NOT EXISTS 'trial';
 
 
+

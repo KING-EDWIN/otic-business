@@ -1035,7 +1035,7 @@ import { getSimpleAccountingService } from './simpleAccountingService'
 // Factory function to get the appropriate service
 export const getAccountingService = (): AkauntingSupabaseService | DemoAccountingService => {
   // Use simple service for now to debug
-  console.log('Accounting service selection: USING SIMPLE SERVICE')
+  // Using simple service for performance
   const simpleService = getSimpleAccountingService()
   
   // Return a compatible object

@@ -32,8 +32,7 @@ const AIInsights: React.FC<AIInsightsProps> = ({ type, data, onRefresh }) => {
     setError('')
     
     try {
-      console.log('AI Insights - Generating insights for type:', type)
-      console.log('AI Insights - Data received:', data)
+      // Removed excessive logging for performance
       
       let newInsights: AIInsight[] = []
       
@@ -45,11 +44,7 @@ const AIInsights: React.FC<AIInsightsProps> = ({ type, data, onRefresh }) => {
           )
           break
         case 'sales':
-          console.log('AI Insights - Sales data:', {
-            sales: data.sales || [],
-            revenue: data.revenue || 0,
-            growth: data.growth || 0
-          })
+          // Removed excessive logging for performance
           newInsights = await AIAnalytics.generateSalesInsights(
             data.sales || [],
             data.revenue || 0,
@@ -67,7 +62,7 @@ const AIInsights: React.FC<AIInsightsProps> = ({ type, data, onRefresh }) => {
           newInsights = []
       }
       
-      console.log('AI Insights - Generated insights:', newInsights)
+      // Removed excessive logging for performance
       setInsights(newInsights)
     } catch (err) {
       setError('Failed to generate AI insights. Please try again.')

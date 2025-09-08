@@ -90,74 +90,74 @@ const Settings = () => {
   console.log('Settings component rendering, appUser:', appUser)
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center space-x-4">
+      <header className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-lg">
+        <div className="container mx-auto px-6 py-6">
+          <div className="flex items-center space-x-6">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate('/dashboard')}
-              className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+              className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10 transition-all duration-200 rounded-lg px-4 py-2"
             >
               <ArrowLeft className="h-4 w-4" />
               <span>Back to Dashboard</span>
             </Button>
-            <SettingsIcon className="h-8 w-8 text-[#faa51a]" />
-            <div>
-              <h1 className="text-2xl font-bold text-[#040458]">Settings</h1>
-              <p className="text-sm text-gray-600">
-                Manage your account and business preferences
-              </p>
+            <div className="flex items-center space-x-3">
+              <div className="p-3 bg-gradient-to-r from-[#faa51a] to-[#ff6b35] rounded-xl shadow-lg">
+                <SettingsIcon className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-[#040458] to-[#1e40af] bg-clip-text text-transparent">
+                  Settings
+                </h1>
+                <p className="text-sm text-gray-600 font-medium">
+                  Manage your account and business preferences
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Debug Info */}
-        <div className="mb-4 p-4 bg-yellow-100 border border-yellow-300 rounded-lg">
-          <p className="text-sm text-yellow-800">
-            <strong>Debug Info:</strong> Settings component is rendering! 
-            AppUser: {appUser ? 'Loaded' : 'Not loaded'} | 
-            User ID: {appUser?.id || 'N/A'}
-          </p>
-        </div>
+      <div className="container mx-auto px-6 py-8">
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="bg-gray-100">
-            <TabsTrigger 
-              value="profile"
-              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
-            >
-              Profile
-            </TabsTrigger>
-            <TabsTrigger 
-              value="business"
-              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
-            >
-              Business
-            </TabsTrigger>
-            <TabsTrigger 
-              value="notifications"
-              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
-            >
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger 
-              value="security"
-              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
-            >
-              Security
-            </TabsTrigger>
-            <TabsTrigger 
-              value="billing"
-              className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
-            >
-              Billing
-            </TabsTrigger>
-          </TabsList>
+          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-2 shadow-lg">
+            <TabsList className="bg-transparent border-0">
+              <TabsTrigger 
+                value="profile"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#040458] data-[state=active]:to-[#1e40af] data-[state=active]:text-white text-[#040458] font-semibold rounded-lg transition-all duration-200"
+              >
+                Profile
+              </TabsTrigger>
+              <TabsTrigger 
+                value="business"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#040458] data-[state=active]:to-[#1e40af] data-[state=active]:text-white text-[#040458] font-semibold rounded-lg transition-all duration-200"
+              >
+                Business
+              </TabsTrigger>
+              <TabsTrigger 
+                value="notifications"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#040458] data-[state=active]:to-[#1e40af] data-[state=active]:text-white text-[#040458] font-semibold rounded-lg transition-all duration-200"
+              >
+                Notifications
+              </TabsTrigger>
+              <TabsTrigger 
+                value="security"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#040458] data-[state=active]:to-[#1e40af] data-[state=active]:text-white text-[#040458] font-semibold rounded-lg transition-all duration-200"
+              >
+                Security
+              </TabsTrigger>
+              <TabsTrigger 
+                value="billing"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#040458] data-[state=active]:to-[#1e40af] data-[state=active]:text-white text-[#040458] font-semibold rounded-lg transition-all duration-200"
+              >
+                Billing
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="profile" className="space-y-6">
             <Card>

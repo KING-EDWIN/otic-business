@@ -18,3 +18,4 @@ SELECT 'Products by User' as info, user_id, COUNT(*) as count FROM products GROU
 
 -- Check user_profiles to see what user_ids exist
 SELECT 'User Profile IDs' as info, id, email, full_name FROM user_profiles LIMIT 5;
+
