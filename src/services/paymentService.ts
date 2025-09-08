@@ -222,7 +222,7 @@ export class PaymentService {
         .update({
           status,
           verified_at: new Date().toISOString(),
-          verified_by: 'admin', // In production, use actual admin user ID
+          verified_by: '00000000-0000-0000-0000-000000000000', // Admin UUID placeholder
           notes
         })
         .eq('id', paymentId)

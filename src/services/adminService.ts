@@ -300,7 +300,7 @@ export class AdminService {
         .update({
           email_verified: true,
           verification_timestamp: new Date().toISOString(),
-          verified_by: 'admin_manual' // Mark as admin verified
+          verified_by: '00000000-0000-0000-0000-000000000000' // Admin UUID placeholder
         })
         .eq('id', userId)
 

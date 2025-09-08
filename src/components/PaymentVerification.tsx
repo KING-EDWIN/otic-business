@@ -71,7 +71,7 @@ export const PaymentVerification: React.FC = () => {
         .update({
           status,
           verified_at: new Date().toISOString(),
-          verified_by: 'admin', // In real app, use actual admin user ID
+          verified_by: '00000000-0000-0000-0000-000000000000', // Admin UUID placeholder
           notes: verificationNotes
         })
         .eq('id', paymentId)
