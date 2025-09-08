@@ -34,10 +34,9 @@ const Payments: React.FC = () => {
   const [revenueData, setRevenueData] = useState([])
 
   useEffect(() => {
-    if (user?.id) {
-      loadPaymentStats()
-    }
-  }, [user?.id])
+    // Always load payment stats, even if user is not loaded yet
+    loadPaymentStats()
+  }, [])
 
   const loadPaymentData = async () => {
     try {
@@ -305,7 +304,7 @@ const Payments: React.FC = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
-                      <h3 className="font-semibold">{appUser?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan</h3>
+                      <h3 className="font-semibold">{profile?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan</h3>
                       <p className="text-sm text-gray-600">Current subscription status</p>
                     </div>
                     <div className="text-right">

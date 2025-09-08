@@ -36,7 +36,7 @@ import {
   Crown,
   Clock
 } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { DataService } from '@/services/dataService'
 
 // Helper function for fallback stats fetching
 const fetchStatsIndividually = async (userId: string) => {
@@ -84,47 +84,34 @@ const Dashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
   
-  // Use React Query for caching and better performance
-  const { data: stats = {
+  // Simple state for stats
+  const [stats, setStats] = useState({
     totalSales: 0,
     totalProducts: 0,
     totalRevenue: 0,
     lowStockItems: 0
-  }, isLoading: statsLoading, error: statsError } = useQuery({
-    queryKey: ['dashboard-stats', profile?.id],
-    queryFn: async () => {
-      if (!profile?.id) {
-        return {
-          totalSales: 0,
-          totalProducts: 0,
-          totalRevenue: 0,
-          lowStockItems: 0
-        }
-      }
+  })
+  const [statsLoading, setStatsLoading] = useState(false)
 
-      console.log('Fetching dashboard stats for user:', profile.id)
+  // Load stats using DataService
+  useEffect(() => {
+    const loadStats = async () => {
+      if (!user?.id) return
       
       try {
-        // Use the fallback method that we know works
-        const result = await fetchStatsIndividually(profile.id)
-        console.log('Dashboard stats result:', result)
-        return result
+        setStatsLoading(true)
+        const statsData = await DataService.getStats(user.id)
+        setStats(statsData)
+        console.log('Loaded stats:', statsData)
       } catch (error) {
-        console.error('Error fetching dashboard stats:', error)
-        return {
-          totalSales: 0,
-          totalProducts: 0,
-          totalRevenue: 0,
-          lowStockItems: 0
-        }
+        console.error('Error loading stats:', error)
+      } finally {
+        setStatsLoading(false)
       }
-    },
-    enabled: !!profile?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchOnWindowFocus: false,
-    retry: 1
-  })
+    }
+
+    loadStats()
+  }, [user?.id])
 
   const loading = statsLoading || authLoading
 
@@ -205,7 +192,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Debug Info - Remove in production */}
       {process.env.NODE_ENV === 'development' && (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 text-sm">
@@ -214,7 +201,7 @@ const Dashboard = () => {
       )}
       
       {/* Header */}
-      <header className="bg-white border-b border-border sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -409,7 +396,7 @@ const Dashboard = () => {
         
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
-          <Card className="p-3 md:p-6">
+          <Card className="p-3 md:p-6 bg-white/80 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
               <CardTitle className="text-xs md:text-sm font-medium">Total Sales</CardTitle>
               <ShoppingCart className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
@@ -422,7 +409,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="p-3 md:p-6">
+          <Card className="p-3 md:p-6 bg-white/80 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
               <CardTitle className="text-xs md:text-sm font-medium">Total Revenue</CardTitle>
               <DollarSign className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
@@ -435,7 +422,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="p-3 md:p-6">
+          <Card className="p-3 md:p-6 bg-white/80 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
               <CardTitle className="text-xs md:text-sm font-medium">Products</CardTitle>
               <Package className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
@@ -448,7 +435,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="p-3 md:p-6">
+          <Card className="p-3 md:p-6 bg-white/80 backdrop-blur-sm border-0 shadow-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
               <CardTitle className="text-xs md:text-sm font-medium">Low Stock</CardTitle>
               <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
@@ -464,7 +451,7 @@ const Dashboard = () => {
 
         {/* Main Dashboard Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 md:space-y-6">
-          <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 bg-gray-100">
+          <TabsList className="grid w-full grid-cols-4 md:grid-cols-8 bg-white/80 backdrop-blur-sm border border-white/20 shadow-lg">
             <TabsTrigger 
               value="overview" 
               className="text-xs md:text-sm data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]"
@@ -518,7 +505,7 @@ const Dashboard = () => {
           <TabsContent value="overview" className="space-y-4 md:space-y-6">
             {/* Top Row - Quick Actions and AI Insights */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
                 <CardHeader>
                   <CardTitle>Quick Actions</CardTitle>
                   <CardDescription>
@@ -571,7 +558,7 @@ const Dashboard = () => {
             </div>
 
             {/* Bottom Row - AI Assistant (Full Width) */}
-            <Card className="w-full">
+            <Card className="w-full bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
                 <CardTitle className="flex items-center text-[#040458] text-xl">
                   <Brain className="h-6 w-6 mr-3 text-[#faa51a]" />
@@ -632,7 +619,7 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="pos">
-            <Card>
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
                 <CardTitle>Point of Sale</CardTitle>
                 <CardDescription>
@@ -654,7 +641,7 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="inventory">
-            <Card>
+            <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
               <CardHeader>
                 <CardTitle>Inventory Management</CardTitle>
                 <CardDescription>
@@ -693,7 +680,7 @@ const Dashboard = () => {
 
           <TabsContent value="settings">
             <div className="space-y-6">
-              <Card>
+              <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
                 <CardHeader>
                   <CardTitle>Account Settings</CardTitle>
                   <CardDescription>

@@ -1,7 +1,40 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase, Product, Sale, SaleItem } from '@/lib/supabase'
+import { getOfflineProducts } from '@/services/offlineData'
+
+interface Product {
+  id: string
+  name: string
+  barcode: string
+  price: number
+  cost: number
+  stock: number
+  min_stock: number
+  category_id: string | null
+  supplier_id: string | null
+  user_id: string
+  created_at: string
+  updated_at: string
+}
+
+interface Sale {
+  id: string
+  user_id: string
+  total: number
+  payment_method: string
+  receipt_number: string
+  created_at: string
+}
+
+interface SaleItem {
+  id: string
+  sale_id: string
+  product_id: string
+  quantity: number
+  price: number
+  created_at: string
+}
 import { OticAPI } from '@/services/api'
 import { BrowserMultiFormatReader } from '@zxing/library'
 import QuaggaBarcodeScanner from '@/components/QuaggaBarcodeScanner'
@@ -37,6 +70,7 @@ import {
   DollarSign
 } from 'lucide-react'
 import { toast } from 'sonner'
+import LoginStatus from '@/components/LoginStatus'
 
 interface CartItem {
   product: Product
@@ -67,11 +101,10 @@ const POS = () => {
   const [taxRate] = useState(18) // 18% VAT for Uganda
 
   useEffect(() => {
-    if (user?.id) {
-      fetchProducts()
-    }
+    // Always fetch products and initialize barcode reader
+    fetchProducts()
     initializeBarcodeReader()
-  }, [user?.id])
+  }, [])
 
   const initializeBarcodeReader = () => {
     try {
@@ -85,14 +118,11 @@ const POS = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('name')
-
-      if (error) throw error
-      setProducts(data || [])
+      
+      // Use offline data for now
+      const offlineProducts = getOfflineProducts()
+      setProducts(offlineProducts)
+      console.log('Loaded offline products for POS:', offlineProducts)
     } catch (error) {
       console.error('Error fetching products:', error)
       toast.error('Failed to load products')
@@ -267,7 +297,7 @@ const POS = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-lg sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
@@ -297,6 +327,7 @@ const POS = () => {
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 {cart.length} items in cart
               </Badge>
+              <LoginStatus />
             </div>
           </div>
         </div>

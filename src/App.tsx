@@ -24,6 +24,8 @@ import Customers from "./pages/Customers";
 import Reports from "./pages/Reports";
 import TestAuth from "./pages/TestAuth";
 import SimpleTest from "./pages/SimpleTest";
+import AuthTest from "./pages/AuthTest";
+import ProfileTest from "./pages/ProfileTest";
 import AdminApp from "./AdminApp";
 import About from "./pages/About";
 import Terms from "./pages/Terms";
@@ -132,6 +134,8 @@ const App = () => {
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/test-auth" element={<TestAuth />} />
                 <Route path="/simple-test" element={<SimpleTest />} />
+                <Route path="/auth-test" element={<AuthTest />} />
+                <Route path="/profile-test" element={<ProfileTest />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

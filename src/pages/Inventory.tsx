@@ -1,7 +1,28 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase, Product } from '@/lib/supabase'
+import { DataService } from '@/services/dataService'
+
+interface Product {
+  id: string
+  name: string
+  description?: string
+  barcode: string
+  wholesale_barcode?: string
+  price: number
+  cost: number
+  stock: number
+  min_stock: number
+  category?: string
+  supplier?: string
+  unit_type?: 'piece' | 'kg' | 'liter' | 'box' | 'pack'
+  selling_type?: 'retail' | 'wholesale' | 'both'
+  category_id: string | null
+  supplier_id: string | null
+  user_id: string
+  created_at: string
+  updated_at: string
+}
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,6 +58,7 @@ import {
   XCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
+import LoginStatus from '@/components/LoginStatus'
 
 interface ProductFormData {
   name: string
@@ -91,21 +113,17 @@ const Inventory = () => {
     selling_type: 'retail'
   })
 
-  // Fetch products from Supabase
+  // Fetch products using DataService
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('name')
-
-      if (error) throw error
-      setProducts(data || [])
+      
+      // Use DataService which handles both online and offline
+      const productsData = await DataService.getProducts(user?.id)
+      setProducts(productsData)
       
       // Calculate low stock items
-      const lowStock = (data || []).filter(product => 
+      const lowStock = productsData.filter(product => 
         product.stock <= product.min_stock
       ).map(product => ({
         id: product.id,
@@ -115,12 +133,13 @@ const Inventory = () => {
         barcode: product.barcode,
         price: product.price,
         days_remaining: Math.max(0, Math.floor(product.stock / 2)), // Rough estimate
-        urgency: product.stock === 0 ? 'critical' : 
+        urgency: (product.stock === 0 ? 'critical' : 
                 product.stock <= product.min_stock * 0.5 ? 'high' :
-                product.stock <= product.min_stock * 0.8 ? 'medium' : 'low'
+                product.stock <= product.min_stock * 0.8 ? 'medium' : 'low') as 'low' | 'medium' | 'high' | 'critical'
       }))
       
       setLowStockItems(lowStock)
+      console.log('Loaded products:', productsData)
     } catch (error) {
       console.error('Error fetching products:', error)
       toast.error('Failed to load products')
@@ -130,10 +149,9 @@ const Inventory = () => {
   }
 
   useEffect(() => {
-    if (user?.id) {
-      fetchProducts()
-    }
-  }, [user?.id])
+    // Always fetch products, even if user is not loaded yet
+    fetchProducts()
+  }, [])
 
   const generateBarcode = (prefix: string = 'OTIC') => {
     const timestamp = Date.now().toString().slice(-6)
@@ -158,31 +176,18 @@ const Inventory = () => {
         supplier: formData.supplier,
         unit_type: formData.unit_type,
         selling_type: formData.selling_type,
-        user_id: appUser?.id,
+        user_id: user?.id,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
 
       if (editingProduct) {
         // Update existing product
-        const { error } = await supabase
-          .from('products')
-          .update({
-            ...productData,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', editingProduct.id)
-          .eq('user_id', user?.id)
-
-        if (error) throw error
+        await DataService.updateProduct(editingProduct.id, productData)
         toast.success('Product updated successfully!')
       } else {
         // Create new product
-        const { error } = await supabase
-          .from('products')
-          .insert([productData])
-
-        if (error) throw error
+        await DataService.createProduct(productData)
         toast.success('Product added successfully!')
       }
 
@@ -200,13 +205,8 @@ const Inventory = () => {
     if (!confirm('Are you sure you want to delete this product?')) return
 
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', productId)
-        .eq('user_id', user?.id)
-
-      if (error) throw error
+      // Delete product using DataService
+      await DataService.deleteProduct(productId)
       toast.success('Product deleted successfully!')
       fetchProducts()
     } catch (error) {
@@ -293,7 +293,7 @@ const Inventory = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-lg sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
@@ -326,6 +326,7 @@ const Inventory = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 Add Product
               </Button>
+              <LoginStatus />
             </div>
           </div>
         </div>

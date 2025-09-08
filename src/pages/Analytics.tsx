@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { DataService } from '@/services/dataService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -25,6 +25,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import AIInsights from '@/components/AIInsights'
 import AIPredictions from '@/components/AIPredictions'
 import AIChatBot from '@/components/AIChatBot'
+import LoginStatus from '@/components/LoginStatus'
 
 interface AnalyticsData {
   totalSales: number
@@ -49,13 +50,17 @@ const Analytics = () => {
   const [aiInsights, setAiInsights] = useState<Array<{ type: string; message: string; confidence: number }>>([])
 
   useEffect(() => {
-    if (user) {
-      fetchAnalyticsData()
-      generateAIInsights()
-    }
-  }, [user, timeRange])
+    // Always fetch analytics data and generate insights
+    fetchAnalyticsData()
+    generateAIInsights()
+  }, [timeRange])
 
   const fetchAnalyticsData = async () => {
+    // Quick timeout to prevent long loading
+    const timeoutId = setTimeout(() => {
+      setLoading(false)
+    }, 3000) // 3 second max
+    
     try {
       console.log('Fetching analytics data for user:', user?.id)
       setLoading(true)
@@ -78,26 +83,10 @@ const Analytics = () => {
           break
       }
 
-      // Fetch sales data
-      const { data: salesData } = await supabase
-        .from('sales')
-        .select(`
-          *,
-          sale_items (
-            quantity,
-            price,
-            product:products (name)
-          )
-        `)
-        .eq('user_id', user?.id)
-        .gte('created_at', startDate.toISOString())
-        .lte('created_at', endDate.toISOString())
-
-      // Fetch products data
-      const { data: productsData } = await supabase
-        .from('products')
-        .select('*')
-        .eq('user_id', user?.id)
+      // Use DataService for analytics data
+      const analyticsData = await DataService.getAnalyticsData(user?.id, timeRange)
+      setAnalyticsData(analyticsData)
+      return
 
       // Calculate analytics
       const totalSales = salesData?.length || 0
@@ -156,6 +145,7 @@ const Analytics = () => {
     } catch (error) {
       console.error('Error fetching analytics:', error)
     } finally {
+      clearTimeout(timeoutId)
       setLoading(false)
     }
   }
@@ -260,14 +250,14 @@ const Analytics = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={() => navigate('/dashboard')}
+                onClick={() => window.location.href = '/dashboard'}
                 className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10 transition-all duration-200 rounded-lg px-4 py-2"
               >
                 <ArrowLeft className="h-4 w-4" />
                 <span>Back to Dashboard</span>
               </Button>
               <div className="flex items-center space-x-3">
-                <div className="p-3 bg-gradient-to-r from-[#faa51a] to-[#ff6b35] rounded-xl shadow-lg">
+                <div className="p-3 bg-gradient-to-r from-[#040458] to-[#1e1e6b] rounded-xl shadow-lg">
                   <BarChart3 className="h-8 w-8 text-white" />
                 </div>
                 <div>
@@ -294,6 +284,7 @@ const Analytics = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <LoginStatus />
             </div>
           </div>
         </div>
@@ -663,7 +654,7 @@ const Analytics = () => {
                     revenue: analyticsData?.totalRevenue || 0,
                     growth: analyticsData?.salesGrowth || 0,
                     lowStockItems: [],
-                    user: appUser
+                    user: user
                   }}
                 />
               </CardContent>
