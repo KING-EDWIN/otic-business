@@ -1,9 +1,25 @@
 import { createClient } from '@supabase/supabase-js'
 
+function setCors(res: any) {
+  const allowedOrigins = [
+    'http://localhost:8080',
+    'http://localhost:5173',
+    'https://otic-businesssss.vercel.app'
+  ]
+  // Allow any of the above; for simplicity we reflect origin if matched
+  const origin = res.req?.headers?.origin
+  const allowOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[2]
+  res.setHeader('Access-Control-Allow-Origin', allowOrigin)
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-admin-secret')
+}
+
 export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
+  setCors(res)
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end()
   }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const adminSecret = req.headers['x-admin-secret'] as string
   const expectedSecret = process.env.ADMIN_API_SECRET
@@ -27,12 +43,13 @@ export default async function handler(req: any, res: any) {
 
   try {
     // Update profile flags
+    const zeroAdmin = '00000000-0000-0000-0000-000000000000'
     const { error: updateError } = await supabase
       .from('user_profiles')
       .update({
         email_verified: verified,
         verification_timestamp: verified ? new Date().toISOString() : null,
-        verified_by: verified ? 'admin_manual' : null,
+        verified_by: verified ? zeroAdmin : null,
       })
       .eq('id', userId)
 
