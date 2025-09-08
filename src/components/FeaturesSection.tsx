@@ -18,49 +18,57 @@ const FeaturesSection = () => {
       icon: <Smartphone className="h-8 w-8" />,
       title: "Mobile POS System",
       description: "Scan barcodes with your phone camera, process sales instantly, and generate digital receipts.",
-      color: "text-[#faa51a]"
+      color: "text-[#faa51a]",
+      image: posImage,
     },
     {
       icon: <BarChart3 className="h-8 w-8" />,
       title: "AI-Powered Analytics",
       description: "Smart forecasting, trend analysis, and actionable insights to drive business growth.",
-      color: "text-[#faa51a]"
+      color: "text-[#faa51a]",
+      image: dashboardImage,
     },
     {
       icon: <Shield className="h-8 w-8" />,
       title: "Automated Compliance",
       description: "Tax computation, VAT analysis, and regulatory reporting with zero manual effort.",
-      color: "text-[#faa51a]"
+      color: "text-[#faa51a]",
+      image: dashboardImage,
     },
     {
       icon: <Users className="h-8 w-8" />,
       title: "Multi-User Management",
       description: "Role-based access for business owners, accountants, cashiers, and managers.",
-      color: "text-[#faa51a]"
+      color: "text-[#faa51a]",
+      image: dashboardImage,
     },
     {
       icon: <Zap className="h-8 w-8" />,
       title: "Real-Time Inventory",
       description: "Auto-updating stock levels, low-stock alerts, and demand prediction.",
-      color: "text-[#faa51a]"
+      color: "text-[#faa51a]",
+      image: posImage,
     },
     {
       icon: <Globe className="h-8 w-8" />,
       title: "Multi-Branch Support",
       description: "Synchronize operations across multiple locations with consolidated reporting.",
-      color: "text-[#faa51a]"
+      color: "text-[#faa51a]",
+      image: dashboardImage,
     },
     {
       icon: <CreditCard className="h-8 w-8" />,
       title: "Payment Integration",
       description: "Accept Mobile Money, cards, and digital payments with automated reconciliation.",
-      color: "text-[#faa51a]"
+      color: "text-[#faa51a]",
+      image: posImage,
     },
     {
       icon: <FileText className="h-8 w-8" />,
       title: "QuickBooks Integration",
       description: "Seamlessly sync with QuickBooks for professional accounting and reporting.",
-      color: "text-[#faa51a]"
+      color: "text-[#faa51a]",
+      image: dashboardImage,
     }
   ];
 
@@ -78,18 +86,28 @@ const FeaturesSection = () => {
           </p>
         </div>
 
-        {/* Feature Grid */}
+        {/* Feature Grid with demo image + icon + text */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
           {features.map((feature, index) => (
-            <Card key={index} className="shadow-lg hover:shadow-2xl transition-all duration-300 group border border-gray-200 hover:border-[#faa51a]/30">
-              <CardContent className="p-6 text-center space-y-4">
-                <div className={`${feature.color} flex justify-center group-hover:scale-110 transition-transform duration-300`}>
-                  {feature.icon}
+            <Card
+              key={index}
+              className="shadow-lg hover:shadow-2xl transition-all duration-300 group border border-gray-200 hover:border-[#faa51a]/30 overflow-hidden"
+            >
+              <div className="relative h-32 w-full overflow-hidden">
+                <img
+                  src={feature.image}
+                  alt={feature.title}
+                  className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute -bottom-5 left-6 bg-white rounded-xl p-3 shadow-md border border-gray-100">
+                  <div className={`${feature.color}`}>{feature.icon}</div>
                 </div>
+              </div>
+              <CardContent className="pt-8 pb-6 px-6 text-left space-y-3">
                 <h3 className="text-lg font-semibold text-[#040458]">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 text-sm leading-relaxed">
                   {feature.description}
                 </p>
               </CardContent>
