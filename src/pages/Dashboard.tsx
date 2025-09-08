@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContextClean'
 import { OticAPI } from '@/services/api'
 import { AIAnalytics } from '@/services/aiService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -79,7 +79,7 @@ const fetchStatsIndividually = async (userId: string) => {
 }
 
 const Dashboard = () => {
-  const { appUser, signOut, user, loading: authLoading } = useAuth()
+  const { profile, signOut, user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('overview')
@@ -91,9 +91,9 @@ const Dashboard = () => {
     totalRevenue: 0,
     lowStockItems: 0
   }, isLoading: statsLoading, error: statsError } = useQuery({
-    queryKey: ['dashboard-stats', appUser?.id],
+    queryKey: ['dashboard-stats', profile?.id],
     queryFn: async () => {
-      if (!appUser?.id) {
+      if (!profile?.id) {
         return {
           totalSales: 0,
           totalProducts: 0,
@@ -102,11 +102,11 @@ const Dashboard = () => {
         }
       }
 
-      console.log('Fetching dashboard stats for user:', appUser.id)
+      console.log('Fetching dashboard stats for user:', profile.id)
       
       try {
         // Use the fallback method that we know works
-        const result = await fetchStatsIndividually(appUser.id)
+        const result = await fetchStatsIndividually(profile.id)
         console.log('Dashboard stats result:', result)
         return result
       } catch (error) {
@@ -119,7 +119,7 @@ const Dashboard = () => {
         }
       }
     },
-    enabled: !!appUser?.id,
+    enabled: !!profile?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
@@ -130,7 +130,7 @@ const Dashboard = () => {
 
   // Debug logging
   console.log('Dashboard Debug:', {
-    appUser,
+    profile,
     user,
     authLoading,
     statsLoading,
@@ -209,7 +209,7 @@ const Dashboard = () => {
       {/* Debug Info - Remove in production */}
       {process.env.NODE_ENV === 'development' && (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 text-sm">
-          <strong>Debug Info:</strong> User: {user?.email || 'None'} | AppUser: {appUser?.business_name || 'None'} | Tier: {appUser?.tier || 'None'}
+          <strong>Debug Info:</strong> User: {user?.email || 'None'} | Profile: {profile?.business_name || 'None'} | Tier: {profile?.tier || 'None'}
         </div>
       )}
       
@@ -365,7 +365,7 @@ const Dashboard = () => {
                 </Button>
                 <div className="pt-2 border-t border-gray-200">
                   <Badge className="bg-[#faa51a] text-white">
-                    {appUser?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan
+                    {profile?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan
                   </Badge>
                 </div>
               </div>
@@ -375,13 +375,13 @@ const Dashboard = () => {
       </header>
 
       {/* Debug: Check verification status */}
-      {appUser && (() => {
-        console.log('Dashboard - appUser.email_verified:', appUser.email_verified, 'type:', typeof appUser.email_verified, '=== false:', appUser.email_verified === false, 'Boolean conversion:', Boolean(appUser.email_verified))
+      {profile && (() => {
+        console.log('Dashboard - profile.email_verified:', profile.email_verified, 'type:', typeof profile.email_verified, '=== false:', profile.email_verified === false, 'Boolean conversion:', Boolean(profile.email_verified))
         return null
       })()}
 
       {/* Email Verification Notice - Show if not verified */}
-      {appUser && !appUser.email_verified && (
+      {profile && !profile.email_verified && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mx-4 mt-4">
           <div className="flex">
             <div className="flex-shrink-0">
@@ -399,7 +399,7 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
-        {!appUser && (
+        {!profile && (
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-blue-800 text-sm">
               <strong>Loading your business profile...</strong> This may take a moment.
@@ -680,11 +680,11 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="reports">
-            <AdvancedReports userId={appUser?.id || user?.id || ''} />
+            <AdvancedReports userId={profile?.id || user?.id || ''} />
           </TabsContent>
 
           <TabsContent value="subscription">
-            <SubscriptionManager userId={appUser?.id || user?.id || ''} />
+            <SubscriptionManager userId={profile?.id || user?.id || ''} />
           </TabsContent>
 
           <TabsContent value="payments">
@@ -713,7 +713,7 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
               
-              <EmailNotificationSettings userId={appUser?.id || user?.id || ''} />
+              <EmailNotificationSettings userId={profile?.id || user?.id || ''} />
             </div>
           </TabsContent>
         </Tabs>
