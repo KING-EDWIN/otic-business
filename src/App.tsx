@@ -18,6 +18,9 @@ import Analytics from "./pages/Analytics";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
 import AdminApp from "./AdminApp";
+import About from "./pages/About";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -67,6 +70,9 @@ const App = () => {
           <AuthProvider>
             <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
                 <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
                 <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
                 <Route path="/get-started" element={<GetStarted />} />

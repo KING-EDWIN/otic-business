@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -16,6 +16,7 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAccept }: PrivacyPolicyModalPro
   const [hasRead, setHasRead] = useState(false);
   const [isAccepted, setIsAccepted] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const handleAccept = () => {
     if (isAccepted) {
@@ -23,8 +24,12 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAccept }: PrivacyPolicyModalPro
     }
   };
 
-  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+  const handleScroll = () => {
+    if (!scrollRef.current) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+    
+    console.log('Scroll values:', { scrollTop, scrollHeight, clientHeight });
     
     // Prevent division by zero and invalid calculations
     if (scrollHeight <= clientHeight) {
@@ -38,8 +43,11 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAccept }: PrivacyPolicyModalPro
     const progress = Math.min(100, Math.max(0, (scrollTop / (scrollHeight - clientHeight)) * 100));
     setScrollProgress(progress);
     
+    console.log('Scroll progress:', progress);
+    
     // Auto-mark as read when user scrolls to 80% of the content
     if (progress >= 80 && !hasRead) {
+      console.log('Marking as read');
       setHasRead(true);
     }
   };
@@ -49,6 +57,14 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAccept }: PrivacyPolicyModalPro
       setHasRead(false);
       setIsAccepted(false);
       setScrollProgress(0);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const scrollElement = scrollRef.current;
+    if (scrollElement) {
+      scrollElement.addEventListener('scroll', handleScroll);
+      return () => scrollElement.removeEventListener('scroll', handleScroll);
     }
   }, [isOpen]);
 
@@ -89,8 +105,8 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAccept }: PrivacyPolicyModalPro
         
         <ScrollArea className="max-h-[60vh] px-6">
           <div 
+            ref={scrollRef}
             className="prose prose-sm max-w-none py-6"
-            onScroll={handleScroll}
           >
             <h1>Privacy Policy</h1>
             <p>Last updated: September 07, 2025</p>
@@ -224,6 +240,17 @@ const PrivacyPolicyModal = ({ isOpen, onClose, onAccept }: PrivacyPolicyModalPro
                 <p className="text-xs text-gray-500 mt-1">
                   {hasRead ? '✓ Policy has been read' : 'Please scroll through the policy above'}
                 </p>
+                {!hasRead && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setHasRead(true)}
+                    className="mt-2 text-xs"
+                  >
+                    Mark as Read (for testing)
+                  </Button>
+                )}
               </div>
             </div>
             

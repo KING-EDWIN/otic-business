@@ -48,9 +48,9 @@ const Navbar = () => {
             <a href="#pricing" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
               Pricing
             </a>
-            <a href="#about" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
+            <Link to="/about" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
               About
-            </a>
+            </Link>
             <a href="#contact" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
               Contact
             </a>
@@ -129,9 +129,9 @@ const Navbar = () => {
               <a href="#pricing" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
                 Pricing
               </a>
-              <a href="#about" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
+              <Link to="/about" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
                 About
-              </a>
+              </Link>
               <a href="#contact" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
                 Contact
               </a>

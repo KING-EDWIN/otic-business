@@ -374,6 +374,9 @@ const Dashboard = () => {
         </div>
       </header>
 
+      {/* Debug: Check verification status */}
+      {appUser && console.log('Dashboard - appUser.email_verified:', appUser.email_verified, 'type:', typeof appUser.email_verified, '=== false:', appUser.email_verified === false)}
+
       {/* Email Verification Notice */}
       {appUser && appUser.email_verified === false && (
         <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mx-4 mt-4">

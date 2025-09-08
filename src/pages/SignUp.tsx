@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Building2, Eye, EyeOff, Check, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import PrivacyPolicyModal from '@/components/PrivacyPolicyModal'
+import TermsAndConditionsModal from '@/components/TermsAndConditionsModal'
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -23,8 +23,8 @@ const SignUp = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
-  const [showPrivacyModal, setShowPrivacyModal] = useState(false)
-  const [privacyAccepted, setPrivacyAccepted] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
   
   const { signUp, signUpWithGoogle } = useAuth()
   const navigate = useNavigate()
@@ -32,9 +32,9 @@ const SignUp = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Check if privacy policy has been accepted
-    if (!privacyAccepted) {
-      setShowPrivacyModal(true)
+    // Check if terms have been accepted
+    if (!termsAccepted) {
+      setShowTermsModal(true)
       return
     }
     
@@ -72,9 +72,9 @@ const SignUp = () => {
   }
 
   const handleGoogleSignUp = async () => {
-    // Check if privacy policy has been accepted
-    if (!privacyAccepted) {
-      setShowPrivacyModal(true)
+    // Check if terms have been accepted
+    if (!termsAccepted) {
+      setShowTermsModal(true)
       return
     }
     
@@ -90,9 +90,9 @@ const SignUp = () => {
     // Note: User will be redirected to complete-profile page on success
   }
 
-  const handlePrivacyAccept = () => {
-    setPrivacyAccepted(true)
-    setShowPrivacyModal(false)
+  const handleTermsAccept = () => {
+    setTermsAccepted(true)
+    setShowTermsModal(false)
   }
 
   if (success) {
@@ -182,7 +182,7 @@ const SignUp = () => {
             variant="outline" 
             className="w-full mb-6 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 bg-white shadow-sm" 
             onClick={handleGoogleSignUp}
-            disabled={loading || !privacyAccepted}
+            disabled={loading || !termsAccepted}
           >
             <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -190,7 +190,7 @@ const SignUp = () => {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            {!privacyAccepted ? 'Accept Privacy Policy to Continue' : 'Continue with Google (Recommended)'}
+            {!termsAccepted ? 'Accept Terms to Continue' : 'Continue with Google (Recommended)'}
           </Button>
 
           <div className="relative mb-6">
@@ -303,10 +303,10 @@ const SignUp = () => {
             <Button 
               type="submit" 
               className="w-full bg-[#faa51a] hover:bg-[#040458] text-white font-semibold" 
-              disabled={loading || !privacyAccepted}
+              disabled={loading || !termsAccepted}
             >
               {loading ? 'Creating Account...' : 
-               !privacyAccepted ? 'Accept Privacy Policy to Continue' : 
+               !termsAccepted ? 'Accept Terms to Continue' : 
                'Create Account'}
             </Button>
           </form>
@@ -322,14 +322,14 @@ const SignUp = () => {
           <div className="mt-4 text-center">
             <div className="flex items-center justify-center space-x-2 text-sm">
               <span className="text-gray-600">
-                {privacyAccepted ? (
+                {termsAccepted ? (
                   <span className="text-green-600 flex items-center">
                     <Check className="h-4 w-4 mr-1" />
-                    Privacy Policy Accepted
+                    Terms & Conditions Accepted
                   </span>
                 ) : (
                   <span className="text-gray-500">
-                    Privacy Policy not accepted
+                    Terms & Conditions not accepted
                   </span>
                 )}
               </span>
@@ -337,20 +337,20 @@ const SignUp = () => {
             <Button
               type="button"
               variant="link"
-              onClick={() => setShowPrivacyModal(true)}
+              onClick={() => setShowTermsModal(true)}
               className="text-[#040458] hover:text-[#faa51a] text-sm p-0 h-auto"
             >
-              {privacyAccepted ? 'Review Privacy Policy' : 'Read Privacy Policy'}
+              {termsAccepted ? 'Review Terms & Conditions' : 'Read Terms & Conditions'}
             </Button>
           </div>
         </CardContent>
       </Card>
       
-      {/* Privacy Policy Modal */}
-      <PrivacyPolicyModal
-        isOpen={showPrivacyModal}
-        onClose={() => setShowPrivacyModal(false)}
-        onAccept={handlePrivacyAccept}
+      {/* Terms & Conditions Modal */}
+      <TermsAndConditionsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+        onAccept={handleTermsAccept}
       />
     </div>
   )

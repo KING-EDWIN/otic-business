@@ -97,6 +97,7 @@ const CompleteProfile = () => {
             phone: formData.phone,
             address: formData.address,
             tier: formData.tier,
+            email_verified: true, // Set as verified
             updated_at: new Date().toISOString()
           })
           .eq('id', user.id)
@@ -118,6 +119,7 @@ const CompleteProfile = () => {
             phone: formData.phone,
             address: formData.address,
             tier: formData.tier,
+            email_verified: true, // Set as verified
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })

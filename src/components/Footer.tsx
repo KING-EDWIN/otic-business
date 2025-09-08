@@ -1,4 +1,5 @@
 import { Mail, Phone, MapPin } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -38,7 +39,7 @@ const Footer = () => {
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white">Company</h3>
             <ul className="space-y-2 text-white/80">
-              <li><a href="#about" className="hover:text-[#faa51a] transition-colors">About Us</a></li>
+              <li><Link to="/about" className="hover:text-[#faa51a] transition-colors">About Us</Link></li>
               <li><a href="#careers" className="hover:text-[#faa51a] transition-colors">Careers</a></li>
               <li><a href="#blog" className="hover:text-[#faa51a] transition-colors">Blog</a></li>
               <li><a href="#contact" className="hover:text-[#faa51a] transition-colors">Contact</a></li>
@@ -71,12 +72,12 @@ const Footer = () => {
             © 2024 Otic Business Solution. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#privacy" className="text-white/60 hover:text-[#faa51a] transition-colors">
+            <Link to="/privacy" className="text-white/60 hover:text-[#faa51a] transition-colors">
               Privacy Policy
-            </a>
-            <a href="#terms" className="text-white/60 hover:text-[#faa51a] transition-colors">
+            </Link>
+            <Link to="/terms" className="text-white/60 hover:text-[#faa51a] transition-colors">
               Terms of Service
-            </a>
+            </Link>
             <a href="#cookies" className="text-white/60 hover:text-[#faa51a] transition-colors">
               Cookie Policy
             </a>
