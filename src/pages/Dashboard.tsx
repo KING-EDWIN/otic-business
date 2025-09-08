@@ -121,7 +121,7 @@ const Dashboard = () => {
     },
     enabled: !!appUser?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
     retry: 1
   })
@@ -140,10 +140,10 @@ const Dashboard = () => {
   // Debug the stats object
   useEffect(() => {
     console.log('Stats object details:', {
-      totalSales: stats.totalSales,
-      totalProducts: stats.totalProducts,
-      totalRevenue: stats.totalRevenue,
-      lowStockItems: stats.lowStockItems,
+      totalSales: (stats as any).totalSales,
+      totalProducts: (stats as any).totalProducts,
+      totalRevenue: (stats as any).totalRevenue,
+      lowStockItems: (stats as any).lowStockItems,
       statsObject: stats
     })
   }, [stats])
@@ -375,7 +375,10 @@ const Dashboard = () => {
       </header>
 
       {/* Debug: Check verification status */}
-      {appUser && console.log('Dashboard - appUser.email_verified:', appUser.email_verified, 'type:', typeof appUser.email_verified, '=== false:', appUser.email_verified === false, 'Boolean conversion:', Boolean(appUser.email_verified))}
+      {appUser && (() => {
+        console.log('Dashboard - appUser.email_verified:', appUser.email_verified, 'type:', typeof appUser.email_verified, '=== false:', appUser.email_verified === false, 'Boolean conversion:', Boolean(appUser.email_verified))
+        return null
+      })()}
 
       {/* Email Verification Notice - Show if not verified */}
       {appUser && !appUser.email_verified && (
@@ -412,7 +415,7 @@ const Dashboard = () => {
               <ShoppingCart className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="p-0 pt-2">
-              <div className="text-lg md:text-2xl font-bold">{stats.totalSales}</div>
+              <div className="text-lg md:text-2xl font-bold">{(stats as any).totalSales}</div>
               <p className="text-xs text-muted-foreground">
                 +20.1% from last month
               </p>
@@ -425,7 +428,7 @@ const Dashboard = () => {
               <DollarSign className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="p-0 pt-2">
-              <div className="text-sm md:text-2xl font-bold">UGX {stats.totalRevenue.toLocaleString()}</div>
+              <div className="text-sm md:text-2xl font-bold">UGX {(stats as any).totalRevenue.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
                 +15.3% from last month
               </p>
@@ -438,7 +441,7 @@ const Dashboard = () => {
               <Package className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="p-0 pt-2">
-              <div className="text-lg md:text-2xl font-bold">{stats.totalProducts}</div>
+              <div className="text-lg md:text-2xl font-bold">{(stats as any).totalProducts}</div>
               <p className="text-xs text-muted-foreground">
                 +2 new this week
               </p>
@@ -451,7 +454,7 @@ const Dashboard = () => {
               <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="p-0 pt-2">
-              <div className="text-lg md:text-2xl font-bold text-destructive">{stats.lowStockItems}</div>
+              <div className="text-lg md:text-2xl font-bold text-destructive">{(stats as any).lowStockItems}</div>
               <p className="text-xs text-muted-foreground">
                 Items need restocking
               </p>
@@ -556,13 +559,13 @@ const Dashboard = () => {
               <AIInsights 
                 type="sales"
                 data={{
-                  sales: Array.from({ length: stats?.totalSales || 0 }, (_, i) => ({
+                  sales: Array.from({ length: (stats as any)?.totalSales || 0 }, (_, i) => ({
                     created_at: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-                    total: Math.floor((stats?.totalRevenue || 0) / (stats?.totalSales || 1)),
+                    total: Math.floor(((stats as any)?.totalRevenue || 0) / ((stats as any)?.totalSales || 1)),
                     payment_method: 'cash'
                   })),
-                  revenue: stats?.totalRevenue || 0,
-                  growth: stats?.salesGrowth || 15.3
+                  revenue: (stats as any)?.totalRevenue || 0,
+                  growth: (stats as any)?.salesGrowth || 15.3
                 }}
               />
             </div>

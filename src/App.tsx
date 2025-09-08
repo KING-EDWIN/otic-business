@@ -22,6 +22,7 @@ import About from "./pages/About";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
+import OAuthCallback from "./components/OAuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +78,7 @@ const App = () => {
                 <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
                 <Route path="/get-started" element={<GetStarted />} />
                 <Route path="/complete-profile" element={<CompleteProfile />} />
+                <Route path="/auth/callback" element={<OAuthCallback />} />
                 <Route path="/ai-insights" element={<AIInsightsPage />} />
                 <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

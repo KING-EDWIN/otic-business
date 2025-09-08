@@ -34,6 +34,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let isMounted = true
 
+    // Handle OAuth callback on page load
+    const handleOAuthCallback = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) {
+          console.error('Error getting session:', error)
+          return
+        }
+        
+        if (session?.user) {
+          console.log('OAuth callback - user found:', session.user.email)
+          setSession(session)
+          setUser(session.user)
+          await fetchUserProfile(session.user.id)
+        }
+      } catch (error) {
+        console.error('Error handling OAuth callback:', error)
+      }
+    }
+
+    // Handle OAuth callback immediately
+    handleOAuthCallback()
+
     // Listen for auth changes (this also gets the initial session)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -76,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subscription.unsubscribe()
     }
   }, [])
+
 
   const updateEmailVerificationStatus = async (userId: string, verified: boolean, verifiedBy: string) => {
     try {
@@ -328,7 +352,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo: `${window.location.origin}/auth/callback`
         }
       })
       
@@ -351,7 +375,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/complete-profile`
+          redirectTo: `${window.location.origin}/auth/callback`
         }
       })
       
