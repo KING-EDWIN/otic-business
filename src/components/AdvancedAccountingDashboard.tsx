@@ -508,3 +508,4 @@ const AdvancedAccountingDashboard: React.FC<{ onBack: () => void }> = ({ onBack 
 }
 
 export default AdvancedAccountingDashboard
+

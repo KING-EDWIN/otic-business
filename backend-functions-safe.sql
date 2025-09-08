@@ -453,3 +453,4 @@ $$ LANGUAGE plpgsql;
 -- Success message
 SELECT 'Backend functions created successfully! Dashboard should now work properly.' as message;
 
+

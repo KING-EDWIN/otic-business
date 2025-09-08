@@ -24,3 +24,4 @@ SELECT 'expenses user_id' as info, user_id, COUNT(*) as count FROM expenses GROU
 SELECT 'invoices user_id' as info, user_id, COUNT(*) as count FROM invoices GROUP BY user_id;
 SELECT 'sales user_id' as info, user_id, COUNT(*) as count FROM sales GROUP BY user_id;
 
+

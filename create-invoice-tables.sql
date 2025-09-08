@@ -46,3 +46,4 @@ CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice_id ON invoice_items(invoice
 -- Add comments
 COMMENT ON TABLE invoices IS 'Stores invoice information for each user';
 COMMENT ON TABLE invoice_items IS 'Stores individual items within each invoice';
+

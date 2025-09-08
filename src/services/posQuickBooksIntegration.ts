@@ -470,3 +470,4 @@ export class POSQuickBooksIntegration {
 }
 
 export const posQuickBooksIntegration = new POSQuickBooksIntegration()
+

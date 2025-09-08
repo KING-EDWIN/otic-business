@@ -89,3 +89,4 @@ If you get errors about missing variables:
 3. Redeploy after adding new variables
 4. Check Vercel build logs for errors
 
+

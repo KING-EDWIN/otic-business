@@ -239,6 +239,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfile(null)
       setSubscription(null)
       setSession(null)
+      // Hard clear any persisted sessions (sb-*) and demo flags
+      try {
+        Object.keys(localStorage).forEach(k => (k.startsWith('sb-') || k.includes('demo')) && localStorage.removeItem(k))
+        sessionStorage.clear()
+        document.cookie.split(';').forEach(c => document.cookie = c.trim().split('=')[0]+'=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/')
+      } catch {}
       setLoading(false)
       // Redirect to signin page
       window.location.href = '/signin'

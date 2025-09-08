@@ -568,3 +568,4 @@ RECOMMENDATIONS:
 }
 
 export const reportsService = new ReportsService()
+

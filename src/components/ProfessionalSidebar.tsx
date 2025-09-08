@@ -250,3 +250,4 @@ const ProfessionalSidebar: React.FC<ProfessionalSidebarProps> = ({ isCollapsed, 
 }
 
 export default ProfessionalSidebar
+

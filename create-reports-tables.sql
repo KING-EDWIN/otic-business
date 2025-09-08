@@ -95,3 +95,4 @@ CREATE TRIGGER update_reports_updated_at BEFORE UPDATE ON reports
 
 CREATE TRIGGER update_report_schedules_updated_at BEFORE UPDATE ON report_schedules
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+

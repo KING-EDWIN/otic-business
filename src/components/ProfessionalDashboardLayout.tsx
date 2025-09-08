@@ -138,3 +138,4 @@ const ProfessionalDashboardLayout: React.FC = () => {
 }
 
 export default ProfessionalDashboardLayout
+

@@ -107,3 +107,4 @@ VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 3. Deploy to production with production redirect URIs
 4. Consider adding other OAuth providers (Facebook, GitHub, etc.)
 
+
