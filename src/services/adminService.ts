@@ -368,6 +368,27 @@ export class AdminService {
       return []
     }
   }
+
+  // Call secure API route to verify/unverify a user
+  async setUserVerification(userId: string, verified: boolean): Promise<{ success: boolean; error?: string }> {
+    try {
+      const res = await fetch('/api/admin/verify-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-admin-secret': import.meta.env.VITE_ADMIN_API_SECRET || '',
+        },
+        body: JSON.stringify({ userId, verified })
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        return { success: false, error: data?.error || 'Request failed' }
+      }
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: 'Network error' }
+    }
+  }
 }
 
 export const adminService = new AdminService()

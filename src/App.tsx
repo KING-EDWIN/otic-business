@@ -31,10 +31,10 @@ import OAuthCallback from "./components/OAuthCallback";
 
 const queryClient = new QueryClient();
 
-// Protected Route Component
+// Protected Route Component with manual email verification gate
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
+  const { user, loading, profile } = useAuth();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -42,8 +42,34 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       </div>
     );
   }
-  
-  return user ? <>{children}</> : <Navigate to="/signin" />;
+
+  // Not logged in → go to sign in
+  if (!user) return <Navigate to="/signin" />;
+
+  // Logged in but not yet admin-verified → block with friendly screen
+  if (profile && profile.email_verified === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center space-y-4">
+          <img src="/Otic icon@2x.png" alt="Otic Business Logo" className="h-12 w-12 mx-auto" />
+          <h2 className="text-2xl font-bold text-[#040458]">Pending Admin Approval</h2>
+          <p className="text-gray-600">
+            Your account was created successfully, but it hasn’t been verified by an admin yet. 
+            Once approved, you’ll be able to access the system.
+          </p>
+          <p className="text-sm text-gray-500">If you believe this is a mistake, please contact your administrator.</p>
+          <a
+            href="/signin"
+            className="inline-flex items-center justify-center w-full rounded-lg bg-[#faa51a] text-white font-semibold py-2 hover:bg-[#040458] transition-colors"
+          >
+            Return to Sign In
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 };
 
 // Public Route Component (redirect to dashboard if already logged in)
