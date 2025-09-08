@@ -166,10 +166,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (data.user) {
-        // Create user profile with pending verification status
+        // Wait a moment for the user to be fully created in auth.users
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        // Use upsert to create or update the user profile
         const { error: profileError } = await supabase
           .from('user_profiles')
-          .insert({
+          .upsert({
             id: data.user.id,
             email: data.user.email!,
             business_name: businessName,
@@ -177,10 +180,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email_verified: false, // Will be set to true after email confirmation
             verification_timestamp: null,
             verified_by: null
+          }, {
+            onConflict: 'id'
           })
 
         if (profileError) {
-          console.error('Error creating user profile:', profileError)
+          console.error('Error upserting user profile:', profileError)
           return { error: profileError }
         }
 
