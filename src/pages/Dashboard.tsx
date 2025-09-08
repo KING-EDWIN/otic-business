@@ -96,20 +96,27 @@ const Dashboard = () => {
 
   // Load stats using DataService
   useEffect(() => {
-    const loadStats = async () => {
-      if (!user?.id) return
-      
-      try {
-        setStatsLoading(true)
-        const statsData = await DataService.getStats(user.id)
-        setStats(statsData)
-        console.log('Loaded stats:', statsData)
-      } catch (error) {
-        console.error('Error loading stats:', error)
-      } finally {
-        setStatsLoading(false)
-      }
+  const loadStats = async () => {
+    if (!user?.id) return
+    
+    try {
+      setStatsLoading(true)
+      const statsData = await DataService.getStats(user.id)
+      setStats(statsData)
+      console.log('Loaded stats:', statsData)
+    } catch (error) {
+      console.error('Error loading stats:', error)
+      // Set fallback stats to prevent infinite loading
+      setStats({
+        totalSales: 0,
+        totalProducts: 0,
+        totalRevenue: 0,
+        lowStockItems: 0
+      })
+    } finally {
+      setStatsLoading(false)
     }
+  }
 
     loadStats()
   }, [user?.id])
@@ -143,7 +150,7 @@ const Dashboard = () => {
         console.warn('Auth loading timeout - forcing redirect to signin')
         navigate('/signin')
       }
-    }, 10000) // 10 second timeout
+    }, 5000) // Reduced to 5 second timeout
 
     if (!authLoading && !user) {
       // No user and not loading, redirect to signin
@@ -202,9 +209,10 @@ const Dashboard = () => {
       )}
       
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-lg sticky top-0 z-50">
+      <header className="bg-white/90 backdrop-blur-md border-b border-white/20 shadow-lg sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
+            {/* Logo */}
             <div className="flex items-center space-x-3">
               <img 
                 src="/Otic icon@2x.png" 
@@ -216,7 +224,67 @@ const Dashboard = () => {
                 <span className="text-xs md:text-sm text-[#faa51a] -mt-1">Business</span>
               </div>
             </div>
-            <div className="flex items-center space-x-2 md:space-x-4">
+
+            {/* Centered Navigation Menu */}
+            <div className="hidden md:flex items-center space-x-1">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/pos')}
+                className="text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-4 py-2 font-medium"
+              >
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                POS
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/inventory')}
+                className="text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-4 py-2 font-medium"
+              >
+                <Package className="h-4 w-4 mr-2" />
+                Inventory
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/analytics')}
+                className="text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-4 py-2 font-medium"
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Analytics
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/payments')}
+                className="text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-4 py-2 font-medium"
+              >
+                <DollarSign className="h-4 w-4 mr-2" />
+                Payments
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/customers')}
+                className="text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-4 py-2 font-medium"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Customers
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/settings')}
+                className="text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-4 py-2 font-medium"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+            </div>
+
+            {/* Right side - Mobile menu and Login Status */}
+            <div className="flex items-center space-x-2">
               {/* Mobile Menu Button */}
               <Button 
                 variant="ghost" 
@@ -226,50 +294,6 @@ const Dashboard = () => {
               >
                 <Menu className="h-5 w-5" />
               </Button>
-              
-              {/* Desktop Navigation */}
-              <div className="hidden md:flex items-center space-x-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate('/pos')}
-                  className="text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
-                >
-                  POS
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate('/inventory')}
-                  className="text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
-                >
-                  Inventory
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate('/analytics')}
-                  className="text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
-                >
-                  Analytics
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate('/payments')}
-                  className="text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
-                >
-                  Payments
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate('/settings')}
-                  className="text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
-                >
-                  Settings
-                </Button>
-              </div>
               
               <LoginStatus />
             </div>
@@ -283,7 +307,7 @@ const Dashboard = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={() => { navigate('/pos'); setMobileMenuOpen(false); }} 
-                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                  className="justify-start text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg"
                 >
                   <ShoppingCart className="h-4 w-4 mr-2" />
                   POS
@@ -292,7 +316,7 @@ const Dashboard = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={() => { navigate('/inventory'); setMobileMenuOpen(false); }} 
-                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                  className="justify-start text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg"
                 >
                   <Package className="h-4 w-4 mr-2" />
                   Inventory
@@ -301,7 +325,7 @@ const Dashboard = () => {
                   variant="ghost" 
                   size="sm" 
                   onClick={() => { navigate('/analytics'); setMobileMenuOpen(false); }} 
-                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                  className="justify-start text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg"
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Analytics
@@ -309,35 +333,8 @@ const Dashboard = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => { setActiveTab('reports'); setMobileMenuOpen(false); }} 
-                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Reports
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => { setActiveTab('subscription'); setMobileMenuOpen(false); }} 
-                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
-                >
-                  <Crown className="h-4 w-4 mr-2" />
-                  Subscription
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => { navigate('/ai-insights'); setMobileMenuOpen(false); }} 
-                  className="justify-start text-[#faa51a] hover:text-[#040458] hover:bg-[#040458]/10 font-semibold"
-                >
-                  <Brain className="h-4 w-4 mr-2" />
-                  AI Insights
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
                   onClick={() => { navigate('/payments'); setMobileMenuOpen(false); }} 
-                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                  className="justify-start text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg"
                 >
                   <DollarSign className="h-4 w-4 mr-2" />
                   Payments
@@ -345,14 +342,32 @@ const Dashboard = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
+                  onClick={() => { navigate('/customers'); setMobileMenuOpen(false); }} 
+                  className="justify-start text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Customers
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { navigate('/ai-chat'); setMobileMenuOpen(false); }} 
+                  className="justify-start text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg"
+                >
+                  <Brain className="h-4 w-4 mr-2" />
+                  AI Chat
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
                   onClick={() => { navigate('/settings'); setMobileMenuOpen(false); }} 
-                  className="justify-start text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
+                  className="justify-start text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg"
                 >
                   <Settings className="h-4 w-4 mr-2" />
                   Settings
                 </Button>
                 <div className="pt-2 border-t border-gray-200">
-                  <Badge className="bg-[#faa51a] text-white">
+                  <Badge className="bg-gradient-to-r from-[#040458] to-[#faa51a] text-white">
                     {profile?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan
                   </Badge>
                 </div>
@@ -395,59 +410,158 @@ const Dashboard = () => {
           </div>
         )}
         
+        {/* Welcome Banner */}
+        <div className="mb-8 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-2xl p-8 text-white relative overflow-hidden">
+          <div className="relative z-10">
+            <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
+            <p className="text-lg opacity-90">Here's what's happening with your business today.</p>
+          </div>
+          <div className="absolute right-4 top-4 opacity-20">
+            <TrendingUp className="h-16 w-16" />
+          </div>
+        </div>
+        
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
-          <Card className="p-3 md:p-6 bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
-              <CardTitle className="text-xs md:text-sm font-medium">Total Sales</CardTitle>
-              <ShoppingCart className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-green-500 text-white border-0 shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+              <ShoppingCart className="h-4 w-4" />
             </CardHeader>
-            <CardContent className="p-0 pt-2">
-              <div className="text-lg md:text-2xl font-bold">{(stats as any).totalSales}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent>
+              <div className="text-2xl font-bold">{(stats as any).totalSales || 0}</div>
+              <p className="text-xs opacity-90">
                 +20.1% from last month
               </p>
             </CardContent>
           </Card>
 
-          <Card className="p-3 md:p-6 bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
-              <CardTitle className="text-xs md:text-sm font-medium">Total Revenue</CardTitle>
-              <DollarSign className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+          <Card className="bg-blue-500 text-white border-0 shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4" />
             </CardHeader>
-            <CardContent className="p-0 pt-2">
-              <div className="text-sm md:text-2xl font-bold">UGX {(stats as any).totalRevenue.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent>
+              <div className="text-2xl font-bold">UGX {((stats as any).totalRevenue || 0).toLocaleString()}</div>
+              <p className="text-xs opacity-90">
                 +15.3% from last month
               </p>
             </CardContent>
           </Card>
 
-          <Card className="p-3 md:p-6 bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
-              <CardTitle className="text-xs md:text-sm font-medium">Products</CardTitle>
-              <Package className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+          <Card className="bg-orange-500 text-white border-0 shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Products</CardTitle>
+              <Package className="h-4 w-4" />
             </CardHeader>
-            <CardContent className="p-0 pt-2">
-              <div className="text-lg md:text-2xl font-bold">{(stats as any).totalProducts}</div>
-              <p className="text-xs text-muted-foreground">
+            <CardContent>
+              <div className="text-2xl font-bold">{(stats as any).totalProducts || 0}</div>
+              <p className="text-xs opacity-90">
                 +2 new this week
               </p>
             </CardContent>
           </Card>
 
-          <Card className="p-3 md:p-6 bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0">
-              <CardTitle className="text-xs md:text-sm font-medium">Low Stock</CardTitle>
-              <TrendingUp className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
+          <Card className="bg-red-500 text-white border-0 shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Low Stock</CardTitle>
+              <Package className="h-4 w-4" />
             </CardHeader>
-            <CardContent className="p-0 pt-2">
-              <div className="text-lg md:text-2xl font-bold text-destructive">{(stats as any).lowStockItems}</div>
-              <p className="text-xs text-muted-foreground">
-                Items need restocking
+            <CardContent>
+              <div className="text-2xl font-bold">{(stats as any).lowStockItems || 0}</div>
+              <p className="text-xs opacity-90">
+                items need restocking
               </p>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+              <h2 className="text-xl font-semibold text-gray-800">Quick Actions</h2>
+            </div>
+            <p className="text-sm text-gray-600 ml-4">Common tasks to get you started.</p>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <Button 
+              onClick={() => navigate('/pos')}
+              className="h-20 bg-gradient-to-r from-[#040458] to-[#faa51a] text-white hover:opacity-90 transition-all duration-200 shadow-lg"
+            >
+              <div className="flex flex-col items-center space-y-2">
+                <ShoppingCart className="h-6 w-6" />
+                <span className="text-sm font-medium">Start New Sale</span>
+              </div>
+            </Button>
+            <Button 
+              onClick={() => navigate('/inventory')}
+              className="h-20 bg-green-500 text-white hover:bg-green-600 transition-all duration-200 shadow-lg"
+            >
+              <div className="flex flex-col items-center space-y-2">
+                <Plus className="h-6 w-6" />
+                <span className="text-sm font-medium">Add New Product</span>
+              </div>
+            </Button>
+            <Button 
+              onClick={() => navigate('/analytics')}
+              className="h-20 bg-blue-500 text-white hover:bg-blue-600 transition-all duration-200 shadow-lg"
+            >
+              <div className="flex flex-col items-center space-y-2">
+                <BarChart3 className="h-6 w-6" />
+                <span className="text-sm font-medium">View Reports</span>
+              </div>
+            </Button>
+            <Button 
+              onClick={() => navigate('/payments')}
+              className="h-20 bg-purple-500 text-white hover:bg-purple-600 transition-all duration-200 shadow-lg"
+            >
+              <div className="flex flex-col items-center space-y-2">
+                <FileText className="h-6 w-6" />
+                <span className="text-sm font-medium">Accounting</span>
+              </div>
+            </Button>
+          </div>
+        </div>
+
+        {/* Sales Performance */}
+        <div className="mb-8">
+          <div className="flex items-center mb-4">
+            <div className="flex items-center space-x-2">
+              <BarChart3 className="h-5 w-5 text-[#040458]" />
+              <h2 className="text-xl font-semibold text-gray-800">Sales Performance</h2>
+            </div>
+            <p className="text-sm text-gray-600 ml-4">Weekly sales and revenue trends.</p>
+          </div>
+          <Card className="p-6 bg-white shadow-lg">
+            <div className="h-64 flex items-center justify-center">
+              <div className="text-center">
+                <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Sales chart will be displayed here</p>
+                <p className="text-sm text-gray-400">Data visualization coming soon</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* AI Business Assistant */}
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-2xl p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold mb-2">AI Business Assistant</h2>
+                <p className="text-sm opacity-90">Get insights and recommendations for your business</p>
+              </div>
+              <Button 
+                onClick={() => navigate('/ai-chat')}
+                className="bg-white text-[#040458] hover:bg-gray-100"
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                Start Chat
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Main Dashboard Tabs */}
