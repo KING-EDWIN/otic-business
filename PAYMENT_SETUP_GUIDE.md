@@ -138,3 +138,4 @@ Run these SQL scripts in your Supabase SQL Editor in this order:
 
 The system is now ready for production use! Users can make payments using your exact payment methods, and you can verify them through the admin dashboard.
 
+

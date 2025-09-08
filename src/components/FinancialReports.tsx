@@ -445,3 +445,4 @@ NET CASH FLOW: ${formatCurrency(financialData.grossProfit - financialData.totalE
 }
 
 export default FinancialReports
+

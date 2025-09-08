@@ -271,3 +271,4 @@ async function setupReportsDatabase() {
 
 // Run the setup function
 setupReportsDatabase()
+

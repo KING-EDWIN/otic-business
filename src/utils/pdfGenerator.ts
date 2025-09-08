@@ -250,3 +250,4 @@ const generateReportContent = (data: any): string => {
   
   return '<div class="section"><div class="section-title">Report Data</div><p>No data available</p></div>'
 }
+

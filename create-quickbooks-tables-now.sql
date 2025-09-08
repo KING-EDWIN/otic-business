@@ -75,3 +75,4 @@ COMMENT ON TABLE quickbooks_sync_log IS 'Logs synchronization activities between
 COMMENT ON TABLE quickbooks_customer_mapping IS 'Maps POS customers to QuickBooks customers';
 COMMENT ON TABLE quickbooks_product_mapping IS 'Maps POS products to QuickBooks items';
 COMMENT ON TABLE quickbooks_invoice_mapping IS 'Maps POS sales to QuickBooks invoices';
+

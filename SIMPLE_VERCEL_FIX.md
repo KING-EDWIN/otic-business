@@ -41,3 +41,4 @@ After adding these 2 variables and redeploying:
 2. Sign in with demo account: `demo@oticbusiness.com` / `demo123456`
 3. Check if all data loads from Supabase
 
+

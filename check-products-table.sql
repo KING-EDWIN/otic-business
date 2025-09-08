@@ -10,3 +10,4 @@ ORDER BY ordinal_position;
 -- Also check if the table exists and get a sample row
 SELECT * FROM products LIMIT 1;
 
+

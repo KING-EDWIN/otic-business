@@ -145,3 +145,4 @@ Once the tables are created and data is seeded, the Reports dashboard will be fu
 - Schedule recurring reports
 - Download reports as text files
 - Track report views and analytics
+

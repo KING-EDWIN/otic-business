@@ -270,3 +270,4 @@ const QuaggaBarcodeScanner: React.FC<QuaggaBarcodeScannerProps> = ({ onScan, onC
 }
 
 export default QuaggaBarcodeScanner
+

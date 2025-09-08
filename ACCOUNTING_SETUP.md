@@ -87,3 +87,4 @@ For Otic Business integration:
 - Ensure CORS is enabled on your Akaunting instance
 - Verify API token permissions
 
+

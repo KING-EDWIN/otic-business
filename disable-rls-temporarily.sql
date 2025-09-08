@@ -45,3 +45,4 @@ ALTER TABLE expense_categories ENABLE ROW LEVEL SECURITY;
 SELECT 'expenses' as table_name, COUNT(*) as count FROM expenses;
 SELECT 'invoices' as table_name, COUNT(*) as count FROM invoices;
 
+
