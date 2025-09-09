@@ -42,6 +42,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
+import { CardSkeleton, TableSkeleton, ChartSkeleton } from '@/components/LoadingSkeleton'
 
 interface Customer {
   id: string
@@ -60,7 +61,7 @@ interface Customer {
 
 const Customers = () => {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
@@ -87,12 +88,18 @@ const Customers = () => {
     totalRevenue: 0,
     averageOrderValue: 0
   })
+  
+  // Loading states for different sections
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [customersLoading, setCustomersLoading] = useState(true)
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
 
   useEffect(() => {
-    if (appUser?.id) {
+    if (user?.id) {
       fetchCustomers()
+      loadAnalyticsData()
     }
-  }, [appUser?.id])
+  }, [user?.id])
 
   useEffect(() => {
     filterCustomers()
@@ -100,7 +107,8 @@ const Customers = () => {
 
   const fetchCustomers = async () => {
     try {
-      setLoading(true)
+      setCustomersLoading(true)
+      setStatsLoading(true)
       
       // Fetch customers from Supabase
       const { data: customersData, error: customersError } = await supabase
@@ -170,7 +178,20 @@ const Customers = () => {
       console.error('Error fetching customers:', error)
       toast.error('Failed to load customers')
     } finally {
-      setLoading(false)
+      setCustomersLoading(false)
+      setStatsLoading(false)
+    }
+  }
+
+  const loadAnalyticsData = async () => {
+    try {
+      setAnalyticsLoading(true)
+      // Simulate loading analytics data
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    } catch (error) {
+      console.error('Error loading analytics data:', error)
+    } finally {
+      setAnalyticsLoading(false)
     }
   }
 
@@ -204,7 +225,7 @@ const Customers = () => {
       const { data, error } = await supabase
         .from('customers')
         .insert([{
-          user_id: appUser?.id,
+          user_id: user?.id,
           name: newCustomer.name,
           email: newCustomer.email || null,
           phone: newCustomer.phone || null,
@@ -371,89 +392,102 @@ const Customers = () => {
       <div className="container mx-auto px-6 py-8">
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">Total Customers</p>
-                  <p className="text-3xl font-bold text-[#040458]">{stats.total}</p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md">
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {statsLoading ? (
+            <>
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+            </>
+          ) : (
+            <>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">Total Customers</p>
+                      <p className="text-3xl font-bold text-[#040458]">{stats.total}</p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md">
+                      <Users className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">Active Customers</p>
-                  <p className="text-3xl font-bold text-green-600">{stats.active}</p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-md">
-                  <UserCheck className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">Active Customers</p>
+                      <p className="text-3xl font-bold text-green-600">{stats.active}</p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-md">
+                      <UserCheck className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">VIP Customers</p>
-                  <p className="text-3xl font-bold text-yellow-600">{stats.vip}</p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg shadow-md">
-                  <Star className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">VIP Customers</p>
+                      <p className="text-3xl font-bold text-yellow-600">{stats.vip}</p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg shadow-md">
+                      <Star className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">New This Month</p>
-                  <p className="text-3xl font-bold text-purple-600">{stats.newThisMonth}</p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-md">
-                  <UserPlus className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">New This Month</p>
+                      <p className="text-3xl font-bold text-purple-600">{stats.newThisMonth}</p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-md">
+                      <UserPlus className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">Total Revenue</p>
-                  <p className="text-2xl font-bold text-[#040458]">UGX {stats.totalRevenue.toLocaleString()}</p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg shadow-md">
-                  <DollarSign className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">Total Revenue</p>
+                      <p className="text-2xl font-bold text-[#040458]">UGX {stats.totalRevenue.toLocaleString()}</p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg shadow-md">
+                      <DollarSign className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">Avg Order Value</p>
-                  <p className="text-2xl font-bold text-[#040458]">UGX {Math.round(stats.averageOrderValue).toLocaleString()}</p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg shadow-md">
-                  <TrendingUp className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">Avg Order Value</p>
+                      <p className="text-2xl font-bold text-[#040458]">UGX {Math.round(stats.averageOrderValue).toLocaleString()}</p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg shadow-md">
+                      <TrendingUp className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         <Tabs defaultValue="customers" className="space-y-6">
@@ -521,11 +555,8 @@ const Customers = () => {
                 <CardDescription>Manage your customer relationships and track their value</CardDescription>
               </CardHeader>
               <CardContent>
-                {loading ? (
-                  <div className="text-center py-12">
-                    <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-[#040458]" />
-                    <p className="text-gray-600">Loading customers...</p>
-                  </div>
+                {customersLoading ? (
+                  <TableSkeleton rows={5} />
                 ) : filteredCustomers.length === 0 ? (
                   <div className="text-center py-12">
                     <Users className="h-16 w-16 mx-auto mb-4 text-gray-400" />
@@ -619,81 +650,90 @@ const Customers = () => {
 
           <TabsContent value="analytics" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Customer Growth Chart */}
-              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-lg">
-                  <CardTitle className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5" />
-                    <span>Customer Growth</span>
-                  </CardTitle>
-                  <CardDescription className="text-blue-100">Monthly customer acquisition and revenue</CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={customerGrowthData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="month" stroke="#64748b" />
-                      <YAxis stroke="#64748b" />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          border: 'none',
-                          borderRadius: '12px',
-                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-                        }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="customers" 
-                        stroke="#3b82f6" 
-                        strokeWidth={3}
-                        dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              {analyticsLoading ? (
+                <>
+                  <ChartSkeleton />
+                  <ChartSkeleton />
+                </>
+              ) : (
+                <>
+                  {/* Customer Growth Chart */}
+                  <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+                    <CardHeader className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-lg">
+                      <CardTitle className="flex items-center space-x-2">
+                        <TrendingUp className="h-5 w-5" />
+                        <span>Customer Growth</span>
+                      </CardTitle>
+                      <CardDescription className="text-blue-100">Monthly customer acquisition and revenue</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={customerGrowthData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis dataKey="month" stroke="#64748b" />
+                          <YAxis stroke="#64748b" />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                              border: 'none',
+                              borderRadius: '12px',
+                              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                            }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="customers" 
+                            stroke="#3b82f6" 
+                            strokeWidth={3}
+                            dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
 
-              {/* Top Customers Chart */}
-              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
-                  <CardTitle className="flex items-center space-x-2">
-                    <Star className="h-5 w-5" />
-                    <span>Top Customers</span>
-                  </CardTitle>
-                  <CardDescription className="text-green-100">Highest spending customers</CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={topCustomersData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="name" stroke="#64748b" />
-                      <YAxis stroke="#64748b" />
-                      <Tooltip 
-                        formatter={(value) => [`UGX ${value.toLocaleString()}`, 'Spent']}
-                        contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          border: 'none',
-                          borderRadius: '12px',
-                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-                        }}
-                      />
-                      <Bar 
-                        dataKey="spent" 
-                        fill="url(#greenGradient)"
-                        radius={[4, 4, 0, 0]}
-                      />
-                      <defs>
-                        <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#10b981" />
-                          <stop offset="100%" stopColor="#059669" />
-                        </linearGradient>
-                      </defs>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                  {/* Top Customers Chart */}
+                  <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+                    <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
+                      <CardTitle className="flex items-center space-x-2">
+                        <Star className="h-5 w-5" />
+                        <span>Top Customers</span>
+                      </CardTitle>
+                      <CardDescription className="text-green-100">Highest spending customers</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={topCustomersData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis dataKey="name" stroke="#64748b" />
+                          <YAxis stroke="#64748b" />
+                          <Tooltip 
+                            formatter={(value) => [`UGX ${value.toLocaleString()}`, 'Spent']}
+                            contentStyle={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                              border: 'none',
+                              borderRadius: '12px',
+                              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                            }}
+                          />
+                          <Bar 
+                            dataKey="spent" 
+                            fill="url(#greenGradient)"
+                            radius={[4, 4, 0, 0]}
+                          />
+                          <defs>
+                            <linearGradient id="greenGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#10b981" />
+                              <stop offset="100%" stopColor="#059669" />
+                            </linearGradient>
+                          </defs>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
           </TabsContent>
         </Tabs>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -69,12 +69,13 @@ import {
 import { toast } from 'sonner'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 import { reportsService, Report, ReportSchedule, ReportStats } from '@/services/reportsService'
+import { CardSkeleton, TableSkeleton, ChartSkeleton } from '@/components/LoadingSkeleton'
 
 // Remove the local ReportData interface since we're using the one from the service
 
 const Reports = () => {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
   const [selectedReportType, setSelectedReportType] = useState('sales')
   const [timeframe, setTimeframe] = useState('last_30_days')
@@ -88,6 +89,11 @@ const Reports = () => {
     thisMonthReports: 0,
     totalViews: 0
   })
+  
+  // Loading states for different sections
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [reportsLoading, setReportsLoading] = useState(true)
+  const [schedulesLoading, setSchedulesLoading] = useState(true)
 
   const reportTypes = [
     { id: 'sales', name: 'Sales Reports', icon: TrendingUp, description: 'Analyze sales performance and trends' },
@@ -112,47 +118,53 @@ const Reports = () => {
   ]
 
   useEffect(() => {
-    if (appUser?.id) {
+    if (user?.id) {
       loadReports()
       loadScheduledReports()
       loadReportStats()
     }
-  }, [appUser?.id])
+  }, [user?.id])
 
   const loadReports = async () => {
     try {
-      setLoading(true)
-      const reports = await reportsService.getReports(appUser!.id)
+      setReportsLoading(true)
+      const reports = await reportsService.getReports(user!.id)
       setGeneratedReports(reports)
     } catch (error) {
       console.error('Error loading reports:', error)
       toast.error('Failed to load reports')
     } finally {
-      setLoading(false)
+      setReportsLoading(false)
     }
   }
 
   const loadScheduledReports = async () => {
     try {
-      const schedules = await reportsService.getReportSchedules(appUser!.id)
+      setSchedulesLoading(true)
+      const schedules = await reportsService.getReportSchedules(user!.id)
       setScheduledReports(schedules)
     } catch (error) {
       console.error('Error loading scheduled reports:', error)
       toast.error('Failed to load scheduled reports')
+    } finally {
+      setSchedulesLoading(false)
     }
   }
 
   const loadReportStats = async () => {
     try {
-      const stats = await reportsService.getReportStats(appUser!.id)
+      setStatsLoading(true)
+      const stats = await reportsService.getReportStats(user!.id)
       setReportStats(stats)
     } catch (error) {
       console.error('Error loading report stats:', error)
+    } finally {
+      setStatsLoading(false)
     }
   }
 
   const generateReport = async () => {
-    if (!selectedReportType || !appUser?.id) {
+    if (!selectedReportType || !user?.id) {
       toast.error('Please select a report type and ensure you are logged in')
       return
     }
@@ -161,11 +173,11 @@ const Reports = () => {
       setLoading(true)
       
       // Generate report content using the service
-      const reportContent = await reportsService.generateReportContent(selectedReportType, timeframe, appUser.id)
+      const reportContent = await reportsService.generateReportContent(selectedReportType, timeframe, user.id)
       
       // Create the report in Supabase
       const newReport = await reportsService.createReport({
-        user_id: appUser.id,
+        user_id: user.id,
         report_type: selectedReportType,
         title: `${reportTypes.find(t => t.id === selectedReportType)?.name} - ${timeframes.find(t => t.id === timeframe)?.name}`,
         content: reportContent,
@@ -202,7 +214,7 @@ const Reports = () => {
   const viewReport = async (report: Report) => {
     try {
       // Record the view
-      await reportsService.recordReportView(report.id, appUser!.id)
+      await reportsService.recordReportView(report.id, user!.id)
       // You could open a modal or navigate to a detailed view here
       toast.success('Report view recorded!')
     } catch (error) {
@@ -281,61 +293,72 @@ const Reports = () => {
       <div className="container mx-auto px-6 py-8">
         {/* Report Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">Total Reports</p>
-                  <p className="text-3xl font-bold text-[#040458]">{reportStats.totalReports}</p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md">
-                  <FileText className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {statsLoading ? (
+            <>
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+            </>
+          ) : (
+            <>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">Total Reports</p>
+                      <p className="text-3xl font-bold text-[#040458]">{reportStats.totalReports}</p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md">
+                      <FileText className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">This Month</p>
-                  <p className="text-3xl font-bold text-green-600">{reportStats.thisMonthReports}</p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-md">
-                  <CalendarDays className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">This Month</p>
+                      <p className="text-3xl font-bold text-green-600">{reportStats.thisMonthReports}</p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-md">
+                      <CalendarDays className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">Scheduled</p>
-                  <p className="text-3xl font-bold text-purple-600">{reportStats.scheduledReports}</p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-md">
-                  <Clock3 className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">Scheduled</p>
+                      <p className="text-3xl font-bold text-purple-600">{reportStats.scheduledReports}</p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-md">
+                      <Clock3 className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">Total Views</p>
-                  <p className="text-3xl font-bold text-orange-600">{reportStats.totalViews}</p>
-                </div>
-                <div className="p-3 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow-md">
-                  <Eye className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">Total Views</p>
+                      <p className="text-3xl font-bold text-orange-600">{reportStats.totalViews}</p>
+                    </div>
+                    <div className="p-3 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg shadow-md">
+                      <Eye className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -516,11 +539,8 @@ const Reports = () => {
                 <CardDescription className="text-gray-600">View and manage your generated reports</CardDescription>
               </CardHeader>
               <CardContent>
-                {loading ? (
-                  <div className="text-center py-12">
-                    <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-[#040458]" />
-                    <p className="text-gray-600">Loading reports...</p>
-                  </div>
+                {reportsLoading ? (
+                  <TableSkeleton rows={3} />
                 ) : generatedReports.length === 0 ? (
                   <div className="text-center py-12">
                     <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
@@ -549,7 +569,7 @@ const Reports = () => {
                             <div>
                               <h3 className="font-semibold text-lg text-[#040458]">{report.title}</h3>
                               <div className="flex items-center space-x-4 text-sm text-gray-600">
-                                <span>Type: {report.type}</span>
+                                <span>Type: {report.report_type}</span>
                                 <span>Timeframe: {timeframes.find(tf => tf.id === report.timeframe)?.name}</span>
                                 <span>Generated: {new Date(report.generated_at).toLocaleDateString()}</span>
                               </div>
@@ -589,86 +609,95 @@ const Reports = () => {
 
           <TabsContent value="analytics" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Report Usage Chart */}
-              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-t-lg">
-                  <CardTitle className="flex items-center space-x-2">
-                    <BarChart3 className="h-5 w-5" />
-                    <span>Report Usage</span>
-                  </CardTitle>
-                  <CardDescription className="text-purple-100">Most popular report types</CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={[
-                      { name: 'Sales', value: 45 },
-                      { name: 'Financial', value: 30 },
-                      { name: 'Inventory', value: 20 },
-                      { name: 'Customer', value: 15 },
-                      { name: 'Tax', value: 10 }
-                    ]}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="name" stroke="#64748b" />
-                      <YAxis stroke="#64748b" />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          border: 'none',
-                          borderRadius: '12px',
-                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-                        }}
-                      />
-                      <Bar 
-                        dataKey="value" 
-                        fill="url(#purpleGradient)"
-                        radius={[4, 4, 0, 0]}
-                      />
-                      <defs>
-                        <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#8b5cf6" />
-                          <stop offset="100%" stopColor="#7c3aed" />
-                        </linearGradient>
-                      </defs>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+              {statsLoading ? (
+                <>
+                  <ChartSkeleton />
+                  <ChartSkeleton />
+                </>
+              ) : (
+                <>
+                  {/* Report Usage Chart */}
+                  <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+                    <CardHeader className="bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-t-lg">
+                      <CardTitle className="flex items-center space-x-2">
+                        <BarChart3 className="h-5 w-5" />
+                        <span>Report Usage</span>
+                      </CardTitle>
+                      <CardDescription className="text-purple-100">Most popular report types</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={[
+                          { name: 'Sales', value: 45 },
+                          { name: 'Financial', value: 30 },
+                          { name: 'Inventory', value: 20 },
+                          { name: 'Customer', value: 15 },
+                          { name: 'Tax', value: 10 }
+                        ]}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis dataKey="name" stroke="#64748b" />
+                          <YAxis stroke="#64748b" />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                              border: 'none',
+                              borderRadius: '12px',
+                              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                            }}
+                          />
+                          <Bar 
+                            dataKey="value" 
+                            fill="url(#purpleGradient)"
+                            radius={[4, 4, 0, 0]}
+                          />
+                          <defs>
+                            <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#8b5cf6" />
+                              <stop offset="100%" stopColor="#7c3aed" />
+                            </linearGradient>
+                          </defs>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
 
-              {/* Report Generation Trends */}
-              <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
-                <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
-                  <CardTitle className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5" />
-                    <span>Generation Trends</span>
-                  </CardTitle>
-                  <CardDescription className="text-orange-100">Reports generated over time</CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={salesData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="month" stroke="#64748b" />
-                      <YAxis stroke="#64748b" />
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          border: 'none',
-                          borderRadius: '12px',
-                          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-                        }}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="sales" 
-                        stroke="#f97316" 
-                        strokeWidth={3}
-                        dot={{ fill: '#f97316', strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6, stroke: '#f97316', strokeWidth: 2 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+                  {/* Report Generation Trends */}
+                  <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl">
+                    <CardHeader className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
+                      <CardTitle className="flex items-center space-x-2">
+                        <TrendingUp className="h-5 w-5" />
+                        <span>Generation Trends</span>
+                      </CardTitle>
+                      <CardDescription className="text-orange-100">Reports generated over time</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={salesData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                          <XAxis dataKey="month" stroke="#64748b" />
+                          <YAxis stroke="#64748b" />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                              border: 'none',
+                              borderRadius: '12px',
+                              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+                            }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey="sales" 
+                            stroke="#f97316" 
+                            strokeWidth={3}
+                            dot={{ fill: '#f97316', strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, stroke: '#f97316', strokeWidth: 2 }}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
           </TabsContent>
         </Tabs>
