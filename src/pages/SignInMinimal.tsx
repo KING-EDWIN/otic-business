@@ -91,7 +91,7 @@ const SignInMinimal = () => {
           
           <div className="mt-6 text-center text-sm">
             <span className="text-gray-600">Don't have an account? </span>
-            <Link to="/signup" className="text-[#faa51a] hover:underline font-medium">
+            <Link to="/user-type" className="text-[#faa51a] hover:underline font-medium">
               Sign up
             </Link>
           </div>

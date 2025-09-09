@@ -30,7 +30,7 @@ const IndexMinimal = () => {
             </Link>
             
             <Link 
-              to="/signup" 
+              to="/user-type" 
               className="bg-white/20 hover:bg-white/30 text-white font-semibold py-3 px-8 rounded-lg text-lg transition-colors border border-white/30"
             >
               Sign Up

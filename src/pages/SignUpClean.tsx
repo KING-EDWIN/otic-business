@@ -29,37 +29,8 @@ const SignUpClean = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    // Check if terms have been accepted
-    if (!termsAccepted) {
-      setShowTermsModal(true)
-      return
-    }
-    
-    setLoading(true)
-    setError('')
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters')
-      setLoading(false)
-      return
-    }
-
-    const { error } = await signUp(formData.email, formData.password, formData.businessName)
-    
-    if (error) {
-      setError(error.message || 'Failed to create account')
-      setLoading(false)
-    } else {
-      setSuccess(true)
-      // Don't redirect immediately - let user know to check email
-    }
+    // Redirect to user type selection instead of handling signup here
+    navigate('/user-type')
   }
 
   const handleInputChange = (field: string, value: string) => {

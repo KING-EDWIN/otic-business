@@ -69,7 +69,7 @@ import {
 import { toast } from 'sonner'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
 import { reportsService, Report, ReportSchedule, ReportStats } from '@/services/reportsService'
-import { CardSkeleton, TableSkeleton, ChartSkeleton } from '@/components/LoadingSkeleton'
+import { ReportsSkeleton, CardSkeleton, TableSkeleton, ChartSkeleton } from '@/components/ui/skeletons'
 
 // Remove the local ReportData interface since we're using the one from the service
 

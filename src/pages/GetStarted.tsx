@@ -139,7 +139,7 @@ const GetStarted = () => {
               <h1 className="text-2xl font-bold text-[#040458]">Get Started Guide</h1>
             </div>
             <Button
-              onClick={() => user ? navigate('/dashboard') : navigate('/signup')}
+              onClick={() => user ? navigate('/dashboard') : navigate('/user-type')}
               className="bg-[#040458] hover:bg-[#030345] text-white"
             >
               {user ? 'Go to Dashboard' : 'Start Free Trial'}
@@ -346,7 +346,7 @@ const GetStarted = () => {
             <Button
               size="lg"
               className="bg-[#faa51a] hover:bg-[#e0940a] text-white text-lg px-8 py-4"
-              onClick={() => user ? navigate('/dashboard') : navigate('/signup')}
+              onClick={() => user ? navigate('/dashboard') : navigate('/user-type')}
             >
               {user ? 'Go to Dashboard' : 'Start Free Trial'}
               <ChevronRight className="ml-2 h-5 w-5" />

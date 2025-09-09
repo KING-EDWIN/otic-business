@@ -203,3 +203,4 @@ async function createDemoUser() {
 
 // Run the setup
 createDemoUser()
+

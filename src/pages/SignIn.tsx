@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,9 +14,20 @@ const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [searchParams] = useSearchParams()
+  const userType = searchParams.get('type') || 'business'
   
-  const { signIn, signInWithGoogle } = useAuth()
+  const { signIn, signInWithGoogle, getDashboardRoute, user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+
+  // Handle routing once user and profile are loaded
+  useEffect(() => {
+    if (user && profile && !authLoading) {
+      const dashboardRoute = getDashboardRoute()
+      console.log('SignIn: Redirecting to dashboard route:', dashboardRoute)
+      navigate(dashboardRoute)
+    }
+  }, [user, profile, authLoading, getDashboardRoute, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,11 +38,12 @@ const SignIn = () => {
     
     if (error) {
       setError(error.message || 'Failed to sign in')
+      setLoading(false)
     } else {
-      navigate('/dashboard')
+      // Don't navigate immediately - let the AuthContext handle routing
+      // The AuthContext will redirect to the appropriate dashboard once profile is loaded
+      // This prevents routing to wrong dashboard if profile isn't loaded yet
     }
-    
-    setLoading(false)
   }
 
 
@@ -45,7 +57,7 @@ const SignIn = () => {
       setError('Google sign-in failed. Please try again.')
       setLoading(false)
     }
-    // Note: User will be redirected to dashboard on success
+    // Note: User will be redirected to appropriate dashboard via useEffect once profile loads
   }
 
   return (
@@ -79,8 +91,13 @@ const SignIn = () => {
           </div>
           <CardTitle className="text-2xl font-bold text-[#040458]">Welcome Back</CardTitle>
           <CardDescription className="text-gray-600">
-            Sign in to your Otic Business account
+            Sign in to your {userType === 'individual' ? 'Personal' : 'Business'} account
           </CardDescription>
+          <div className="mt-2">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#faa51a]/10 text-[#faa51a]">
+              {userType === 'individual' ? '👤 Individual Account' : '🏢 Business Account'}
+            </span>
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -170,7 +187,7 @@ const SignIn = () => {
           
           <div className="mt-6 text-center text-sm">
             <span className="text-gray-600">Don't have an account? </span>
-            <Link to="/signup" className="text-[#faa51a] hover:underline font-medium">
+            <Link to="/user-type" className="text-[#faa51a] hover:underline font-medium">
               Sign up
             </Link>
           </div>

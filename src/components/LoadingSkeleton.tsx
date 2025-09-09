@@ -82,3 +82,4 @@ export const ChartSkeleton: React.FC = () => {
     </div>
   )
 }
+

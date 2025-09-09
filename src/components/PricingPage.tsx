@@ -54,7 +54,7 @@ const PricingPage: React.FC = () => {
   const handleTierSelect = async (tierId: string) => {
     if (!appUser?.id) {
       // Redirect to sign up
-      window.location.href = '/signup'
+      window.location.href = '/user-type'
       return
     }
 

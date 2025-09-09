@@ -38,7 +38,7 @@ import {
 import { DataService } from '@/services/dataService'
 import { supabase } from '@/lib/supabaseClient'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
-import { CardSkeleton, TableSkeleton, ChartSkeleton } from '@/components/LoadingSkeleton'
+import { DashboardSkeleton, CardSkeleton } from '@/components/ui/skeletons'
 import { useIsMobile, ResponsiveContainer as MobileResponsiveContainer, MobileCard } from '@/components/MobileOptimizations'
 
 // Helper function for fallback stats fetching
@@ -511,10 +511,38 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
           {statsLoading ? (
             <>
-              <CardSkeleton />
-              <CardSkeleton />
-              <CardSkeleton />
-              <CardSkeleton />
+              <div className="bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg rounded-xl p-6 animate-pulse">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                  <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                </div>
+                <div className="h-8 w-16 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 w-20 bg-gray-200 rounded"></div>
+              </div>
+              <div className="bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg rounded-xl p-6 animate-pulse">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                  <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                </div>
+                <div className="h-8 w-16 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 w-20 bg-gray-200 rounded"></div>
+              </div>
+              <div className="bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg rounded-xl p-6 animate-pulse">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                  <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                </div>
+                <div className="h-8 w-16 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 w-20 bg-gray-200 rounded"></div>
+              </div>
+              <div className="bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg rounded-xl p-6 animate-pulse">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="h-4 w-20 bg-gray-200 rounded"></div>
+                  <div className="h-6 w-6 bg-gray-200 rounded"></div>
+                </div>
+                <div className="h-8 w-16 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 w-20 bg-gray-200 rounded"></div>
+              </div>
             </>
           ) : (
             <>

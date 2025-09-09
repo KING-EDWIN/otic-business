@@ -10,6 +10,7 @@ interface UserProfile {
   phone?: string
   address?: string
   tier: 'basic' | 'standard' | 'premium'
+  user_type: 'business' | 'individual'
   email_verified: boolean
   created_at: string
   updated_at: string
@@ -20,11 +21,12 @@ interface AuthContextType {
   profile: UserProfile | null
   session: any
   loading: boolean
-  signUp: (email: string, password: string, businessName: string) => Promise<{ error: any }>
+  signUp: (email: string, password: string, businessName: string, userType?: 'business' | 'individual') => Promise<{ error: any }>
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signInWithGoogle: () => Promise<{ error: any }>
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: any }>
+  getDashboardRoute: () => string
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -153,7 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const signUp = async (email: string, password: string, businessName: string) => {
+  const signUp = async (email: string, password: string, businessName: string, userType: 'business' | 'individual' = 'business') => {
     try {
       console.log('Starting signup process for:', email)
       
@@ -202,6 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           phone: '+256 700 000 000',
           address: 'Kampala, Uganda',
           tier: 'standard' as const,
+          user_type: 'business' as const,
           email_verified: true,
           created_at: '2025-09-08T11:14:31.149382Z',
           updated_at: '2025-09-08T11:14:31.145986Z'
@@ -312,6 +315,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+  const getDashboardRoute = () => {
+    if (!profile) return '/dashboard'
+    return profile.user_type === 'individual' ? '/individual-dashboard' : '/dashboard'
+  }
+
   const value = {
     user,
     profile,
@@ -321,7 +329,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signInWithGoogle,
     signOut,
-    updateProfile
+    updateProfile,
+    getDashboardRoute
   }
 
   return (

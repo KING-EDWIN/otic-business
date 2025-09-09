@@ -3,51 +3,55 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Building2, Users, Target, Award, Shield, FileText } from "lucide-react";
 import { Link } from "react-router-dom";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">About OTIC Business</h1>
-                <p className="text-gray-600">Empowering businesses with intelligent solutions</p>
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      
+      {/* Hero Section */}
+      <section className="pt-24 pb-16 bg-gradient-to-br from-[#040458] via-purple-600 to-[#faa51a] text-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-4xl mx-auto">
+            <div className="flex items-center justify-center mb-8">
+              <img 
+                src="/Otic icon@2x.png" 
+                alt="Otic Business Logo" 
+                className="h-20 w-20 mr-4"
+              />
+              <div className="text-left">
+                <h1 className="text-5xl lg:text-6xl font-bold mb-2">
+                  About Otic Business
+                </h1>
+                <p className="text-xl lg:text-2xl opacity-90">
+                  Empowering businesses with intelligent solutions
+                </p>
               </div>
             </div>
-            <Link to="/">
-              <Button variant="outline" className="flex items-center space-x-2">
-                <ArrowRight className="h-4 w-4" />
-                <span>Back to Home</span>
-              </Button>
-            </Link>
           </div>
         </div>
-      </div>
+      </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Hero Section */}
+        {/* Main Content */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-6">
+          <h2 className="text-4xl font-bold text-[#040458] mb-6">
             Transforming Business Operations with AI-Powered Solutions
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            OTIC Foundation is dedicated to empowering businesses across Uganda with cutting-edge 
+            Otic Business is dedicated to empowering businesses across Uganda with cutting-edge 
             technology solutions that streamline operations, enhance productivity, and drive growth.
           </p>
         </div>
 
         {/* Mission & Vision */}
         <div className="grid md:grid-cols-2 gap-8 mb-16">
-          <Card className="border-l-4 border-l-blue-500">
+          <Card className="border-l-4 border-l-[#faa51a]">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Target className="h-6 w-6 text-blue-600" />
+                <Target className="h-6 w-6 text-[#faa51a]" />
                 <span>Our Mission</span>
               </CardTitle>
             </CardHeader>
@@ -60,10 +64,10 @@ const About = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-l-purple-500">
+          <Card className="border-l-4 border-l-[#040458]">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Award className="h-6 w-6 text-purple-600" />
+                <Award className="h-6 w-6 text-[#040458]" />
                 <span>Our Vision</span>
               </CardTitle>
             </CardHeader>
@@ -78,12 +82,12 @@ const About = () => {
 
         {/* What We Offer */}
         <div className="mb-16">
-          <h3 className="text-3xl font-bold text-center text-gray-900 mb-12">What We Offer</h3>
+          <h3 className="text-3xl font-bold text-center text-[#040458] mb-12">What We Offer</h3>
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="text-center hover:shadow-lg transition-shadow">
               <CardHeader>
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Building2 className="h-8 w-8 text-blue-600" />
+                <div className="w-16 h-16 bg-[#faa51a]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Building2 className="h-8 w-8 text-[#faa51a]" />
                 </div>
                 <CardTitle>POS System</CardTitle>
                 <CardDescription>
@@ -102,8 +106,8 @@ const About = () => {
 
             <Card className="text-center hover:shadow-lg transition-shadow">
               <CardHeader>
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-8 w-8 text-green-600" />
+                <div className="w-16 h-16 bg-[#040458]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-8 w-8 text-[#040458]" />
                 </div>
                 <CardTitle>Inventory Management</CardTitle>
                 <CardDescription>
@@ -122,8 +126,8 @@ const About = () => {
 
             <Card className="text-center hover:shadow-lg transition-shadow">
               <CardHeader>
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Award className="h-8 w-8 text-purple-600" />
+                <div className="w-16 h-16 bg-gradient-to-r from-[#faa51a]/10 to-[#040458]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Award className="h-8 w-8 text-[#faa51a]" />
                 </div>
                 <CardTitle>AI Analytics</CardTitle>
                 <CardDescription>
@@ -144,13 +148,13 @@ const About = () => {
 
         {/* Pricing Tiers */}
         <div className="mb-16">
-          <h3 className="text-3xl font-bold text-center text-gray-900 mb-12">Flexible Pricing Plans</h3>
+          <h3 className="text-3xl font-bold text-center text-[#040458] mb-12">Flexible Pricing Plans</h3>
           <div className="grid md:grid-cols-4 gap-6">
             <Card className="text-center">
               <CardHeader>
                 <Badge variant="secondary" className="w-fit mx-auto">Free Trial</Badge>
                 <CardTitle className="text-2xl">0 UGX</CardTitle>
-                <CardDescription>30 days free</CardDescription>
+                <CardDescription>14 days free</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 mb-4">Try everything for free</p>
@@ -163,11 +167,11 @@ const About = () => {
               </CardContent>
             </Card>
 
-            <Card className="text-center border-2 border-blue-500 relative">
-              <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-blue-500">Popular</Badge>
+            <Card className="text-center border-2 border-[#faa51a] relative">
+              <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-[#faa51a]">Popular</Badge>
               <CardHeader>
                 <CardTitle className="text-2xl">Start Smart</CardTitle>
-                <CardDescription>1m UGX Per Month</CardDescription>
+                <CardDescription>1,000,000 UGX Per Month</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 mb-4">Perfect for small businesses</p>
@@ -183,7 +187,7 @@ const About = () => {
             <Card className="text-center">
               <CardHeader>
                 <CardTitle className="text-2xl">Grow Intelligence</CardTitle>
-                <CardDescription>3m UGX Per Month</CardDescription>
+                <CardDescription>3,000,000 UGX Per Month</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 mb-4">Ideal for growing SMEs</p>
@@ -199,7 +203,7 @@ const About = () => {
             <Card className="text-center">
               <CardHeader>
                 <CardTitle className="text-2xl">Enterprise</CardTitle>
-                <CardDescription>5m UGX Per Month</CardDescription>
+                <CardDescription>5,000,000 UGX Per Month</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 mb-4">Enterprise solution</p>
@@ -216,12 +220,12 @@ const About = () => {
 
         {/* Contact Information */}
         <div className="mb-16">
-          <h3 className="text-3xl font-bold text-center text-gray-900 mb-12">Get in Touch</h3>
+          <h3 className="text-3xl font-bold text-center text-[#040458] mb-12">Get in Touch</h3>
           <div className="grid md:grid-cols-2 gap-8">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Building2 className="h-6 w-6 text-blue-600" />
+                  <Building2 className="h-6 w-6 text-[#faa51a]" />
                   <span>Contact Information</span>
                 </CardTitle>
               </CardHeader>
@@ -244,7 +248,7 @@ const About = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
-                  <Shield className="h-6 w-6 text-green-600" />
+                  <Shield className="h-6 w-6 text-[#040458]" />
                   <span>Legal & Compliance</span>
                 </CardTitle>
               </CardHeader>
@@ -255,13 +259,13 @@ const About = () => {
                 </p>
                 <div className="space-y-2">
                   <Link to="/terms">
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button variant="outline" className="w-full justify-start hover:bg-[#faa51a]/10 hover:border-[#faa51a]">
                       <FileText className="h-4 w-4 mr-2" />
                       Terms & Conditions
                     </Button>
                   </Link>
                   <Link to="/privacy">
-                    <Button variant="outline" className="w-full justify-start">
+                    <Button variant="outline" className="w-full justify-start hover:bg-[#040458]/10 hover:border-[#040458]">
                       <Shield className="h-4 w-4 mr-2" />
                       Privacy Policy
                     </Button>
@@ -273,25 +277,27 @@ const About = () => {
         </div>
 
         {/* Call to Action */}
-        <div className="text-center bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-12 text-white">
+        <div className="text-center bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-2xl p-12 text-white">
           <h3 className="text-3xl font-bold mb-4">Ready to Transform Your Business?</h3>
           <p className="text-xl mb-8 opacity-90">
-            Join thousands of businesses already using OTIC Business to streamline their operations.
+            Join thousands of businesses already using Otic Business to streamline their operations.
           </p>
           <div className="space-x-4">
             <Link to="/get-started">
-              <Button size="lg" variant="secondary" className="bg-white text-blue-600 hover:bg-gray-100">
+              <Button size="lg" variant="secondary" className="bg-white text-[#040458] hover:bg-gray-100">
                 Get Started Free
               </Button>
             </Link>
-            <Link to="/signup">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600">
+            <Link to="/user-type">
+              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-[#040458]">
                 Sign Up Now
               </Button>
             </Link>
           </div>
         </div>
       </div>
+      
+      <Footer />
     </div>
   );
 };

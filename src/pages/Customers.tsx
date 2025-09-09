@@ -42,7 +42,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
-import { CardSkeleton, TableSkeleton, ChartSkeleton } from '@/components/LoadingSkeleton'
+import { CustomersSkeleton } from '@/components/ui/skeletons'
 
 interface Customer {
   id: string

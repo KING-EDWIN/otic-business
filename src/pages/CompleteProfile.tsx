@@ -56,7 +56,7 @@ const CompleteProfile = () => {
         }
       } else {
         // No user found, redirect to sign up
-        navigate('/signup')
+        navigate('/user-type')
       }
     }
     getUser()

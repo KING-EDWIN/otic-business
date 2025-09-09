@@ -317,3 +317,4 @@ async function addSampleData() {
 
 // Run the setup
 setupAccountingTables()
+

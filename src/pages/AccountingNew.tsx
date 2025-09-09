@@ -40,6 +40,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell } from 'recharts'
+import LoginStatus from '@/components/LoginStatus'
 
 const AccountingNew: React.FC = () => {
   const navigate = useNavigate()
@@ -215,16 +216,32 @@ const AccountingNew: React.FC = () => {
 
   const COLORS = ['#faa51a', '#040458', '#10b981', '#ef4444', '#8b5cf6']
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#040458] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading accounting data...</p>
+  // Skeleton components
+  const CardSkeleton = () => (
+    <Card className="animate-pulse">
+      <CardHeader>
+        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
         </div>
-      </div>
-    )
-  }
+      </CardContent>
+    </Card>
+  )
+
+  const ChartSkeleton = () => (
+    <Card className="animate-pulse">
+      <CardHeader>
+        <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+      </CardHeader>
+      <CardContent>
+        <div className="h-32 bg-gray-200 rounded"></div>
+      </CardContent>
+    </Card>
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -244,9 +261,11 @@ const AccountingNew: React.FC = () => {
               </Button>
               <div className="h-8 w-px bg-gray-300" />
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">O</span>
-                </div>
+                <img 
+                  src="/Otic icon@2x.png" 
+                  alt="Otic Business Logo" 
+                  className="h-8 w-8"
+                />
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">Otic Business</h1>
                   <p className="text-sm text-gray-500">Accounting & Finance</p>
@@ -268,9 +287,7 @@ const AccountingNew: React.FC = () => {
                 <Button variant="ghost" size="sm" className="text-gray-600">
                   <Settings className="h-4 w-4" />
               </Button>
-                <div className="w-8 h-8 bg-[#040458] rounded-full flex items-center justify-center">
-                  <User className="h-4 w-4 text-white" />
-                </div>
+                <LoginStatus />
               </div>
             </div>
           </div>
@@ -282,12 +299,14 @@ const AccountingNew: React.FC = () => {
         <aside className="w-64 bg-gray-800 text-white min-h-screen">
           <div className="p-6">
             <div className="flex items-center space-x-3 mb-8">
-              <div className="w-8 h-8 bg-gradient-to-r from-[#faa51a] to-[#ff6b35] rounded flex items-center justify-center">
-                <span className="text-white font-bold text-sm">Q</span>
-              </div>
+              <img 
+                src="/Otic icon@2x.png" 
+                alt="Otic Business Logo" 
+                className="h-8 w-8"
+              />
               <div>
-                <h2 className="text-lg font-bold">QuickBooks</h2>
-                <p className="text-xs text-gray-300">Integration</p>
+                <h2 className="text-lg font-bold">Accounting</h2>
+                <p className="text-xs text-gray-300">Menu</p>
               </div>
             </div>
             
@@ -314,26 +333,59 @@ const AccountingNew: React.FC = () => {
 
         {/* Main Content */}
         <main className="flex-1 p-6">
-          {/* Company Header */}
+          {/* Action Buttons */}
           <div className="mb-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <h1 className="text-2xl font-bold text-gray-900">Acme US</h1>
-                <Button variant="outline" size="sm" className="text-gray-600">
-                  LOGO
-                </Button>
-              </div>
-              <div className="flex space-x-2">
+            <div className="flex justify-end space-x-2">
                 <Button variant="outline" size="sm">Get things done</Button>
                 <Button variant="default" size="sm" className="bg-[#040458] hover:bg-[#030345]">
                   Business overview
                 </Button>
-              </div>
             </div>
           </div>
 
           {/* Dashboard Widgets */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            {loading ? (
+              <>
+                {/* Profit and Loss Skeleton */}
+                <Card className="lg:col-span-2 animate-pulse">
+                  <CardHeader>
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="space-y-3">
+                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                        <div className="h-2 bg-gray-200 rounded w-full"></div>
+                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                        <div className="h-2 bg-gray-200 rounded w-full"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Expenses Skeleton */}
+                <Card className="animate-pulse">
+                  <CardHeader>
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                      <div className="w-24 h-24 mx-auto bg-gray-200 rounded-full"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <>
             {/* Profit and Loss */}
             <Card className="lg:col-span-2">
               <CardHeader>
@@ -429,9 +481,66 @@ const AccountingNew: React.FC = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </>
+            )}
               </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            {loading ? (
+              <>
+                {/* Bank Accounts Skeleton */}
+                <Card className="animate-pulse">
+                  <CardHeader>
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-8 bg-gray-200 rounded w-full"></div>
+                        <div className="h-8 bg-gray-200 rounded w-full"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Invoices Skeleton */}
+                <Card className="animate-pulse">
+                  <CardHeader>
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                        <div className="h-2 bg-gray-200 rounded w-full"></div>
+                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                        <div className="h-2 bg-gray-200 rounded w-full"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Sales Skeleton */}
+                <Card className="animate-pulse">
+                  <CardHeader>
+                    <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+                      <div className="h-32 bg-gray-200 rounded"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            ) : (
+              <>
             {/* Bank Accounts */}
             <Card>
                 <CardHeader>
@@ -460,7 +569,7 @@ const AccountingNew: React.FC = () => {
                       <div className="text-right">
                         <div className="text-sm text-gray-600">Bank balance: $0</div>
                         <div className={`font-semibold ${account.current_balance < 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                          In QuickBooks: ${Math.abs(account.current_balance).toLocaleString()}
+                              In Otic: ${Math.abs(account.current_balance).toLocaleString()}
                         </div>
                   </div>
                     </div>
@@ -576,9 +685,42 @@ const AccountingNew: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
+              </>
+            )}
             </div>
 
           {/* Capital Section */}
+          {loading ? (
+            <Card className="animate-pulse">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  <div className="h-6 bg-gray-200 rounded w-12"></div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <div className="h-6 bg-gray-200 rounded w-3/4 mx-auto mb-4"></div>
+                  <div className="flex items-center justify-center space-x-8 mt-6">
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </div>
+                    <div className="h-4 w-4 bg-gray-200 rounded"></div>
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </div>
+                    <div className="h-4 w-4 bg-gray-200 rounded"></div>
+                    <div className="flex flex-col items-center space-y-2">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
+                      <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -626,6 +768,7 @@ const AccountingNew: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+          )}
         </main>
             </div>
     </div>

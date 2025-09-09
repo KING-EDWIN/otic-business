@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 
 const OAuthCallback = () => {
-  const { user, loading } = useAuth()
+  const { user, loading, getDashboardRoute } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -17,16 +17,17 @@ const OAuthCallback = () => {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        // User is authenticated, redirect to dashboard
-        console.log('OAuth callback successful, redirecting to dashboard')
-        navigate('/dashboard')
+        // User is authenticated, redirect to appropriate dashboard
+        const dashboardRoute = getDashboardRoute()
+        console.log('OAuth callback successful, redirecting to:', dashboardRoute)
+        navigate(dashboardRoute)
       } else {
-        // User is not authenticated, redirect to signin
-        console.log('OAuth callback failed, redirecting to signin')
-        navigate('/signin')
+        // User is not authenticated, redirect to login type selection
+        console.log('OAuth callback failed, redirecting to login type selection')
+        navigate('/login-type')
       }
     }
-  }, [user, loading, navigate])
+  }, [user, loading, navigate, getDashboardRoute])
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">

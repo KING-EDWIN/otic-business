@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { DataService } from '@/services/dataService'
+import { InventorySkeleton } from '@/components/ui/skeletons'
 
 interface Product {
   id: string
@@ -94,9 +95,12 @@ const Inventory = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [lowStockItems, setLowStockItems] = useState<LowStockItem[]>([])
   const [activeTab, setActiveTab] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(12) // Show 12 products per page
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
@@ -113,32 +117,17 @@ const Inventory = () => {
     selling_type: 'retail'
   })
 
-  // Fetch products using DataService
-  const fetchProducts = async () => {
+  // Fetch products using DataService - memoized to prevent unnecessary re-renders
+  const fetchProducts = useCallback(async () => {
+    if (!user?.id) return
+    
     try {
       setLoading(true)
       
       // Use DataService which handles both online and offline
-      const productsData = await DataService.getProducts(user?.id)
+      const productsData = await DataService.getProducts(user.id)
       setProducts(productsData)
       
-      // Calculate low stock items
-      const lowStock = productsData.filter(product => 
-        product.stock <= product.min_stock
-      ).map(product => ({
-        id: product.id,
-        name: product.name,
-        current_stock: product.stock,
-        min_stock: product.min_stock,
-        barcode: product.barcode,
-        price: product.price,
-        days_remaining: Math.max(0, Math.floor(product.stock / 2)), // Rough estimate
-        urgency: (product.stock === 0 ? 'critical' : 
-                product.stock <= product.min_stock * 0.5 ? 'high' :
-                product.stock <= product.min_stock * 0.8 ? 'medium' : 'low') as 'low' | 'medium' | 'high' | 'critical'
-      }))
-      
-      setLowStockItems(lowStock)
       console.log('Loaded products:', productsData)
     } catch (error) {
       console.error('Error fetching products:', error)
@@ -146,12 +135,14 @@ const Inventory = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.id])
 
   useEffect(() => {
-    // Always fetch products, even if user is not loaded yet
+    // Only fetch products when user is available
+    if (user?.id) {
     fetchProducts()
-  }, [])
+    }
+  }, [user?.id, fetchProducts])
 
   const generateBarcode = (prefix: string = 'OTIC') => {
     const timestamp = Date.now().toString().slice(-6)
@@ -251,16 +242,87 @@ const Inventory = () => {
     })
   }
 
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    if (filterStatus === 'low_stock') {
-      return matchesSearch && product.stock <= product.min_stock
+  // Debounced search effect
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
     }
     
-    return matchesSearch
-  })
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+      setCurrentPage(1)
+    }, 300) // 300ms delay
+    
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [searchTerm])
+
+  // Reset pagination when search or filter changes
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value)
+  }
+
+  const handleFilterChange = (value: string) => {
+    setFilterStatus(value)
+    setCurrentPage(1)
+  }
+
+  // Memoized low stock items calculation
+  const lowStockItems = useMemo(() => {
+    return products.filter(product => 
+      product.stock <= product.min_stock
+    ).map(product => ({
+      id: product.id,
+      name: product.name,
+      current_stock: product.stock,
+      min_stock: product.min_stock,
+      barcode: product.barcode,
+      price: product.price,
+      days_remaining: Math.max(0, Math.floor(product.stock / 2)), // Rough estimate
+      urgency: (product.stock === 0 ? 'critical' : 
+              product.stock <= product.min_stock * 0.5 ? 'high' :
+              product.stock <= product.min_stock * 0.8 ? 'medium' : 'low') as 'low' | 'medium' | 'high' | 'critical'
+    }))
+  }, [products])
+
+  // Memoized filtered products calculation using debounced search
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
+      const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                           product.barcode?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+      
+      if (filterStatus === 'low_stock') {
+        return matchesSearch && product.stock <= product.min_stock
+      }
+      
+      return matchesSearch
+    })
+  }, [products, debouncedSearchTerm, filterStatus])
+
+  // Memoized pagination logic
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filteredProducts.slice(startIndex, endIndex)
+  }, [filteredProducts, currentPage, itemsPerPage])
+
+  // Memoized pagination info
+  const paginationInfo = useMemo(() => {
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage)
+    const hasNextPage = currentPage < totalPages
+    const hasPrevPage = currentPage > 1
+    
+    return {
+      totalPages,
+      hasNextPage,
+      hasPrevPage,
+      startItem: (currentPage - 1) * itemsPerPage + 1,
+      endItem: Math.min(currentPage * itemsPerPage, filteredProducts.length)
+    }
+  }, [filteredProducts.length, currentPage, itemsPerPage])
 
   const getStockStatus = (stock: number, minStock: number) => {
     if (stock === 0) return { status: 'Out of Stock', color: 'bg-red-100 text-red-800', icon: XCircle }
@@ -278,16 +340,17 @@ const Inventory = () => {
     }
   }
 
-  const totalValue = products.reduce((sum, product) => sum + (product.price * product.stock), 0)
-  const totalUnits = products.reduce((sum, product) => sum + product.stock, 0)
+  // Memoized total calculations
+  const { totalValue, totalUnits } = useMemo(() => {
+    const value = products.reduce((sum, product) => sum + (product.price * product.stock), 0)
+    const units = products.reduce((sum, product) => sum + product.stock, 0)
+    return { totalValue: value, totalUnits: units }
+  }, [products])
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#faa51a] mx-auto mb-4"></div>
-          <p className="text-lg text-gray-600">Loading Inventory...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 p-6">
+        <InventorySkeleton />
       </div>
     )
   }
@@ -401,12 +464,12 @@ const Inventory = () => {
                 <Input
                   placeholder="Search by name or barcode..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-10 h-12 border-gray-200 focus:border-[#faa51a] focus:ring-[#faa51a]/20"
                 />
               </div>
               <div className="flex gap-2">
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <Select value={filterStatus} onValueChange={handleFilterChange}>
                   <SelectTrigger className="w-40 h-12">
                     <SelectValue placeholder="Filter by status" />
                   </SelectTrigger>
@@ -483,7 +546,7 @@ const Inventory = () => {
             </div>
             <div className="flex items-center space-x-2">
               <Badge variant="outline" className="text-sm">
-                {filteredProducts.length} products
+                {paginationInfo.startItem}-{paginationInfo.endItem} of {filteredProducts.length} products
               </Badge>
             </div>
           </div>
@@ -506,8 +569,9 @@ const Inventory = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => {
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {paginatedProducts.map((product) => {
                 const stockStatus = getStockStatus(product.stock, product.min_stock)
                 const StatusIcon = stockStatus.icon
                 
@@ -620,7 +684,51 @@ const Inventory = () => {
                   </Card>
                 )
               })}
-            </div>
+              </div>
+
+              {/* Pagination Controls */}
+              {paginationInfo.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-8">
+                  <div className="text-sm text-gray-600">
+                    Showing {paginationInfo.startItem} to {paginationInfo.endItem} of {filteredProducts.length} products
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={!paginationInfo.hasPrevPage}
+                    >
+                      Previous
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: Math.min(5, paginationInfo.totalPages) }, (_, i) => {
+                        const pageNum = i + 1
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={currentPage === pageNum ? "bg-[#040458] text-white" : ""}
+                          >
+                            {pageNum}
+                          </Button>
+                        )
+                      })}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(prev => Math.min(paginationInfo.totalPages, prev + 1))}
+                      disabled={!paginationInfo.hasNextPage}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

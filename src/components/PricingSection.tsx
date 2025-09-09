@@ -15,7 +15,7 @@ const PricingSection = () => {
       navigate('/dashboard');
     } else {
       // User not logged in, redirect to signup with tier pre-selected
-      navigate('/signup', { state: { selectedTier: tier } });
+      navigate('/user-type');
     }
   };
 
@@ -40,7 +40,7 @@ const PricingSection = () => {
     },
     {
       name: "Start Smart",
-      price: "1m UGX",
+      price: "1,000,000 UGX",
       period: "Per Month",
       description: "Perfect for small businesses starting their digital transformation",
       badge: null,
@@ -58,7 +58,7 @@ const PricingSection = () => {
     },
     {
       name: "Grow with Intelligence",
-      price: "3m UGX",
+      price: "3,000,000 UGX",
       period: "Per Month",
       description: "Ideal for growing SMEs ready for advanced automation",
       badge: "Most Popular",
@@ -77,7 +77,7 @@ const PricingSection = () => {
     },
     {
       name: "Enterprise Advantage",
-      price: "5m UGX",
+      price: "5,000,000 UGX",
       period: "Per Month",
       description: "Enterprise solution for multi-branch operations",
       badge: "Enterprise",

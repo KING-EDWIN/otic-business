@@ -72,3 +72,4 @@ After setup, you can:
 5. Manage customer information
 
 The accounting system is now fully functional with real data!
+

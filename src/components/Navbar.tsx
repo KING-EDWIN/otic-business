@@ -42,12 +42,12 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
+            <Link to="/features" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
               Features
-            </a>
-            <a href="#pricing" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
+            </Link>
+            <Link to="/pricing" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
               Pricing
-            </a>
+            </Link>
             <Link to="/about" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
               About
             </Link>
@@ -96,10 +96,10 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Button variant="ghost" onClick={() => navigate('/signin')} className="text-[#040458] hover:text-[#faa51a]">
+                <Button variant="ghost" onClick={() => navigate('/login-type')} className="text-[#040458] hover:text-[#faa51a]">
                   Sign In
                 </Button>
-                <Button variant="hero" onClick={() => navigate('/signup')} className="bg-[#040458] hover:bg-[#faa51a] text-white">
+                <Button variant="hero" onClick={() => navigate('/user-type')} className="bg-[#040458] hover:bg-[#faa51a] text-white">
                   Get Started
                 </Button>
               </>
@@ -123,12 +123,12 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border">
             <div className="flex flex-col space-y-4">
-              <a href="#features" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
+              <Link to="/features" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
                 Features
-              </a>
-              <a href="#pricing" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
+              </Link>
+              <Link to="/pricing" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
                 Pricing
-              </a>
+              </Link>
               <Link to="/about" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
                 About
               </Link>
@@ -155,10 +155,10 @@ const Navbar = () => {
                   </>
                 ) : (
                   <>
-                    <Button variant="ghost" className="justify-start text-[#040458] hover:text-[#faa51a]" onClick={() => navigate('/signin')}>
+                    <Button variant="ghost" className="justify-start text-[#040458] hover:text-[#faa51a]" onClick={() => navigate('/login-type')}>
                       Sign In
                     </Button>
-                    <Button variant="hero" className="justify-start bg-[#040458] hover:bg-[#faa51a] text-white" onClick={() => navigate('/signup')}>
+                    <Button variant="hero" className="justify-start bg-[#040458] hover:bg-[#faa51a] text-white" onClick={() => navigate('/user-type')}>
                       Get Started
                     </Button>
                   </>
