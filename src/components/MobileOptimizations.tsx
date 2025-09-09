@@ -220,7 +220,7 @@ export const usePerformanceOptimization = () => {
 }
 
 // Data caching hook
-export const useDataCache = <T>(key: string, fetcher: () => Promise<T>, ttl: number = 300000) => {
+export const useDataCache = <T,>(key: string, fetcher: () => Promise<T>, ttl: number = 300000) => {
   const [data, setData] = React.useState<T | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<Error | null>(null)

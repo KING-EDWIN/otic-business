@@ -39,10 +39,10 @@ const AIInsightsPage = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (appUser) {
+    if (user) {
       fetchAnalyticsData()
     }
-  }, [appUser])
+  }, [user])
 
   const fetchAnalyticsData = async () => {
     try {
@@ -157,7 +157,7 @@ const AIInsightsPage = () => {
             </div>
             <div className="flex items-center space-x-4">
               <Badge className="bg-[#faa51a] text-white">
-                {appUser?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan
+                {user?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan
               </Badge>
               <Button
                 variant="outline"
@@ -190,7 +190,7 @@ const AIInsightsPage = () => {
               revenue: analyticsData?.totalRevenue || 0,
               growth: analyticsData?.salesGrowth || 0,
               lowStockItems: [],
-              user: appUser
+              user: user
             }}
           />
         </div>
