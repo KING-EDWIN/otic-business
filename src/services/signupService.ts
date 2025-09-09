@@ -48,10 +48,12 @@ export class SignupService {
       const profile = {
         id: userId,
         email: data.email,
+        full_name: data.businessName, // Use business name as full name for now
         business_name: data.businessName,
         phone: data.phone || '',
         address: data.address || '',
         tier: 'basic' as const,
+        user_type: 'business' as const, // Default to business type
         email_verified: true,
         created_at: now,
         updated_at: now
@@ -128,10 +130,12 @@ export class SignupService {
       const profileData = {
         id: authData.user.id,
         email: data.email,
+        full_name: data.businessName, // Use business name as full name for now
         business_name: data.businessName,
         phone: data.phone || '',
         address: data.address || '',
         tier: 'basic' as const,
+        user_type: 'business' as const, // Default to business type
         email_verified: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -282,8 +286,10 @@ export class SignupService {
           .insert({
             id: userId,
             email: userData.email,
+            full_name: userData.business_name || 'New Business',
             business_name: userData.business_name || 'New Business',
             tier: 'basic',
+            user_type: 'business',
             email_verified: false,
             created_at: now,
             updated_at: now

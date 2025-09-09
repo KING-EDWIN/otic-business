@@ -6,10 +6,11 @@ import { SignupService } from '@/services/signupService'
 interface UserProfile {
   id: string
   email: string
+  full_name?: string
   business_name?: string
   phone?: string
   address?: string
-  tier: 'basic' | 'standard' | 'premium'
+  tier: 'basic' | 'standard' | 'premium' | 'free_trial'
   user_type: 'business' | 'individual'
   email_verified: boolean
   created_at: string
@@ -200,6 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const demoProfile = {
           id: '4a280b3c-f99b-4efb-b1c8-a2a93c6fb76d',
           email: 'test@oticbusiness.com',
+          full_name: 'Demo Business Store',
           business_name: 'Demo Business Store',
           phone: '+256 700 000 000',
           address: 'Kampala, Uganda',
