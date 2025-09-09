@@ -133,7 +133,7 @@ const AccountingNew: React.FC = () => {
       const creditCardBalance = bankAccountsData?.find(acc => acc.account_type === 'Credit Card')?.current_balance || 0
       
       // Calculate expense breakdown
-      const expenseCategories = {}
+      const expenseCategories: { [key: string]: number } = {}
       expensesData?.forEach(expense => {
         if (expenseCategories[expense.category]) {
           expenseCategories[expense.category] += expense.amount

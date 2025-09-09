@@ -389,8 +389,8 @@ const Payments: React.FC = () => {
                   <Card className="border-2 border-gray-200">
                     <CardHeader>
                       <h3 className="text-lg font-semibold">Start Smart</h3>
-                      <div className="text-3xl font-bold text-[#faa51a]">1,000,000 UGX</div>
-                      <p className="text-sm text-gray-600">per month</p>
+                      <div className="text-3xl font-bold text-[#faa51a]">1m UGX</div>
+                      <p className="text-sm text-gray-600">Per Month</p>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-gray-600 mb-4">Perfect for small businesses starting their digital transformation.</p>
@@ -420,8 +420,8 @@ const Payments: React.FC = () => {
                     </div>
                     <CardHeader>
                       <h3 className="text-lg font-semibold">Grow with Intelligence</h3>
-                      <div className="text-3xl font-bold text-[#faa51a]">3,000,000 UGX</div>
-                      <p className="text-sm text-gray-600">per month</p>
+                      <div className="text-3xl font-bold text-[#faa51a]">3m UGX</div>
+                      <p className="text-sm text-gray-600">Per Month</p>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-gray-600 mb-4">Ideal for growing SMEs ready for advanced automation.</p>
@@ -451,8 +451,8 @@ const Payments: React.FC = () => {
                     </div>
                     <CardHeader>
                       <h3 className="text-lg font-semibold">Enterprise Advantage</h3>
-                      <div className="text-3xl font-bold text-purple-600">5,000,000 UGX</div>
-                      <p className="text-sm text-gray-600">per month</p>
+                      <div className="text-3xl font-bold text-purple-600">5m UGX</div>
+                      <p className="text-sm text-gray-600">Per Month</p>
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-gray-600 mb-4">For large enterprises requiring advanced features and dedicated support.</p>

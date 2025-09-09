@@ -38,6 +38,8 @@ import {
 import { DataService } from '@/services/dataService'
 import { supabase } from '@/lib/supabaseClient'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { CardSkeleton, TableSkeleton, ChartSkeleton } from '@/components/LoadingSkeleton'
+import { useIsMobile, ResponsiveContainer as MobileResponsiveContainer, MobileCard } from '@/components/MobileOptimizations'
 
 // Helper function for fallback stats fetching
 const fetchStatsIndividually = async (userId: string) => {
@@ -83,6 +85,7 @@ const Dashboard = () => {
   const { profile, signOut, user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const isMobile = useIsMobile()
   
   // Simple state for stats
   const [stats, setStats] = useState({
@@ -169,15 +172,49 @@ const Dashboard = () => {
     }
   }
 
-  if (loading || authLoading) {
+  if (authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#faa51a] mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
-          <p className="text-muted-foreground/70 text-sm mt-2">
-            {authLoading ? 'Authenticating...' : 'Loading data...'}
-          </p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Header Skeleton */}
+        <div className="bg-white/70 backdrop-blur-sm border-b border-white/40 shadow-lg">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="h-8 w-48 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="p-6 space-y-6">
+          {/* Welcome Banner Skeleton */}
+          <div className="h-32 bg-white/70 backdrop-blur-sm rounded-xl animate-pulse"></div>
+          
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+          
+          {/* Main Content Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <div className="h-64 bg-white/70 backdrop-blur-sm rounded-xl animate-pulse"></div>
+              <div className="h-48 bg-white/70 backdrop-blur-sm rounded-xl animate-pulse"></div>
+            </div>
+            <div className="space-y-6">
+              <div className="h-64 bg-white/70 backdrop-blur-sm rounded-xl animate-pulse"></div>
+              <div className="h-48 bg-white/70 backdrop-blur-sm rounded-xl animate-pulse"></div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -268,6 +305,7 @@ const Dashboard = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
+                onClick={() => navigate('/reports')}
                 className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
               >
                 Reports
@@ -470,58 +508,69 @@ const Dashboard = () => {
         </div>
         
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Total Sales - Green */}
-          <Card className="bg-green-500 text-white border-0 shadow-lg rounded-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium opacity-90">Total Sales</h3>
-                <ShoppingCart className="h-5 w-5" />
-              </div>
-              <div className="text-3xl font-bold mb-1">{(stats as any).totalSales || 0}</div>
-              <p className="text-sm opacity-90">+20.1% from last month</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+          {statsLoading ? (
+            <>
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+              <CardSkeleton />
+            </>
+          ) : (
+            <>
+              {/* Total Sales - Green */}
+              <Card className="bg-green-500 text-white border-0 shadow-lg rounded-xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium opacity-90">Total Sales</h3>
+                    <ShoppingCart className="h-5 w-5" />
+                  </div>
+                  <div className="text-3xl font-bold mb-1">{(stats as any).totalSales || 0}</div>
+                  <p className="text-sm opacity-90">+20.1% from last month</p>
             </CardContent>
           </Card>
 
-          {/* Total Revenue - Blue */}
-          <Card className="bg-blue-500 text-white border-0 shadow-lg rounded-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium opacity-90">Total Revenue</h3>
-                <DollarSign className="h-5 w-5" />
-              </div>
-              <div className="text-3xl font-bold mb-1">UGX {((stats as any).totalRevenue || 0).toLocaleString()}</div>
-              <p className="text-sm opacity-90">+15.3% from last month</p>
+              {/* Total Revenue - Blue */}
+              <Card className="bg-blue-500 text-white border-0 shadow-lg rounded-xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium opacity-90">Total Revenue</h3>
+                    <DollarSign className="h-5 w-5" />
+                  </div>
+                  <div className="text-3xl font-bold mb-1">UGX {((stats as any).totalRevenue || 0).toLocaleString()}</div>
+                  <p className="text-sm opacity-90">+15.3% from last month</p>
             </CardContent>
           </Card>
 
-          {/* Products - Orange */}
-          <Card className="bg-orange-500 text-white border-0 shadow-lg rounded-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium opacity-90">Products</h3>
-                <Package className="h-5 w-5" />
-              </div>
-              <div className="text-3xl font-bold mb-1">{(stats as any).totalProducts || 0}</div>
-              <p className="text-sm opacity-90">+2 new this week</p>
+              {/* Products - Orange */}
+              <Card className="bg-orange-500 text-white border-0 shadow-lg rounded-xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium opacity-90">Products</h3>
+                    <Package className="h-5 w-5" />
+                  </div>
+                  <div className="text-3xl font-bold mb-1">{(stats as any).totalProducts || 0}</div>
+                  <p className="text-sm opacity-90">+2 new this week</p>
             </CardContent>
           </Card>
 
-          {/* Low Stock - Red */}
-          <Card className="bg-red-500 text-white border-0 shadow-lg rounded-xl">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-medium opacity-90">Low Stock</h3>
-                <Package className="h-5 w-5" />
-              </div>
-              <div className="text-3xl font-bold mb-1">{(stats as any).lowStockItems || 0}</div>
-              <p className="text-sm opacity-90">items need restocking</p>
+              {/* Low Stock - Red */}
+              <Card className="bg-red-500 text-white border-0 shadow-lg rounded-xl">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium opacity-90">Low Stock</h3>
+                    <Package className="h-5 w-5" />
+                  </div>
+                  <div className="text-3xl font-bold mb-1">{(stats as any).lowStockItems || 0}</div>
+                  <p className="text-sm opacity-90">items need restocking</p>
             </CardContent>
           </Card>
+            </>
+          )}
         </div>
 
         {/* Main Content Grid - 2 columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 mb-8">
           {/* Left Column - Quick Actions */}
           <div>
             <div className="flex items-center mb-6">
@@ -531,10 +580,10 @@ const Dashboard = () => {
               </div>
               <p className="text-sm text-gray-600 ml-4">Common tasks to get you started.</p>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                   <Button 
                     onClick={() => navigate('/pos')}
-                className="h-24 bg-gradient-to-r from-[#040458] to-[#faa51a] text-white hover:opacity-90 transition-all duration-200 shadow-lg rounded-xl"
+                className="h-20 md:h-24 bg-gradient-to-r from-[#040458] to-[#faa51a] text-white hover:opacity-90 transition-all duration-200 shadow-lg rounded-xl"
               >
                 <div className="flex flex-col items-center space-y-2">
                   <ShoppingCart className="h-8 w-8" />
@@ -543,7 +592,7 @@ const Dashboard = () => {
                   </Button>
                   <Button 
                     onClick={() => navigate('/inventory')}
-                className="h-24 bg-green-500 text-white hover:bg-green-600 transition-all duration-200 shadow-lg rounded-xl"
+                className="h-20 md:h-24 bg-green-500 text-white hover:bg-green-600 transition-all duration-200 shadow-lg rounded-xl"
               >
                 <div className="flex flex-col items-center space-y-2">
                   <Plus className="h-8 w-8" />
@@ -552,7 +601,7 @@ const Dashboard = () => {
                   </Button>
                   <Button 
                     onClick={() => navigate('/analytics')}
-                className="h-24 bg-blue-500 text-white hover:bg-blue-600 transition-all duration-200 shadow-lg rounded-xl"
+                className="h-20 md:h-24 bg-blue-500 text-white hover:bg-blue-600 transition-all duration-200 shadow-lg rounded-xl"
               >
                 <div className="flex flex-col items-center space-y-2">
                   <BarChart3 className="h-8 w-8" />
@@ -561,7 +610,7 @@ const Dashboard = () => {
                   </Button>
                     <Button
                 onClick={() => navigate('/accounting')}
-                className="h-24 bg-purple-500 text-white hover:bg-purple-600 transition-all duration-200 shadow-lg rounded-xl"
+                className="h-20 md:h-24 bg-purple-500 text-white hover:bg-purple-600 transition-all duration-200 shadow-lg rounded-xl"
               >
                 <div className="flex flex-col items-center space-y-2">
                   <FileText className="h-8 w-8" />
