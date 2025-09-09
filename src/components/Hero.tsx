@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 //import heroImage from "@/assets/hero-business.jpg";
 // Import the woman selling fruits image - add this file to your assets folder
- import Screenshot 2025-09-09 at 19.37.00 from "@/assets/Screenshot 2025-09-09 at 19.37.00.png";
+import Screenshot 2025-09-09 at 19.37.00 from "@/assets/Screenshot 2025-09-09 at 19.37.00.png";
 
 const Hero = () => {
   const navigate = useNavigate();
