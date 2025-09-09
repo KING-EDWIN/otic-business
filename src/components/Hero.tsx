@@ -3,9 +3,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight, BarChart3, Smartphone, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import heroImage from "@/assets/hero-business.jpg";
+//import heroImage from "@/assets/hero-business.jpg";
 // Import the woman selling fruits image - add this file to your assets folder
-// import womanSellingFruits from "@/assets/woman-selling-fruits.jpg";
+ import womanSellingFruits from "@/assets/woman-selling-fruits.jpg";
 
 const Hero = () => {
   const navigate = useNavigate();
