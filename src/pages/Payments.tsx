@@ -169,9 +169,9 @@ const Payments: React.FC = () => {
   }
 
   const tierPricing = {
-    basic: { price: 50000, name: 'Basic Plan' },
-    standard: { price: 150000, name: 'Standard Plan' },
-    premium: { price: 300000, name: 'Premium Plan' }
+    basic: { price: 1000000, name: 'Start Smart' },
+    standard: { price: 3000000, name: 'Grow with Intelligence' },
+    premium: { price: 5000000, name: 'Enterprise Advantage' }
   }
 
   return (
@@ -322,8 +322,8 @@ const Payments: React.FC = () => {
                       variant="outline"
                     >
                       <Star className="h-6 w-6 text-green-500" />
-                      <span className="font-medium">Basic Plan</span>
-                      <span className="text-sm text-gray-600">UGX 50,000/month</span>
+                      <span className="font-medium">Start Smart</span>
+                      <span className="text-sm text-gray-600">UGX 1,000,000/month</span>
                     </Button>
                     <Button
                       onClick={() => handleUpgrade('standard')}
@@ -331,8 +331,8 @@ const Payments: React.FC = () => {
                       variant="outline"
                     >
                       <Crown className="h-6 w-6 text-purple-500" />
-                      <span className="font-medium">Standard Plan</span>
-                      <span className="text-sm text-gray-600">UGX 150,000/month</span>
+                      <span className="font-medium">Grow with Intelligence</span>
+                      <span className="text-sm text-gray-600">UGX 3,000,000/month</span>
                     </Button>
                     <Button
                       onClick={() => handleUpgrade('premium')}
@@ -340,8 +340,8 @@ const Payments: React.FC = () => {
                       variant="outline"
                     >
                       <Crown className="h-6 w-6 text-orange-500" />
-                      <span className="font-medium">Premium Plan</span>
-                      <span className="text-sm text-gray-600">UGX 300,000/month</span>
+                      <span className="font-medium">Enterprise Advantage</span>
+                      <span className="text-sm text-gray-600">UGX 5,000,000/month</span>
                     </Button>
                   </div>
                 </div>
@@ -357,7 +357,7 @@ const Payments: React.FC = () => {
                 <CardDescription>Transparent pricing designed for African businesses. Scale your business with the right tools at the right price.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   {/* Free Trial */}
                   <Card className="border-2 border-gray-200">
                     <CardHeader>
@@ -388,8 +388,8 @@ const Payments: React.FC = () => {
                   {/* Basic Plan */}
                   <Card className="border-2 border-gray-200">
                     <CardHeader>
-                      <h3 className="text-lg font-semibold">Basic</h3>
-                      <div className="text-3xl font-bold text-[#faa51a]">50,000 UGX</div>
+                      <h3 className="text-lg font-semibold">Start Smart</h3>
+                      <div className="text-3xl font-bold text-[#faa51a]">1,000,000 UGX</div>
                       <p className="text-sm text-gray-600">per month</p>
                     </CardHeader>
                     <CardContent>
@@ -419,8 +419,8 @@ const Payments: React.FC = () => {
                       <Badge className="bg-[#faa51a] text-white">Most Popular</Badge>
                     </div>
                     <CardHeader>
-                      <h3 className="text-lg font-semibold">Standard</h3>
-                      <div className="text-3xl font-bold text-[#faa51a]">150,000 UGX</div>
+                      <h3 className="text-lg font-semibold">Grow with Intelligence</h3>
+                      <div className="text-3xl font-bold text-[#faa51a]">3,000,000 UGX</div>
                       <p className="text-sm text-gray-600">per month</p>
                     </CardHeader>
                     <CardContent>
@@ -440,6 +440,37 @@ const Payments: React.FC = () => {
                         className="w-full mt-4 bg-[#040458] hover:bg-[#030345] text-white"
                       >
                         Choose Standard
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Enterprise Advantage Plan */}
+                  <Card className="border-2 border-purple-200 relative">
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <Badge className="bg-purple-600 text-white">Enterprise</Badge>
+                    </div>
+                    <CardHeader>
+                      <h3 className="text-lg font-semibold">Enterprise Advantage</h3>
+                      <div className="text-3xl font-bold text-purple-600">5,000,000 UGX</div>
+                      <p className="text-sm text-gray-600">per month</p>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-gray-600 mb-4">For large enterprises requiring advanced features and dedicated support.</p>
+                      <ul className="space-y-2 text-sm">
+                        <li className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" />Everything in Grow with Intelligence</li>
+                        <li className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" />Advanced AI analytics & predictions</li>
+                        <li className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" />Custom integrations & APIs</li>
+                        <li className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" />Unlimited users & locations</li>
+                        <li className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" />Advanced reporting & dashboards</li>
+                        <li className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" />White-label solutions</li>
+                        <li className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" />Dedicated account manager</li>
+                        <li className="flex items-center"><Check className="h-4 w-4 text-green-500 mr-2" />24/7 priority support</li>
+                      </ul>
+                      <Button 
+                        onClick={() => handleUpgrade('premium')}
+                        className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        Choose Enterprise
                       </Button>
                     </CardContent>
                   </Card>

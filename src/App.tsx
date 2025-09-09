@@ -16,7 +16,7 @@ import MainDashboard from "./pages/MainDashboard";
 import POS from "./pages/POS";
 import Inventory from "./pages/Inventory";
 import Analytics from "./pages/Analytics";
-import Accounting from "./pages/Accounting";
+import Accounting from "./pages/AccountingNew";
 import QuickBooksCallback from "./pages/QuickBooksCallback";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";

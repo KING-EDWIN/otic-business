@@ -1,7 +1,7 @@
--- Accounting Tables for Otic Business
--- This file contains the necessary tables for professional accounting functionality
+-- Accounting Tables for Otic Business - Fixed Version
+-- Run this in Supabase SQL Editor
 
--- 1. Chart of Accounts
+-- 1. Create Chart of Accounts table
 CREATE TABLE IF NOT EXISTS chart_of_accounts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS chart_of_accounts (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 2. Bank Accounts
+-- 2. Create Bank Accounts table
 CREATE TABLE IF NOT EXISTS bank_accounts (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS bank_accounts (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. Invoices
+-- 3. Create Invoices table
 CREATE TABLE IF NOT EXISTS invoices (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS invoices (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. Invoice Items
+-- 4. Create Invoice Items table
 CREATE TABLE IF NOT EXISTS invoice_items (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   invoice_id UUID REFERENCES invoices(id) ON DELETE CASCADE,
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS invoice_items (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 5. Expenses
+-- 5. Create Expenses table
 CREATE TABLE IF NOT EXISTS expenses (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS expenses (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 6. Transactions
+-- 6. Create Transactions table
 CREATE TABLE IF NOT EXISTS transactions (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 7. Profit and Loss Summary (for quick access)
+-- 7. Create Profit and Loss Summary table
 CREATE TABLE IF NOT EXISTS profit_loss_summary (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS profit_loss_summary (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 8. Customers
+-- 8. Create Customers table
 CREATE TABLE IF NOT EXISTS customers (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -129,18 +129,19 @@ CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses(category);
 CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_customers_user_id ON customers(user_id);
 
--- Insert default chart of accounts
-INSERT INTO chart_of_accounts (user_id, account_code, account_name, account_type) VALUES
-  (NULL, '1000', 'Cash on Hand', 'Asset'),
-  (NULL, '1010', 'Checking Account', 'Asset'),
-  (NULL, '2001', 'Credit Card', 'Liability'),
-  (NULL, '3000', 'Owner Equity', 'Equity'),
-  (NULL, '4000', 'Sales Revenue', 'Revenue'),
-  (NULL, '5000', 'Cost of Goods Sold', 'Expense'),
-  (NULL, '6000', 'Operating Expenses', 'Expense'),
-  (NULL, '6010', 'Online Marketing', 'Expense'),
-  (NULL, '6020', 'Subscriptions', 'Expense'),
-  (NULL, '6090', 'Depreciation', 'Expense');
+-- Insert default chart of accounts (without user_id for global use)
+INSERT INTO chart_of_accounts (account_code, account_name, account_type) VALUES
+  ('1000', 'Cash on Hand', 'Asset'),
+  ('1010', 'Checking Account', 'Asset'),
+  ('2001', 'Credit Card', 'Liability'),
+  ('3000', 'Owner Equity', 'Equity'),
+  ('4000', 'Sales Revenue', 'Revenue'),
+  ('5000', 'Cost of Goods Sold', 'Expense'),
+  ('6000', 'Operating Expenses', 'Expense'),
+  ('6010', 'Online Marketing', 'Expense'),
+  ('6020', 'Subscriptions', 'Expense'),
+  ('6090', 'Depreciation', 'Expense')
+ON CONFLICT DO NOTHING;
 
 -- Enable Row Level Security
 ALTER TABLE chart_of_accounts ENABLE ROW LEVEL SECURITY;
@@ -156,23 +157,29 @@ ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own chart of accounts" ON chart_of_accounts
   FOR SELECT USING (auth.uid() = user_id OR user_id IS NULL);
 
-CREATE POLICY "Users can view their own bank accounts" ON bank_accounts
+CREATE POLICY "Users can manage their own chart of accounts" ON chart_of_accounts
   FOR ALL USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view their own invoices" ON invoices
+CREATE POLICY "Users can manage their own bank accounts" ON bank_accounts
   FOR ALL USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view their own invoice items" ON invoice_items
+CREATE POLICY "Users can manage their own invoices" ON invoices
+  FOR ALL USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can manage their own invoice items" ON invoice_items
   FOR ALL USING (auth.uid() IN (SELECT user_id FROM invoices WHERE id = invoice_id));
 
-CREATE POLICY "Users can view their own expenses" ON expenses
+CREATE POLICY "Users can manage their own expenses" ON expenses
   FOR ALL USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view their own transactions" ON transactions
+CREATE POLICY "Users can manage their own transactions" ON transactions
   FOR ALL USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view their own profit loss summary" ON profit_loss_summary
+CREATE POLICY "Users can manage their own profit loss summary" ON profit_loss_summary
   FOR ALL USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can view their own customers" ON customers
+CREATE POLICY "Users can manage their own customers" ON customers
   FOR ALL USING (auth.uid() = user_id);
+
+-- Success message
+SELECT 'Accounting tables created successfully!' as message;
