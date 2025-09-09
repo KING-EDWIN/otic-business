@@ -30,8 +30,6 @@ const Footer = () => {
             <ul className="space-y-2 text-white/80">
               <li><a href="#features" className="hover:text-[#faa51a] transition-colors">Features</a></li>
               <li><a href="#pricing" className="hover:text-[#faa51a] transition-colors">Pricing</a></li>
-              <li><a href="#integrations" className="hover:text-[#faa51a] transition-colors">Integrations</a></li>
-              <li><a href="#mobile-app" className="hover:text-[#faa51a] transition-colors">Mobile App</a></li>
             </ul>
           </div>
 
@@ -40,9 +38,7 @@ const Footer = () => {
             <h3 className="text-lg font-semibold text-white">Company</h3>
             <ul className="space-y-2 text-white/80">
               <li><Link to="/about" className="hover:text-[#faa51a] transition-colors">About Us</Link></li>
-              <li><a href="#careers" className="hover:text-[#faa51a] transition-colors">Careers</a></li>
-              <li><a href="#blog" className="hover:text-[#faa51a] transition-colors">Blog</a></li>
-              <li><a href="#contact" className="hover:text-[#faa51a] transition-colors">Contact</a></li>
+              <li><Link to="/contact" className="hover:text-[#faa51a] transition-colors">Contact</Link></li>
             </ul>
           </div>
 
@@ -52,7 +48,7 @@ const Footer = () => {
             <div className="space-y-3 text-white/80">
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-[#faa51a]" />
-                <span>hello@oticbusiness.com</span>
+                <span>info@oticbusiness.com</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-5 w-5 text-[#faa51a]" />

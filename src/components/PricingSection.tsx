@@ -39,9 +39,9 @@ const PricingSection = () => {
       buttonVariant: "hero" as const
     },
     {
-      name: "Tier 1 – Start Smart",
-      price: "$300",
-      period: "per month",
+      name: "Start Smart",
+      price: "1m UGX",
+      period: "Per Month",
       description: "Perfect for small businesses starting their digital transformation",
       badge: null,
       features: [
@@ -57,9 +57,9 @@ const PricingSection = () => {
       buttonVariant: "outline" as const
     },
     {
-      name: "Tier 2 – Grow with Intelligence",
-      price: "$852.45",
-      period: "per month",
+      name: "Grow with Intelligence",
+      price: "3m UGX",
+      period: "Per Month",
       description: "Ideal for growing SMEs ready for advanced automation",
       badge: "Most Popular",
       features: [
@@ -76,9 +76,9 @@ const PricingSection = () => {
       buttonVariant: "hero" as const
     },
     {
-      name: "Tier 3 – Enterprise Advantage",
-      price: "$1,420",
-      period: "per month",
+      name: "Enterprise Advantage",
+      price: "5m UGX",
+      period: "Per Month",
       description: "Enterprise solution for multi-branch operations",
       badge: "Enterprise",
       features: [
@@ -141,7 +141,6 @@ const PricingSection = () => {
                     <span className="text-4xl font-bold text-[#faa51a]">
                       {tier.price}
                     </span>
-                    <span className="text-sm text-gray-600">UGX</span>
                   </div>
                   <p className="text-sm text-gray-600">{tier.period}</p>
                 </div>

@@ -167,7 +167,7 @@ const About = () => {
               <Badge className="absolute -top-2 left-1/2 transform -translate-x-1/2 bg-blue-500">Popular</Badge>
               <CardHeader>
                 <CardTitle className="text-2xl">Start Smart</CardTitle>
-                <CardDescription>$300 UGX/month</CardDescription>
+                <CardDescription>1m UGX Per Month</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 mb-4">Perfect for small businesses</p>
@@ -183,7 +183,7 @@ const About = () => {
             <Card className="text-center">
               <CardHeader>
                 <CardTitle className="text-2xl">Grow Intelligence</CardTitle>
-                <CardDescription>$852.45 UGX/month</CardDescription>
+                <CardDescription>3m UGX Per Month</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 mb-4">Ideal for growing SMEs</p>
@@ -199,7 +199,7 @@ const About = () => {
             <Card className="text-center">
               <CardHeader>
                 <CardTitle className="text-2xl">Enterprise</CardTitle>
-                <CardDescription>$1,420 UGX/month</CardDescription>
+                <CardDescription>5m UGX Per Month</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-600 mb-4">Enterprise solution</p>
@@ -228,7 +228,7 @@ const About = () => {
               <CardContent className="space-y-4">
                 <div>
                   <p className="font-semibold text-gray-900">Email</p>
-                  <p className="text-gray-600">hello@oticbusiness.com</p>
+                  <p className="text-gray-600">info@oticbusiness.com</p>
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900">Phone</p>

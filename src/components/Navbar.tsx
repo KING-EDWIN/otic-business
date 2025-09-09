@@ -51,9 +51,9 @@ const Navbar = () => {
             <Link to="/about" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
               About
             </Link>
-            <a href="#contact" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
+            <Link to="/contact" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
               Contact
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Auth Buttons */}
@@ -132,9 +132,9 @@ const Navbar = () => {
               <Link to="/about" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
                 About
               </Link>
-              <a href="#contact" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
+              <Link to="/contact" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
                 Contact
-              </a>
+              </Link>
               <div className="flex flex-col space-y-2 px-4 pt-4 border-t border-border">
                 {user ? (
                   <>

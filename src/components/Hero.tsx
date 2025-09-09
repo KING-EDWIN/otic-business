@@ -26,17 +26,13 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-screen bg-gradient-to-br from-[#040458] via-[#040458] to-[#faa51a] overflow-hidden">
-      {/* Background Image - Woman selling fruits */}
+      {/* Background Image - SME business owner */}
       <div className="absolute inset-0">
-        {/* Place your woman selling fruits image here */}
-        {/* Replace 'woman-selling-fruits.jpg' with your actual image filename */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-15"
           style={{
-            // Uncomment the line below when you add the woman-selling-fruits.jpg image to your assets folder
-            // backgroundImage: `url(${womanSellingFruits})`,
-            // Fallback gradient - this will show until you add the image
-            background: 'linear-gradient(135deg, #040458 0%, #040458 50%, #faa51a 100%)'
+            backgroundImage: `url('https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')`,
+            backgroundPosition: 'center right'
           }}
         />
         {/* Overlay for better text readability */}
@@ -69,14 +65,12 @@ const Hero = () => {
                 {user ? 'Go to Dashboard' : 'Start Free Trial'}
                 <ChevronRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button 
-                variant="outline" 
-                size="lg"
-                className="text-lg px-8 py-4 h-auto border-2 border-white text-white hover:bg-white hover:text-[#040458] font-semibold rounded-lg transition-all duration-300"
+              <button 
+                className="text-lg px-8 py-4 h-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#040458] font-semibold rounded-lg transition-all duration-300 inline-flex items-center justify-center"
                 onClick={handleGetStartedGuide}
               >
                 Get Started
-              </Button>
+              </button>
             </div>
 
             {/* Stats */}
