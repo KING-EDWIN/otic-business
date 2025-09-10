@@ -11,6 +11,7 @@ import {
   Users,
   TrendingUp,
   FileText,
+  Calculator,
   Zap,
   ChevronRight
 } from "lucide-react";
@@ -72,6 +73,22 @@ const FeaturesOverview = () => {
       image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
       color: "from-teal-500 to-teal-600",
       features: ["P&L Statements", "Tax Reports", "Cash Flow Analysis", "Export to Excel"]
+    },
+    {
+      title: "Accounting & Bookkeeping",
+      description: "Automated accounting with QuickBooks integration, expense tracking, and invoice management. Keep your books organized and tax-ready year-round.",
+      icon: Calculator,
+      image: "https://images.unsplash.com/photo-1554224155-1696413565d3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+      color: "from-blue-500 to-blue-600",
+      features: ["QuickBooks Sync", "Expense Tracking", "Invoice Management", "Tax Preparation"]
+    },
+    {
+      title: "Budget & Forecasting",
+      description: "Smart budgeting tools with AI-powered forecasting and financial planning. Plan for growth and make informed business decisions.",
+      icon: TrendingUp,
+      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+      color: "from-purple-500 to-purple-600",
+      features: ["Budget Planning", "AI Forecasting", "Financial Goals", "Growth Projections"]
     }
   ];
 
@@ -80,82 +97,233 @@ const FeaturesOverview = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
           <Badge className="mb-4 bg-[#faa51a]/10 text-[#faa51a] border-[#faa51a]/20">
-            Powerful Features
+            Complete Business Solution
           </Badge>
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#040458] mb-4 sm:mb-6 px-4">
-            Everything You Need to Grow
+            Everything You Need to Grow Your Business
           </h2>
           <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4">
-            Our comprehensive business management platform includes all the tools you need to streamline operations and boost profitability.
+            From sales to analytics, inventory to accounting - one platform that grows with your business. 
+            Join 2000+ African businesses already transforming their operations.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {features.map((feature, index) => (
-            <Card key={feature.title} className="group bg-white border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-              <div className="relative">
-                {/* Clear feature image only */}
-                <div className="h-56 relative overflow-hidden">
-                  <img 
-                    src={feature.image} 
-                    alt={feature.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-              
-              <CardHeader className="pb-3">
-                <CardTitle className="text-xl font-bold text-[#040458] group-hover:text-[#faa51a] transition-colors">
-                  {feature.title}
-                </CardTitle>
-              </CardHeader>
-              
-              <CardContent className="pt-0 space-y-4">
-                <CardDescription className="text-gray-600 leading-relaxed text-sm">
-                  {feature.description}
-                </CardDescription>
-                
-                {/* Feature highlights */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold text-[#040458]">Key Features:</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    {feature.features.map((item, idx) => (
-                      <div key={idx} className="flex items-center space-x-2">
-                        <div className="w-1.5 h-1.5 bg-[#faa51a] rounded-full"></div>
-                        <span className="text-xs text-gray-600">{item}</span>
-                      </div>
-                    ))}
+        {/* Sales & Operations Section */}
+        <div className="mb-16">
+          <h3 className="text-2xl sm:text-3xl font-bold text-[#040458] mb-8 text-center">
+            🛒 Sales & Operations
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {features.slice(0, 3).map((feature, index) => (
+              <Card key={feature.title} className="group bg-white border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+                <div className="relative">
+                  <div className="h-56 relative overflow-hidden">
+                    <img 
+                      src={feature.image} 
+                      alt={feature.title}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
+                
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-xl font-bold text-[#040458] group-hover:text-[#faa51a] transition-colors">
+                    {feature.title}
+                  </CardTitle>
+                </CardHeader>
+                
+                <CardContent className="pt-0 space-y-4">
+                  <CardDescription className="text-gray-600 leading-relaxed text-sm">
+                    {feature.description}
+                  </CardDescription>
+                  
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-[#040458]">Key Features:</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {feature.features.map((item, idx) => (
+                        <div key={idx} className="flex items-center space-x-2">
+                          <div className="w-1.5 h-1.5 bg-[#faa51a] rounded-full"></div>
+                          <span className="text-xs text-gray-600">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
 
-        {/* Start Free Trial Section */}
+        {/* Management & Analytics Section */}
+        <div className="mb-16">
+          <h3 className="text-2xl sm:text-3xl font-bold text-[#040458] mb-8 text-center">
+            📊 Management & Analytics
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {features.slice(3, 6).map((feature, index) => (
+              <Card key={feature.title} className="group bg-white border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+                <div className="relative">
+                  <div className="h-56 relative overflow-hidden">
+                    <img 
+                      src={feature.image} 
+                      alt={feature.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+                
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-xl font-bold text-[#040458] group-hover:text-[#faa51a] transition-colors">
+                    {feature.title}
+                  </CardTitle>
+                </CardHeader>
+                
+                <CardContent className="pt-0 space-y-4">
+                  <CardDescription className="text-gray-600 leading-relaxed text-sm">
+                    {feature.description}
+                  </CardDescription>
+                  
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-[#040458]">Key Features:</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {feature.features.map((item, idx) => (
+                        <div key={idx} className="flex items-center space-x-2">
+                          <div className="w-1.5 h-1.5 bg-[#faa51a] rounded-full"></div>
+                          <span className="text-xs text-gray-600">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Financial & Reporting Section */}
+        <div className="mb-16">
+          <h3 className="text-2xl sm:text-3xl font-bold text-[#040458] mb-8 text-center">
+            💰 Financial & Reporting
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {features.slice(6).map((feature, index) => (
+              <Card key={feature.title} className="group bg-white border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+                <div className="relative">
+                  <div className="h-56 relative overflow-hidden">
+                    <img 
+                      src={feature.image} 
+                      alt={feature.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+                
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-xl font-bold text-[#040458] group-hover:text-[#faa51a] transition-colors">
+                    {feature.title}
+                  </CardTitle>
+                </CardHeader>
+                
+                <CardContent className="pt-0 space-y-4">
+                  <CardDescription className="text-gray-600 leading-relaxed text-sm">
+                    {feature.description}
+                  </CardDescription>
+                  
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-[#040458]">Key Features:</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {feature.features.map((item, idx) => (
+                        <div key={idx} className="flex items-center space-x-2">
+                          <div className="w-1.5 h-1.5 bg-[#faa51a] rounded-full"></div>
+                          <span className="text-xs text-gray-600">{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Business Problem Section */}
         <div className="text-center mt-12 sm:mt-16 lg:mt-20 mb-8 sm:mb-12">
-          <div className="bg-white border-2 border-[#faa51a] rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 relative overflow-hidden">
+          <div className="bg-gradient-to-br from-red-50 to-orange-50 border border-red-200 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 relative overflow-hidden">
             <div className="relative z-10">
               <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 px-4 text-[#040458]">
-                Start Your Free Trial Today
+                Are You Struggling With These Business Challenges?
               </h3>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-                No credit card required. Get full access to all features for 14 days.
-              </p>
-              <Link to="/user-type">
-                <Button 
-                  size="lg"
-                  className="bg-[#faa51a] hover:bg-[#040458] text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg rounded-lg transition-all duration-300 shadow-xl w-full sm:w-auto"
-                >
-                  Start Free Trial
-                  <ChevronRight className="ml-2 h-4 w-4 sm:h-6 sm:w-6" />
-                </Button>
-              </Link>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8">
+                <div className="text-left p-4 bg-white/60 rounded-lg">
+                  <div className="text-red-500 font-semibold mb-2">❌ Manual Processes</div>
+                  <div className="text-sm text-gray-600">Losing time and money with paper-based systems and manual calculations</div>
+                </div>
+                <div className="text-left p-4 bg-white/60 rounded-lg">
+                  <div className="text-red-500 font-semibold mb-2">❌ Stock Shortages</div>
+                  <div className="text-sm text-gray-600">Running out of popular items and missing sales opportunities</div>
+                </div>
+                <div className="text-left p-4 bg-white/60 rounded-lg">
+                  <div className="text-red-500 font-semibold mb-2">❌ Poor Visibility</div>
+                  <div className="text-sm text-gray-600">Not knowing your real profits, best-selling products, or customer trends</div>
+                </div>
+                <div className="text-left p-4 bg-white/60 rounded-lg">
+                  <div className="text-red-500 font-semibold mb-2">❌ Accounting Headaches</div>
+                  <div className="text-sm text-gray-600">Struggling with tax calculations, invoicing, and financial reporting</div>
+                </div>
+                <div className="text-left p-4 bg-white/60 rounded-lg">
+                  <div className="text-red-500 font-semibold mb-2">❌ Limited Growth</div>
+                  <div className="text-sm text-gray-600">Unable to scale efficiently due to outdated business processes</div>
+                </div>
+                <div className="text-left p-4 bg-white/60 rounded-lg">
+                  <div className="text-red-500 font-semibold mb-2">❌ Data Loss Risk</div>
+                  <div className="text-sm text-gray-600">Vulnerable to losing important business data and customer information</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* View Pricing Section */}
+        {/* Solution Section */}
+        <div className="text-center mb-8 sm:mb-12">
+          <div className="bg-gradient-to-br from-green-50 to-blue-50 border border-green-200 rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 relative overflow-hidden">
+            <div className="relative z-10">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 px-4 text-[#040458]">
+                Transform Your Business With Otic Business
+              </h3>
+              <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-3xl mx-auto px-4">
+                Join 2000+ African businesses that have already transformed their operations and increased profits by 80% using our AI-powered platform.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8">
+                <div className="text-left p-4 bg-white/60 rounded-lg">
+                  <div className="text-green-500 font-semibold mb-2">✅ Automated Everything</div>
+                  <div className="text-sm text-gray-600">POS, inventory, accounting, and reporting all work together seamlessly</div>
+                </div>
+                <div className="text-left p-4 bg-white/60 rounded-lg">
+                  <div className="text-green-500 font-semibold mb-2">✅ Smart Inventory</div>
+                  <div className="text-sm text-gray-600">Never run out of stock with AI-powered predictions and automated reordering</div>
+                </div>
+                <div className="text-left p-4 bg-white/60 rounded-lg">
+                  <div className="text-green-500 font-semibold mb-2">✅ Real-time Insights</div>
+                  <div className="text-sm text-gray-600">Know exactly what's selling, what's profitable, and what your customers want</div>
+                </div>
+                <div className="text-left p-4 bg-white/60 rounded-lg">
+                  <div className="text-green-500 font-semibold mb-2">✅ Easy Accounting</div>
+                  <div className="text-sm text-gray-600">Automated invoicing, tax calculations, and QuickBooks integration</div>
+                </div>
+                <div className="text-left p-4 bg-white/60 rounded-lg">
+                  <div className="text-green-500 font-semibold mb-2">✅ Scale Fast</div>
+                  <div className="text-sm text-gray-600">Grow your business with tools that grow with you, from startup to enterprise</div>
+                </div>
+                <div className="text-left p-4 bg-white/60 rounded-lg">
+                  <div className="text-green-500 font-semibold mb-2">✅ Bank-level Security</div>
+                  <div className="text-sm text-gray-600">Your data is protected with enterprise-grade security and automatic backups</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Call to Action Section */}
         <div className="text-center mb-12 sm:mb-16">
           <div className="bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 text-white relative overflow-hidden">
             {/* Background pattern */}
@@ -170,18 +338,31 @@ const FeaturesOverview = () => {
                 Ready to Transform Your Business?
               </h3>
               <p className="text-base sm:text-lg lg:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
-                Choose the perfect plan for your business needs and start your free trial today. 
-                No credit card required for the first 14 days.
+                Join thousands of successful African businesses. Start your free trial today - no credit card required for 14 days.
               </p>
-              <Link to="/pricing">
-                <Button 
-                  size="lg"
-                  className="bg-white text-[#040458] hover:bg-white/90 font-semibold px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg rounded-lg transition-all duration-300 shadow-xl w-full sm:w-auto"
-                >
-                  View Pricing Plans
-                  <ChevronRight className="ml-2 h-4 w-4 sm:h-6 sm:w-6" />
-                </Button>
-              </Link>
+              
+              {/* Both buttons together */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link to="/user-type">
+                  <Button 
+                    size="lg"
+                    className="bg-white text-[#040458] hover:bg-white/90 font-semibold px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg rounded-lg transition-all duration-300 shadow-xl w-full sm:w-auto"
+                  >
+                    Start Free Trial
+                    <ChevronRight className="ml-2 h-4 w-4 sm:h-6 sm:w-6" />
+                  </Button>
+                </Link>
+                <Link to="/pricing">
+                  <Button 
+                    size="lg"
+                    variant="outline"
+                    className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#040458] font-semibold px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg rounded-lg transition-all duration-300 shadow-xl w-full sm:w-auto"
+                  >
+                    View Pricing Plans
+                    <ChevronRight className="ml-2 h-4 w-4 sm:h-6 sm:w-6" />
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

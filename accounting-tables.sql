@@ -175,4 +175,3 @@ CREATE POLICY "Users can view their own profit loss summary" ON profit_loss_summ
   FOR ALL USING (auth.uid() = user_id);
 
 CREATE POLICY "Users can view their own customers" ON customers
-  FOR ALL USING (auth.uid() = user_id);

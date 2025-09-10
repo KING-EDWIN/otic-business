@@ -18,8 +18,8 @@ const Hero = () => {
   };
 
   const handleGetStartedGuide = () => {
-    // Navigate to user type selection
-    navigate('/user-type');
+    // Navigate to get started guide
+    navigate('/get-started');
   };
 
   return (
@@ -56,14 +56,23 @@ const Hero = () => {
             From mobile POS to intelligent analytics, everything you need in one platform.
           </p>
 
-          {/* Call-to-Action Button */}
-          <div className="flex justify-center mb-12 sm:mb-16 px-4">
+          {/* Call-to-Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 sm:mb-16 px-4">
             <Button 
               size="lg"
               className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 h-auto bg-[#faa51a] text-white hover:bg-[#faa51a]/90 font-semibold rounded-lg shadow-xl transition-all duration-300 w-full sm:w-auto"
               onClick={handleGetStarted}
             >
               Start Free Trial
+              <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+            <Button 
+              size="lg"
+              variant="outline"
+              className="text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 h-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#040458] font-semibold rounded-lg shadow-xl transition-all duration-300 w-full sm:w-auto"
+              onClick={handleGetStartedGuide}
+            >
+              Get Started
               <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </div>

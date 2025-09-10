@@ -59,4 +59,3 @@ BEGIN
 END $$;
 
 -- Verify the data was inserted
-SELECT 'Sample accounting data added successfully!' as message;

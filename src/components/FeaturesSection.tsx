@@ -56,7 +56,7 @@ const FeaturesSection = () => {
       title: "Multi-Branch Support",
       description: "Synchronize operations across multiple locations with consolidated reporting.",
       color: "text-[#faa51a]",
-      image: multiBranchImage,
+      image: "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=1200&q=60&auto=format&fit=crop", // modern office building with multiple floors
     },
     {
       icon: <CreditCard className="h-8 w-8" />,
