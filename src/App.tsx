@@ -40,6 +40,7 @@ import TrialConfirmation from "./pages/TrialConfirmation";
 import TierSelection from "./pages/TierSelection";
 import TierGuide from "./pages/TierGuide";
 import IndividualDashboard from "./pages/IndividualDashboard";
+import IndividualSettings from "./pages/IndividualSettings";
 import LoginTypeSelection from "./pages/LoginTypeSelection";
 import BusinessSignIn from "./pages/BusinessSignIn";
 import IndividualSignIn from "./pages/IndividualSignIn";
@@ -145,6 +146,7 @@ const App = () => {
                 <Route path="/tier-selection" element={<TierSelection />} />
                 <Route path="/tier-guide" element={<TierGuide />} />
                 <Route path="/individual-dashboard" element={<ProtectedRoute><IndividualDashboard /></ProtectedRoute>} />
+                <Route path="/individual-settings" element={<ProtectedRoute><IndividualSettings /></ProtectedRoute>} />
                 <Route path="/login-type" element={<LoginTypeSelection />} />
                 <Route path="/business-signin" element={<PublicRoute><BusinessSignIn /></PublicRoute>} />
                 <Route path="/individual-signin" element={<PublicRoute><IndividualSignIn /></PublicRoute>} />

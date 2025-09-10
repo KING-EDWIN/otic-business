@@ -56,8 +56,8 @@ const Hero = () => {
             From mobile POS to intelligent analytics, everything you need in one platform.
           </p>
 
-          {/* Call-to-Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-16">
+          {/* Call-to-Action Button */}
+          <div className="flex justify-center mb-16">
             <Button 
               size="lg"
               className="text-lg px-8 py-4 h-auto bg-[#faa51a] text-white hover:bg-[#faa51a]/90 font-semibold rounded-lg shadow-xl transition-all duration-300"
@@ -65,15 +65,6 @@ const Hero = () => {
             >
               Start Free Trial
               <ChevronRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button 
-              variant="outline"
-              size="lg"
-              className="text-lg px-8 py-4 h-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-black font-semibold rounded-lg transition-all duration-300"
-              onClick={() => navigate('/pricing')}
-            >
-              <ChevronRight className="mr-2 h-5 w-5" />
-              View Pricing
             </Button>
           </div>
 

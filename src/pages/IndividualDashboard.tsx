@@ -100,10 +100,78 @@ const IndividualDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#faa51a] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your personal dashboard...</p>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header Skeleton */}
+        <header className="bg-white border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-10 h-10 bg-gray-200 rounded animate-pulse"></div>
+                <div>
+                  <div className="h-6 bg-gray-200 rounded w-32 mb-2 animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="h-10 bg-gray-200 rounded w-24 animate-pulse"></div>
+                <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Content Skeleton */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="space-y-6">
+            {/* Welcome Section Skeleton */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="h-8 bg-gray-200 rounded w-64 mb-4 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded w-96 animate-pulse"></div>
+            </div>
+
+            {/* Stats Cards Skeleton */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-white rounded-lg p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                  <div className="h-8 bg-gray-200 rounded w-20 mb-2 animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Charts Section Skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="h-6 bg-gray-200 rounded w-48 mb-4 animate-pulse"></div>
+                <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="h-6 bg-gray-200 rounded w-48 mb-4 animate-pulse"></div>
+                <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+
+            {/* Recent Activity Skeleton */}
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="h-6 bg-gray-200 rounded w-48 mb-4 animate-pulse"></div>
+              <div className="space-y-3">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                    </div>
+                    <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -129,7 +197,7 @@ const IndividualDashboard = () => {
             <div className="flex items-center space-x-3">
               <Button
                 variant="outline"
-                onClick={() => navigate('/settings')}
+                onClick={() => navigate('/individual-settings')}
                 className="flex items-center space-x-2"
               >
                 <Settings className="h-4 w-4" />

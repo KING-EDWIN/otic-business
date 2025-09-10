@@ -278,66 +278,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Prevent multiple signout attempts
     if (loading) return
     
-    setLoading(true)
-    
     // Remember user type for appropriate redirect
     const userType = profile?.user_type || pendingUserType
     console.log('SignOut: User type was:', userType)
     
-    if (isOffline) {
-      // Offline sign out
-      setUser(null)
-      setProfile(null)
-      setSession(null)
-      setPendingUserType(null)
-      localStorage.removeItem('otic_user')
-      localStorage.removeItem('otic_profile')
-      localStorage.removeItem('otic_subscription')
-      setLoading(false)
-      // Redirect to appropriate sign-in form
-      const redirectUrl = userType === 'individual' ? '/individual-signin' : '/business-signin'
-      console.log('SignOut: Redirecting to:', redirectUrl)
-      window.location.href = redirectUrl
-    } else {
-      // Online sign out with Supabase
-      try {
-        // Clear local state immediately for instant UI update
-        setUser(null)
-        setProfile(null)
-        setSession(null)
-        setPendingUserType(null)
-        
-        // Clear localStorage immediately
-        localStorage.removeItem('otic_user')
-        localStorage.removeItem('otic_profile')
-        localStorage.removeItem('otic_subscription')
-        
-        // Clear any Supabase-related localStorage items
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('sb-') || key.includes('supabase')) {
-            localStorage.removeItem(key)
-          }
-        })
-        
-        // Clear sessionStorage
-        sessionStorage.clear()
-        
-        // Clear Supabase session
-        await supabase.auth.signOut()
-        
-        setLoading(false)
-        // Redirect to appropriate sign-in form
-        const redirectUrl = userType === 'individual' ? '/individual-signin' : '/business-signin'
-        console.log('SignOut: Redirecting to:', redirectUrl)
-        window.location.href = redirectUrl
-      } catch (error) {
-        console.error('Sign out error:', error)
-        setLoading(false)
-        // Still redirect even if there's an error
-        const redirectUrl = userType === 'individual' ? '/individual-signin' : '/business-signin'
-        window.location.href = redirectUrl
+    // Clear local state immediately for instant UI update
+    setUser(null)
+    setProfile(null)
+    setSession(null)
+    setPendingUserType(null)
+    
+    // Clear localStorage immediately
+    localStorage.removeItem('otic_user')
+    localStorage.removeItem('otic_profile')
+    localStorage.removeItem('otic_subscription')
+    
+    // Clear any Supabase-related localStorage items
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('sb-') || key.includes('supabase')) {
+        localStorage.removeItem(key)
       }
+    })
+    
+    // Clear sessionStorage
+    sessionStorage.clear()
+    
+    if (!isOffline) {
+      // Online sign out with Supabase (async but don't wait)
+      supabase.auth.signOut().catch(error => {
+        console.error('Sign out error:', error)
+      })
     }
+    
+    // Immediate redirect without loading state
+    const redirectUrl = userType === 'individual' ? '/individual-signin' : '/business-signin'
+    console.log('SignOut: Redirecting to:', redirectUrl)
+    window.location.href = redirectUrl
   }
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
