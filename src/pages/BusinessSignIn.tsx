@@ -49,9 +49,8 @@ const BusinessSignIn = () => {
           // Force navigation to business dashboard
           console.log('BusinessSignIn: Forcing navigation to /dashboard');
           console.log('BusinessSignIn: profile:', profile);
-          setTimeout(() => {
-            navigate('/dashboard');
-          }, 100);
+          // Use window.location.href for immediate redirect to prevent auth context interference
+          window.location.href = '/dashboard';
         } catch (error) {
           console.error('Error validating account type:', error);
         }

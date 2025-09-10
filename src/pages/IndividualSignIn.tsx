@@ -115,14 +115,8 @@ const IndividualSignIn = () => {
           toast.success('Welcome back, professional!')
           console.log('IndividualSignIn: Forcing navigation to /individual-dashboard');
           
-          // Try immediate navigation first
-          navigate('/individual-dashboard')
-          
-          // Also try with timeout as backup
-          setTimeout(() => {
-            console.log('IndividualSignIn: Timeout navigation to /individual-dashboard')
-            navigate('/individual-dashboard')
-          }, 100);
+          // Use window.location.href for immediate redirect to prevent auth context interference
+          window.location.href = '/individual-dashboard'
         } else {
           // User is a business account, show error
           console.log('IndividualSignIn: Business account detected, showing error')

@@ -282,38 +282,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userType = profile?.user_type || pendingUserType
     console.log('SignOut: User type was:', userType)
     
-    // Clear local state immediately for instant UI update
+    // Determine redirect URL first
+    const redirectUrl = userType === 'individual' ? '/individual-signin' : '/business-signin'
+    console.log('SignOut: Redirecting to:', redirectUrl)
+    
+    // Clear all state and storage immediately
     setUser(null)
     setProfile(null)
     setSession(null)
     setPendingUserType(null)
     
-    // Clear localStorage immediately
-    localStorage.removeItem('otic_user')
-    localStorage.removeItem('otic_profile')
-    localStorage.removeItem('otic_subscription')
+    // Clear all localStorage
+    localStorage.clear()
     
-    // Clear any Supabase-related localStorage items
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('sb-') || key.includes('supabase')) {
-        localStorage.removeItem(key)
-      }
-    })
-    
-    // Clear sessionStorage
+    // Clear all sessionStorage
     sessionStorage.clear()
     
+    // Sign out from Supabase (async, don't wait)
     if (!isOffline) {
-      // Online sign out with Supabase (async but don't wait)
       supabase.auth.signOut().catch(error => {
         console.error('Sign out error:', error)
       })
     }
     
-    // Immediate redirect without loading state
-    const redirectUrl = userType === 'individual' ? '/individual-signin' : '/business-signin'
-    console.log('SignOut: Redirecting to:', redirectUrl)
-    window.location.href = redirectUrl
+    // Force immediate redirect using replace to prevent back button issues
+    window.location.replace(redirectUrl)
   }
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
