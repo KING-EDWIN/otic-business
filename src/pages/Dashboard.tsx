@@ -13,7 +13,7 @@ import { SubscriptionManager } from '@/components/SubscriptionManager'
 import { AdvancedReports } from '@/components/AdvancedReports'
 import PaymentVerification from '@/components/PaymentVerification'
 import { EmailNotificationSettings } from '@/components/EmailNotificationSettings'
-import LoginStatus from '@/components/LoginStatus'
+import BusinessLoginStatus from '@/components/BusinessLoginStatus'
 import { 
   Building2, 
   ShoppingCart, 
@@ -304,7 +304,7 @@ const Dashboard = () => {
                 <Menu className="h-5 w-5" />
               </Button>
               
-              <LoginStatus />
+              <BusinessLoginStatus />
             </div>
           </div>
           

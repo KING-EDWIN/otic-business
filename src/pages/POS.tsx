@@ -70,7 +70,7 @@ import {
   DollarSign
 } from 'lucide-react'
 import { toast } from 'sonner'
-import LoginStatus from '@/components/LoginStatus'
+import BusinessLoginStatus from '@/components/BusinessLoginStatus'
 
 interface CartItem {
   product: Product
@@ -327,7 +327,7 @@ const POS = () => {
                 <ShoppingCart className="h-4 w-4 mr-2" />
                 {cart.length} items in cart
               </Badge>
-              <LoginStatus />
+              <BusinessLoginStatus />
             </div>
           </div>
         </div>

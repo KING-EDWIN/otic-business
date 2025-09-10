@@ -59,7 +59,7 @@ import {
   XCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
-import LoginStatus from '@/components/LoginStatus'
+import BusinessLoginStatus from '@/components/BusinessLoginStatus'
 
 interface ProductFormData {
   name: string
@@ -407,7 +407,7 @@ const Inventory = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 Add Product
               </Button>
-              <LoginStatus />
+              <BusinessLoginStatus />
             </div>
           </div>
         </div>

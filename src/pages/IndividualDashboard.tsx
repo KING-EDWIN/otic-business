@@ -24,7 +24,7 @@ import {
   Wallet
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts'
-import LoginStatus from '@/components/LoginStatus'
+import IndividualLoginStatus from '@/components/IndividualLoginStatus'
 
 interface Expense {
   id: string
@@ -203,7 +203,7 @@ const IndividualDashboard = () => {
                 <Settings className="h-4 w-4" />
                 <span>Settings</span>
               </Button>
-              <LoginStatus />
+              <IndividualLoginStatus />
             </div>
           </div>
         </div>

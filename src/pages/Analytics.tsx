@@ -26,7 +26,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import AIInsights from '@/components/AIInsights'
 import AIPredictions from '@/components/AIPredictions'
 import AIChatBot from '@/components/AIChatBot'
-import LoginStatus from '@/components/LoginStatus'
+import BusinessLoginStatus from '@/components/BusinessLoginStatus'
 
 interface AnalyticsData {
   totalSales: number
@@ -229,7 +229,7 @@ const Analytics = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <LoginStatus />
+              <BusinessLoginStatus />
             </div>
           </div>
         </div>

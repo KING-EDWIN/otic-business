@@ -40,7 +40,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell } from 'recharts'
-import LoginStatus from '@/components/LoginStatus'
+import BusinessLoginStatus from '@/components/BusinessLoginStatus'
 
 const AccountingNew: React.FC = () => {
   const navigate = useNavigate()
@@ -287,7 +287,7 @@ const AccountingNew: React.FC = () => {
                 <Button variant="ghost" size="sm" className="text-gray-600">
                   <Settings className="h-4 w-4" />
               </Button>
-                <LoginStatus />
+                <BusinessLoginStatus />
               </div>
             </div>
           </div>
