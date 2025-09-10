@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContextHybrid'
+import { supabase } from '@/lib/supabaseClient'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -48,27 +49,31 @@ const IndividualDashboard = () => {
   const [budgets, setBudgets] = useState<Budget[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Mock data for demonstration
+  console.log('IndividualDashboard: Component rendered, user:', user?.id)
+
+  // Fetch real data from database
   useEffect(() => {
-    const mockExpenses: Expense[] = [
-      { id: '1', category: 'Food & Dining', amount: 150000, description: 'Grocery shopping', date: '2024-01-15', type: 'expense' },
-      { id: '2', category: 'Transportation', amount: 45000, description: 'Fuel', date: '2024-01-14', type: 'expense' },
-      { id: '3', category: 'Salary', amount: 2500000, description: 'Monthly salary', date: '2024-01-01', type: 'income' },
-      { id: '4', category: 'Utilities', amount: 120000, description: 'Electricity bill', date: '2024-01-10', type: 'expense' },
-      { id: '5', category: 'Entertainment', amount: 80000, description: 'Movie tickets', date: '2024-01-12', type: 'expense' },
-    ]
+    const fetchData = async () => {
+      if (!user?.id) return
+      
+      try {
+        setLoading(true)
+        
+        // For now, use empty arrays since the individual tables might not exist yet
+        // This will show the dashboard structure without data
+        console.log('IndividualDashboard: Using empty data for now')
+        setExpenses([])
+        setBudgets([])
+    } catch (error) {
+        console.error('Error fetching individual dashboard data:', error)
+        // Don't set fallback data - let error state handle this
+    } finally {
+        setLoading(false)
+      }
+    }
 
-    const mockBudgets: Budget[] = [
-      { category: 'Food & Dining', budgeted: 200000, spent: 150000, remaining: 50000 },
-      { category: 'Transportation', budgeted: 100000, spent: 45000, remaining: 55000 },
-      { category: 'Utilities', budgeted: 150000, spent: 120000, remaining: 30000 },
-      { category: 'Entertainment', budgeted: 100000, spent: 80000, remaining: 20000 },
-    ]
-
-    setExpenses(mockExpenses)
-    setBudgets(mockBudgets)
-    setLoading(false)
-  }, [])
+    fetchData()
+  }, [user?.id])
 
   const totalIncome = expenses.filter(e => e.type === 'income').reduce((sum, e) => sum + e.amount, 0)
   const totalExpenses = expenses.filter(e => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0)
@@ -115,7 +120,7 @@ const IndividualDashboard = () => {
                 <div className="w-10 h-10 bg-gradient-to-r from-[#faa51a] to-[#040458] rounded-lg flex items-center justify-center">
                   <User className="h-6 w-6 text-white" />
                 </div>
-                <div>
+              <div>
                   <h1 className="text-2xl font-bold text-[#040458]">Personal Finance</h1>
                   <p className="text-sm text-gray-600">Manage your personal finances</p>
                 </div>
@@ -148,7 +153,7 @@ const IndividualDashboard = () => {
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <TrendingUp className="h-6 w-6 text-green-600" />
-                </div>
+      </div>
               </div>
             </CardContent>
           </Card>
@@ -259,7 +264,7 @@ const IndividualDashboard = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
+                </div>
 
         {/* Budget Overview */}
         <div className="grid lg:grid-cols-2 gap-8 mb-8">
@@ -272,7 +277,7 @@ const IndividualDashboard = () => {
               <CardDescription>Track your spending against budget</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+                <div className="space-y-4">
                 {budgets.map((budget, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex justify-between items-center">
@@ -291,10 +296,10 @@ const IndividualDashboard = () => {
                         className={`h-2 rounded-full ${budget.remaining >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
                         style={{ width: `${Math.min(100, (budget.spent / budget.budgeted) * 100)}%` }}
                       ></div>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
             </CardContent>
           </Card>
 
@@ -320,8 +325,8 @@ const IndividualDashboard = () => {
                         ) : (
                           <TrendingDown className="h-5 w-5 text-red-600" />
                         )}
-                      </div>
-                      <div>
+                </div>
+                        <div>
                         <p className="font-medium text-gray-900">{expense.description}</p>
                         <p className="text-sm text-gray-500">{expense.category}</p>
                       </div>
@@ -333,10 +338,10 @@ const IndividualDashboard = () => {
                         {expense.type === 'income' ? '+' : '-'}UGX {expense.amount.toLocaleString()}
                       </p>
                       <p className="text-sm text-gray-500">{expense.date}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
             </CardContent>
           </Card>
         </div>

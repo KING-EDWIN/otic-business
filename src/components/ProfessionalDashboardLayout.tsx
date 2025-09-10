@@ -95,21 +95,7 @@ const ProfessionalDashboardLayout: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Notifications */}
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
-                </Button>
-
-                {/* Help */}
-                <Button variant="ghost" size="sm">
-                  <HelpCircle className="h-5 w-5" />
-                </Button>
-
-                {/* Settings */}
-                <Button variant="ghost" size="sm">
-                  <Settings className="h-5 w-5" />
-                </Button>
+                {/* Removed non-functional icons: Notifications, Help, Settings */}
 
                 {/* User Profile */}
                 <div className="flex items-center space-x-3">

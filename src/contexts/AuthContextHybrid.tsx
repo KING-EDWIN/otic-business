@@ -23,7 +23,7 @@ interface AuthContextType {
   session: any
   loading: boolean
   signUp: (email: string, password: string, businessName: string, userType?: 'business' | 'individual') => Promise<{ error: any }>
-  signIn: (email: string, password: string) => Promise<{ error: any }>
+  signIn: (email: string, password: string, userType?: 'business' | 'individual') => Promise<{ error: any }>
   signInWithGoogle: () => Promise<{ error: any }>
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: any }>
@@ -45,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [pendingUserType, setPendingUserType] = useState<'business' | 'individual' | null>(null)
 
   // Check if we're in offline mode
   const isOffline = isOfflineMode()
@@ -151,6 +152,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setProfile(data)
+      // Clear pending user type once profile is loaded
+      setPendingUserType(null)
     } catch (error) {
       console.error('Error loading user profile:', error)
     }
@@ -187,7 +190,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, userType?: 'business' | 'individual') => {
+    // Store the user type for routing
+    if (userType) {
+      setPendingUserType(userType)
+      console.log('SignIn: Set pending user type to:', userType)
+    }
+
     if (isOffline) {
       // Offline sign in with demo user
       if (email === 'test@oticbusiness.com' && password === 'test123456') {
@@ -206,7 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           phone: '+256 700 000 000',
           address: 'Kampala, Uganda',
           tier: 'standard' as const,
-          user_type: 'business' as const,
+          user_type: userType || 'business' as const,
           email_verified: true,
           created_at: '2025-09-08T11:14:31.149382Z',
           updated_at: '2025-09-08T11:14:31.145986Z'
@@ -215,6 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(demoUser)
         setProfile(demoProfile)
         setSession({ user: demoUser })
+        setPendingUserType(null) // Clear pending user type
         
         // Save to localStorage
         localStorage.setItem('otic_user', JSON.stringify(demoUser))
@@ -265,19 +275,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const signOut = async () => {
+    // Prevent multiple signout attempts
+    if (loading) return
+    
+    setLoading(true)
+    
+    // Remember user type for appropriate redirect
+    const userType = profile?.user_type || pendingUserType
+    console.log('SignOut: User type was:', userType)
+    
     if (isOffline) {
       // Offline sign out
       setUser(null)
       setProfile(null)
       setSession(null)
+      setPendingUserType(null)
       localStorage.removeItem('otic_user')
       localStorage.removeItem('otic_profile')
+      localStorage.removeItem('otic_subscription')
+      setLoading(false)
+      // Redirect to appropriate sign-in form
+      const redirectUrl = userType === 'individual' ? '/individual-signin' : '/business-signin'
+      console.log('SignOut: Redirecting to:', redirectUrl)
+      window.location.href = redirectUrl
     } else {
       // Online sign out with Supabase
       try {
+        // Clear local state immediately for instant UI update
+        setUser(null)
+        setProfile(null)
+        setSession(null)
+        setPendingUserType(null)
+        
+        // Clear localStorage immediately
+        localStorage.removeItem('otic_user')
+        localStorage.removeItem('otic_profile')
+        localStorage.removeItem('otic_subscription')
+        
+        // Clear any Supabase-related localStorage items
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('sb-') || key.includes('supabase')) {
+            localStorage.removeItem(key)
+          }
+        })
+        
+        // Clear sessionStorage
+        sessionStorage.clear()
+        
+        // Clear Supabase session
         await supabase.auth.signOut()
+        
+        setLoading(false)
+        // Redirect to appropriate sign-in form
+        const redirectUrl = userType === 'individual' ? '/individual-signin' : '/business-signin'
+        console.log('SignOut: Redirecting to:', redirectUrl)
+        window.location.href = redirectUrl
       } catch (error) {
         console.error('Sign out error:', error)
+        setLoading(false)
+        // Still redirect even if there's an error
+        const redirectUrl = userType === 'individual' ? '/individual-signin' : '/business-signin'
+        window.location.href = redirectUrl
       }
     }
   }
@@ -318,8 +376,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }
 
   const getDashboardRoute = () => {
-    if (!profile) return '/dashboard'
-    return profile.user_type === 'individual' ? '/individual-dashboard' : '/dashboard'
+    console.log('getDashboardRoute called - pendingUserType:', pendingUserType, 'profile.user_type:', profile?.user_type)
+    
+    // Use pending user type if available (for immediate routing after sign-in)
+    if (pendingUserType) {
+      const route = pendingUserType === 'individual' ? '/individual-dashboard' : '/dashboard'
+      console.log('Using pending user type, routing to:', route)
+      return route
+    }
+    
+    // Fall back to profile user type
+    if (!profile) {
+      console.log('No profile, defaulting to /dashboard')
+      return '/dashboard'
+    }
+    
+    const route = profile.user_type === 'individual' ? '/individual-dashboard' : '/dashboard'
+    console.log('Using profile user type, routing to:', route)
+    return route
   }
 
   const value = {

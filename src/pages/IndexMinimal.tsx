@@ -6,11 +6,13 @@ const IndexMinimal = () => {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center text-white">
           <div className="flex justify-center mb-8">
-            <img 
-              src="/Otic icon@2x.png" 
-              alt="Otic Business Logo" 
-              className="h-20 w-20"
-            />
+            <Link to="/" className="hover:opacity-80 transition-opacity">
+              <img 
+                src="/Otic icon@2x.png" 
+                alt="Otic Business Logo" 
+                className="h-20 w-20"
+              />
+            </Link>
           </div>
           
           <h1 className="text-5xl font-bold mb-6">

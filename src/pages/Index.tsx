@@ -1,8 +1,8 @@
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import FreeTrialSection from "@/components/FreeTrialSection";
-import FreeTierSection from "@/components/FreeTierSection";
+import StepByStepGuide from "@/components/StepByStepGuide";
+import FeaturesOverview from "@/components/FeaturesOverview";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -20,7 +20,8 @@ const Index = () => {
     <div className="min-h-screen">
       <Navbar />
       <Hero />
-      <FreeTierSection />
+      <StepByStepGuide />
+      <FeaturesOverview />
       <Footer />
     </div>
   );

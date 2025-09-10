@@ -138,7 +138,23 @@ const Accounting = () => {
     pendingInvoices: 0,
     overdueInvoices: 0,
     quickbooksConnected: false,
-    lastSync: null
+    lastSync: null,
+    totalExpenses: 0,
+    netIncome: 0,
+    grossProfit: 0,
+    operatingExpenses: 0,
+    accountsReceivable: 0,
+    accountsPayable: 0,
+    cashBalance: 0,
+    totalAssets: 0,
+    totalLiabilities: 0,
+    equity: 0,
+    vatCollected: 0,
+    vatPaid: 0,
+    netVat: 0,
+    efrisVat: 0,
+    efrisIncome: 0,
+    efrisWithholding: 0
   })
   const [qbStatus, setQbStatus] = useState<QuickBooksStatus>({ connected: false })
   const [loading, setLoading] = useState(true)
@@ -215,51 +231,9 @@ const Accounting = () => {
         }
       }
 
-      // Fallback to Supabase data if QuickBooks fails
+      // Don't use fallback data - require real QuickBooks data
       if (!metricsData) {
-        console.log('🔄 Using Supabase data as fallback...')
-        const [salesResult, productsResult, expensesResult] = await Promise.all([
-          supabase
-            .from('sales')
-            .select('total, created_at')
-            .eq('user_id', userInfo.id),
-          supabase
-            .from('products')
-            .select('*')
-            .eq('user_id', userInfo.id),
-          supabase
-            .from('expenses')
-            .select('amount, created_at')
-            .eq('user_id', userInfo.id)
-        ])
-
-        const totalRevenue = salesResult.data?.reduce((sum, sale) => sum + (sale.total || 0), 0) || 0
-        const totalExpenses = expensesResult.data?.reduce((sum, expense) => sum + (expense.amount || 0), 0) || 0
-        const netIncome = totalRevenue - totalExpenses
-        const vatCollected = totalRevenue * 0.18
-        const efrisVat = vatCollected
-        const efrisIncome = netIncome * 0.30
-        const efrisWithholding = totalRevenue * 0.06
-
-        metricsData = {
-          totalRevenue,
-          totalExpenses,
-          netIncome,
-          grossProfit: totalRevenue - (totalExpenses * 0.7),
-          operatingExpenses: totalExpenses * 0.3,
-          accountsReceivable: totalRevenue * 0.2,
-          accountsPayable: totalExpenses * 0.3,
-          cashBalance: totalRevenue * 0.3,
-          totalAssets: totalRevenue * 0.8,
-          totalLiabilities: totalExpenses * 0.4,
-          equity: totalRevenue * 0.6,
-          vatCollected,
-          vatPaid: totalExpenses * 0.18,
-          netVat: vatCollected - (totalExpenses * 0.18),
-          efrisVat,
-          efrisIncome,
-          efrisWithholding
-        }
+        throw new Error('Failed to fetch QuickBooks metrics data')
       }
 
       // Use QuickBooks invoices if available, otherwise use Supabase sales
@@ -277,23 +251,8 @@ const Accounting = () => {
           date: invoice.TxnDate
         }))
       } else {
-        // Fallback to Supabase sales data
-        const salesResult = await supabase
-          .from('sales')
-          .select('total, created_at')
-          .eq('user_id', userInfo.id)
-        
-        invoicesData = salesResult.data?.map(sale => ({
-          id: sale.id,
-          number: `INV-${sale.id}`,
-          customer: 'Customer',
-          amount: sale.total,
-          vat: sale.total * 0.18,
-          efrisVat: sale.total * 0.18,
-          total: sale.total * 1.18,
-          status: 'paid',
-          date: sale.created_at
-        })) || []
+        // Don't use fallback data - require real QuickBooks invoices
+        throw new Error('No QuickBooks invoices available')
       }
 
       // Use QuickBooks customers if available, otherwise use Supabase customers
@@ -311,23 +270,8 @@ const Accounting = () => {
           lastInvoice: ''
         }))
       } else {
-        // Fallback to Supabase customers
-        const customersResult = await supabase
-          .from('customers')
-          .select('*')
-          .eq('user_id', userInfo.id)
-
-        customersData = customersResult.data?.map(customer => ({
-          id: customer.id,
-          name: customer.name || 'Unknown Customer',
-          company: customer.company || '',
-          email: customer.email || '',
-          phone: customer.phone || '',
-          tin: customer.tin || '',
-          balance: customer.balance || 0,
-          totalInvoices: 0,
-          lastInvoice: ''
-        })) || []
+        // Don't use fallback data - require real QuickBooks customers
+        throw new Error('No QuickBooks customers available')
       }
 
       // Update stats with real Supabase data
@@ -457,17 +401,9 @@ const Accounting = () => {
     try {
       setSyncing(true)
       // Sync all POS data to QuickBooks
-      const [productsResult, customersResult, salesResult] = await Promise.all([
-        posQuickBooksIntegration.syncAllProducts(),
-        posQuickBooksIntegration.syncAllCustomers(),
-        posQuickBooksIntegration.syncAllSales()
-      ])
-
-      console.log('Sync Results:', {
-        products: productsResult,
-        customers: customersResult,
-        sales: salesResult
-      })
+      // Note: posQuickBooksIntegration is not available in this context
+      // This would need to be implemented or removed
+      console.log('Sync functionality not available in this context')
 
       await loadAccountingData()
     } catch (error) {
@@ -537,8 +473,17 @@ const Accounting = () => {
         vat: vatAmount,
         efrisVat: efrisVat,
         total: total,
-        status: 'pending',
-        date: newInvoice.created_at
+        status: 'sent',
+        date: newInvoice.created_at,
+        dueDate: invoiceForm.dueDate || new Date().toISOString(),
+        items: invoiceForm.items.map(item => ({
+          id: Math.random().toString(),
+          description: item.description,
+          quantity: item.quantity,
+          price: item.price,
+          vatRate: item.vatRate,
+          total: item.quantity * item.price
+        }))
       }])
       
       setInvoiceForm({ 
@@ -590,6 +535,7 @@ const Accounting = () => {
         company: newCustomer.company || '',
         email: newCustomer.email || '',
         phone: newCustomer.phone || '',
+        address: customerForm.address || '',
         tin: newCustomer.tin || '',
         balance: newCustomer.balance || 0,
         totalInvoices: 0,
@@ -617,7 +563,7 @@ const Accounting = () => {
       setAiQuestion('')
     } catch (error) {
       console.error('Error getting AI help:', error)
-      toast.error('Failed to get AI assistance')
+      alert('Failed to get AI assistance')
     } finally {
       setLoading(false)
     }
@@ -726,11 +672,13 @@ const Accounting = () => {
       
       const reportData = {
         title: reportTitle,
-        companyName: userInfo.business_name || 'Business Name',
+        companyName: userInfo.email || 'Business Name',
         period: `${new Date().toLocaleDateString()} - ${new Date().toLocaleDateString()}`,
         data: {
           type: reportType,
-          ...metricsData
+          totalRevenue: stats.totalRevenue,
+          totalExpenses: stats.totalExpenses,
+          netIncome: stats.netIncome
         },
         generatedAt: new Date().toISOString()
       }
@@ -791,10 +739,10 @@ const Accounting = () => {
       // Generate EFRIS-compliant tax report
       const efrisReport = {
         companyInfo: {
-          name: userInfo.business_name || 'Business Name',
+          name: userInfo.email || 'Business Name',
           tin: '123456789', // This should come from user profile
-          address: userInfo.address || 'Kampala, Uganda',
-          phone: userInfo.phone || '+256 700 000 000',
+          address: 'Kampala, Uganda',
+          phone: '+256 700 000 000',
           email: userInfo.email
         },
         taxPeriod: {

@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContextHybrid";
 import Index from "./pages/Index";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
@@ -41,6 +41,8 @@ import TierSelection from "./pages/TierSelection";
 import TierGuide from "./pages/TierGuide";
 import IndividualDashboard from "./pages/IndividualDashboard";
 import LoginTypeSelection from "./pages/LoginTypeSelection";
+import BusinessSignIn from "./pages/BusinessSignIn";
+import IndividualSignIn from "./pages/IndividualSignIn";
 import NotFound from "./pages/NotFound";
 import OAuthCallback from "./components/OAuthCallback";
 
@@ -50,7 +52,10 @@ const queryClient = new QueryClient();
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, profile } = useAuth();
 
+  console.log('ProtectedRoute: user:', user?.id, 'loading:', loading, 'profile:', profile);
+
   if (loading) {
+    console.log('ProtectedRoute: Still loading...');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -59,10 +64,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   // Not logged in → go to sign in
-  if (!user) return <Navigate to="/signin" />;
+  if (!user) {
+    console.log('ProtectedRoute: No user, redirecting to /signin');
+    return <Navigate to="/signin" />;
+  }
 
   // Logged in but not yet admin-verified → block with friendly screen
   if (profile && profile.email_verified === false) {
+    console.log('ProtectedRoute: Email not verified, showing approval screen');
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center space-y-4">
@@ -84,6 +93,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  console.log('ProtectedRoute: Access granted, rendering children');
   return <>{children}</>;
 };
 
@@ -136,6 +146,8 @@ const App = () => {
                 <Route path="/tier-guide" element={<TierGuide />} />
                 <Route path="/individual-dashboard" element={<ProtectedRoute><IndividualDashboard /></ProtectedRoute>} />
                 <Route path="/login-type" element={<LoginTypeSelection />} />
+                <Route path="/business-signin" element={<PublicRoute><BusinessSignIn /></PublicRoute>} />
+                <Route path="/individual-signin" element={<PublicRoute><IndividualSignIn /></PublicRoute>} />
                 <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
                 <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
                 <Route path="/get-started" element={<GetStarted />} />

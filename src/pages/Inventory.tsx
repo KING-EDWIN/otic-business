@@ -100,7 +100,27 @@ const Inventory = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage] = useState(12) // Show 12 products per page
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const [isSearching, setIsSearching] = useState(false)
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Debounce search term to avoid excessive filtering
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    setIsSearching(true)
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+      setIsSearching(false)
+    }, 300) // 300ms delay
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [searchTerm])
   
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
@@ -127,8 +147,6 @@ const Inventory = () => {
       // Use DataService which handles both online and offline
       const productsData = await DataService.getProducts(user.id)
       setProducts(productsData)
-      
-      console.log('Loaded products:', productsData)
     } catch (error) {
       console.error('Error fetching products:', error)
       toast.error('Failed to load products')
@@ -324,21 +342,21 @@ const Inventory = () => {
     }
   }, [filteredProducts.length, currentPage, itemsPerPage])
 
-  const getStockStatus = (stock: number, minStock: number) => {
+  const getStockStatus = useCallback((stock: number, minStock: number) => {
     if (stock === 0) return { status: 'Out of Stock', color: 'bg-red-100 text-red-800', icon: XCircle }
     if (stock <= minStock) return { status: 'Low Stock', color: 'bg-yellow-100 text-yellow-800', icon: AlertTriangle }
     if (stock <= minStock * 2) return { status: 'Medium Stock', color: 'bg-blue-100 text-blue-800', icon: AlertCircle }
     return { status: 'In Stock', color: 'bg-green-100 text-green-800', icon: CheckCircle }
-  }
+  }, [])
 
-  const getUrgencyColor = (urgency: string) => {
+  const getUrgencyColor = useCallback((urgency: string) => {
     switch (urgency) {
       case 'critical': return 'bg-red-500'
       case 'high': return 'bg-orange-500'
       case 'medium': return 'bg-yellow-500'
       default: return 'bg-blue-500'
     }
-  }
+  }, [])
 
   // Memoized total calculations
   const { totalValue, totalUnits } = useMemo(() => {
@@ -460,7 +478,11 @@ const Inventory = () => {
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                {isSearching ? (
+                  <RefreshCw className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 animate-spin" />
+                ) : (
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                )}
                 <Input
                   placeholder="Search by name or barcode..."
                   value={searchTerm}

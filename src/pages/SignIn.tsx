@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Building2, Eye, EyeOff, ArrowLeft } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContextHybrid'
 
 const SignIn = () => {
   const [email, setEmail] = useState('')
@@ -34,7 +34,7 @@ const SignIn = () => {
     setLoading(true)
     setError('')
 
-    const { error } = await signIn(email, password)
+    const { error } = await signIn(email, password, userType as 'business' | 'individual')
     
     if (error) {
       setError(error.message || 'Failed to sign in')

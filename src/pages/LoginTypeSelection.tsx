@@ -8,11 +8,11 @@ const LoginTypeSelection = () => {
   const navigate = useNavigate()
 
   const handleBusinessLogin = () => {
-    navigate('/signin?type=business')
+    navigate('/business-signin')
   }
 
   const handleIndividualLogin = () => {
-    navigate('/signin?type=individual')
+    navigate('/individual-signin')
   }
 
   return (

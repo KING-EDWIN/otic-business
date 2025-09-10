@@ -235,15 +235,64 @@ const Reports = () => {
     }
   }
 
-  // Mock chart data
-  const salesData = [
-    { month: 'Jan', sales: 4000, revenue: 2400000 },
-    { month: 'Feb', sales: 3000, revenue: 1800000 },
-    { month: 'Mar', sales: 5000, revenue: 3000000 },
-    { month: 'Apr', sales: 4500, revenue: 2700000 },
-    { month: 'May', sales: 6000, revenue: 3600000 },
-    { month: 'Jun', sales: 5500, revenue: 3300000 }
-  ]
+  // Real chart data from database
+  const [salesData, setSalesData] = useState([])
+  const [chartLoading, setChartLoading] = useState(true)
+
+  // Fetch real sales data for charts
+  useEffect(() => {
+    const fetchSalesData = async () => {
+      if (!user?.id) return
+      
+      try {
+        setChartLoading(true)
+        
+        // Fetch sales data from the last 6 months
+        const sixMonthsAgo = new Date()
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
+        
+        const { data: sales, error } = await supabase
+          .from('sales')
+          .select('*')
+          .eq('user_id', user.id)
+          .gte('created_at', sixMonthsAgo.toISOString())
+          .order('created_at', { ascending: true })
+
+        if (error) {
+          console.error('Error fetching sales data for charts:', error)
+          throw new Error(`Failed to fetch sales data: ${error.message}`)
+        }
+
+        // Group sales by month
+        const monthlyData = sales?.reduce((acc, sale) => {
+          const month = new Date(sale.created_at).toLocaleDateString('en-US', { month: 'short' })
+          const existing = acc.find(item => item.month === month)
+          
+          if (existing) {
+            existing.sales += 1
+            existing.revenue += sale.total || 0
+          } else {
+            acc.push({
+              month,
+              sales: 1,
+              revenue: sale.total || 0
+            })
+          }
+          
+          return acc
+        }, []) || []
+
+        setSalesData(monthlyData)
+      } catch (error) {
+        console.error('Error fetching chart data:', error)
+        // Don't set fallback data - let error state handle this
+      } finally {
+        setChartLoading(false)
+      }
+    }
+
+    fetchSalesData()
+  }, [user?.id])
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
@@ -439,10 +488,24 @@ const Reports = () => {
                 </CardHeader>
                 <CardContent className="p-6">
                   <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={salesData}>
+                    {chartLoading ? (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#040458]"></div>
+                      </div>
+                    ) : (
+                      <LineChart data={salesData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                      <XAxis dataKey="month" stroke="#64748b" />
-                      <YAxis stroke="#64748b" />
+                      <XAxis 
+                        dataKey="month" 
+                        stroke="#64748b" 
+                        fontSize={10}
+                        label={{ value: 'Month', position: 'insideBottom', offset: -10 }}
+                      />
+                      <YAxis 
+                        stroke="#64748b" 
+                        fontSize={10}
+                        label={{ value: 'Revenue (UGX)', angle: -90, position: 'insideLeft' }}
+                      />
                       <Tooltip 
                         contentStyle={{
                           backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -468,6 +531,7 @@ const Reports = () => {
                         activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
                       />
                     </LineChart>
+                    )}
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
@@ -635,8 +699,8 @@ const Reports = () => {
                           { name: 'Tax', value: 10 }
                         ]}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                          <XAxis dataKey="name" stroke="#64748b" />
-                          <YAxis stroke="#64748b" />
+                          <XAxis dataKey="name" stroke="#64748b" fontSize={10} />
+                          <YAxis stroke="#64748b" fontSize={10} />
                           <Tooltip 
                             contentStyle={{
                               backgroundColor: 'rgba(255, 255, 255, 0.95)',
@@ -674,8 +738,8 @@ const Reports = () => {
                       <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={salesData}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                          <XAxis dataKey="month" stroke="#64748b" />
-                          <YAxis stroke="#64748b" />
+                          <XAxis dataKey="month" stroke="#64748b" fontSize={10} />
+                          <YAxis stroke="#64748b" fontSize={10} />
                           <Tooltip 
                             contentStyle={{
                               backgroundColor: 'rgba(255, 255, 255, 0.95)',

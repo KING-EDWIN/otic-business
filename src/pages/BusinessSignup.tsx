@@ -52,53 +52,29 @@ const BusinessSignup = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Create business signup record
-        const { error: businessError } = await supabase
-          .from('business_signups')
-          .insert({
-            user_id: authData.user.id,
-            company_name: formData.companyName,
-            industry_sector: formData.industrySector,
-            city_of_operation: formData.cityOfOperation,
-            country_of_operation: formData.countryOfOperation,
-            email_address: formData.emailAddress,
-            physical_address: formData.physicalAddress,
-            key_contact_person: formData.keyContactPerson,
-            phone_number: formData.phoneNumber
-          });
-
-        if (businessError) throw businessError;
-
-        // Create user profile
+        // Use upsert to handle both insert and update cases gracefully
         const { error: profileError } = await supabase
           .from('user_profiles')
-          .insert({
-            user_id: authData.user.id,
+          .upsert({
+            id: authData.user.id, // Use 'id' not 'user_id'
             email: formData.emailAddress,
             business_name: formData.companyName,
             full_name: formData.keyContactPerson,
+            phone: formData.phoneNumber,
+            address: formData.physicalAddress,
             user_type: 'business',
             email_verified: false,
-            tier: 'trial'
+            tier: 'free_trial',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'id' // Handle conflicts on the id field
           });
 
-        if (profileError) throw profileError;
-
-        // Create trial subscription
-        const { error: subscriptionError } = await supabase
-          .from('tier_subscriptions')
-          .insert({
-            user_id: authData.user.id,
-            business_id: null, // Will be updated after business_signup is created
-            tier_name: 'trial',
-            tier_display_name: 'Free Trial',
-            price_ugx: 0,
-            status: 'trial',
-            trial_start_date: new Date().toISOString(),
-            trial_end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-          });
-
-        if (subscriptionError) throw subscriptionError;
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          throw profileError;
+        }
 
         toast.success('Business account created successfully! Please check your email to verify your account.');
         navigate('/signin');

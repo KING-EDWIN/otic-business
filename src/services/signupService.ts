@@ -161,10 +161,11 @@ export class SignupService {
       const subscriptionData = {
         id: crypto.randomUUID(),
         user_id: authData.user.id,
-        tier: 'basic' as const,
-        status: 'active' as const,
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date().toISOString()
+        tier: 'free_trial' as const,
+        status: 'trial' as const,
+        expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }
 
       const { error: subscriptionError } = await supabase
@@ -176,28 +177,6 @@ export class SignupService {
         // Don't fail the signup for subscription errors
       } else {
         console.log('Subscription created successfully')
-      }
-
-      // Step 4: Create initial payment request (optional)
-      const paymentRequestData = {
-        id: crypto.randomUUID(),
-        user_id: authData.user.id,
-        amount: 0.00,
-        currency: 'USD',
-        status: 'pending' as const,
-        description: 'Initial account setup',
-        created_at: new Date().toISOString()
-      }
-
-      const { error: paymentError } = await supabase
-        .from('payment_requests')
-        .insert(paymentRequestData)
-
-      if (paymentError) {
-        console.error('Payment request creation error:', paymentError)
-        // Don't fail the signup for payment request errors
-      } else {
-        console.log('Payment request created successfully')
       }
 
       console.log('Complete signup successful for:', data.email)
@@ -223,34 +202,29 @@ export class SignupService {
   static async verifyUserSetup(userId: string): Promise<{
     hasProfile: boolean
     hasSubscription: boolean
-    hasPaymentRequest: boolean
     missing: string[]
   }> {
     if (this.isOffline) {
       return {
         hasProfile: !!localStorage.getItem('otic_profile'),
         hasSubscription: !!localStorage.getItem('otic_subscription'),
-        hasPaymentRequest: true, // Assume true for offline
         missing: []
       }
     }
 
     try {
-      const [profileResult, subscriptionResult, paymentResult] = await Promise.all([
+      const [profileResult, subscriptionResult] = await Promise.all([
         supabase.from('user_profiles').select('id').eq('id', userId).single(),
-        supabase.from('subscriptions').select('id').eq('user_id', userId).single(),
-        supabase.from('payment_requests').select('id').eq('user_id', userId).single()
+        supabase.from('subscriptions').select('id').eq('user_id', userId).single()
       ])
 
       const missing = []
       if (profileResult.error) missing.push('profile')
       if (subscriptionResult.error) missing.push('subscription')
-      if (paymentResult.error) missing.push('payment_request')
 
       return {
         hasProfile: !profileResult.error,
         hasSubscription: !subscriptionResult.error,
-        hasPaymentRequest: !paymentResult.error,
         missing
       }
     } catch (error) {
@@ -258,8 +232,7 @@ export class SignupService {
       return {
         hasProfile: false,
         hasSubscription: false,
-        hasPaymentRequest: false,
-        missing: ['profile', 'subscription', 'payment_request']
+        missing: ['profile', 'subscription']
       }
     }
   }
@@ -288,7 +261,7 @@ export class SignupService {
             email: userData.email,
             full_name: userData.business_name || 'New Business',
             business_name: userData.business_name || 'New Business',
-            tier: 'basic',
+            tier: 'free_trial',
             user_type: 'business',
             email_verified: false,
             created_at: now,
@@ -307,33 +280,15 @@ export class SignupService {
           .insert({
             id: crypto.randomUUID(),
             user_id: userId,
-            tier: 'basic',
-            status: 'active',
-            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            created_at: now
+            tier: 'free_trial',
+            status: 'trial',
+            expires_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+            created_at: now,
+            updated_at: now
           })
 
         if (error) {
           console.error('Error creating missing subscription:', error)
-        }
-      }
-
-      // Create missing payment request
-      if (verification.missing.includes('payment_request')) {
-        const { error } = await supabase
-          .from('payment_requests')
-          .insert({
-            id: crypto.randomUUID(),
-            user_id: userId,
-            amount: 0.00,
-            currency: 'USD',
-            status: 'pending',
-            description: 'Initial account setup',
-            created_at: now
-          })
-
-        if (error) {
-          console.error('Error creating missing payment request:', error)
         }
       }
 

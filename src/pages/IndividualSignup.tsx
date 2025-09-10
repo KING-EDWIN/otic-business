@@ -59,40 +59,28 @@ const IndividualSignup = () => {
       if (authError) throw authError;
 
       if (authData.user) {
-        // Get profession ID
-        const { data: professionData, error: professionError } = await supabase
-          .from('individual_professions')
-          .select('id')
-          .eq('name', formData.profession)
-          .single();
-
-        if (professionError) throw professionError;
-
-        // Create individual signup record
-        const { error: individualError } = await supabase
-          .from('individual_signups')
-          .insert({
-            user_id: authData.user.id,
-            profession_id: professionData.id,
-            full_name: formData.fullName,
-            phone_number: formData.phoneNumber
-          });
-
-        if (individualError) throw individualError;
-
-        // Create user profile
+        // Use upsert to handle both insert and update cases gracefully
         const { error: profileError } = await supabase
           .from('user_profiles')
-          .insert({
-            user_id: authData.user.id,
+          .upsert({
+            id: authData.user.id, // Use 'id' not 'user_id'
             email: formData.email,
             full_name: formData.fullName,
+            business_name: formData.fullName, // Use full_name as business_name for individuals
+            phone: formData.phoneNumber,
             user_type: 'individual',
-            individual_profession_id: professionData.id,
-            email_verified: false
+            tier: 'basic',
+            email_verified: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'id' // Handle conflicts on the id field
           });
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          throw profileError;
+        }
 
         toast.success('Individual account created successfully! Please check your email to verify your account.');
         navigate('/signin');

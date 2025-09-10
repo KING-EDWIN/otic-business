@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,6 +18,7 @@ import {
 import AIInsights from '@/components/AIInsights'
 import AIPredictions from '@/components/AIPredictions'
 import AIChatBot from '@/components/AIChatBot'
+import { CardSkeleton, ChartSkeleton } from '@/components/ui/skeletons'
 
 interface AnalyticsData {
   totalSales: number
@@ -37,90 +38,248 @@ const AIInsightsPage = () => {
   const navigate = useNavigate()
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (user) {
-      fetchAnalyticsData()
+  const fetchAnalyticsData = useCallback(async () => {
+    if (!user?.id) {
+      console.log('No user ID available')
+      return
     }
-  }, [user])
-
-  const fetchAnalyticsData = async () => {
+    
     try {
       setLoading(true)
+      console.log('Fetching analytics data for user:', user.id)
+      
+      // First, let's test the connection and user authentication
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError) {
+        console.error('Session error:', sessionError)
+        throw new Error(`Authentication error: ${sessionError.message}`)
+      }
+      
+      if (!session) {
+        throw new Error('No active session found')
+      }
+      
+      console.log('Current session:', session)
+      console.log('Session user ID:', session.user.id)
+      console.log('Context user ID:', user.id)
       
       // Fetch sales data
+      console.log('Fetching sales data...')
       const { data: sales, error: salesError } = await supabase
         .from('sales')
         .select('*')
-        .eq('user_id', user?.id || '00000000-0000-0000-0000-000000000001')
+        .eq('user_id', user.id)
 
       if (salesError) {
         console.error('Error fetching sales:', salesError)
+        throw new Error(`Failed to fetch sales data: ${salesError.message}`)
       }
 
       // Fetch products data
+      console.log('Fetching products data...')
       const { data: products, error: productsError } = await supabase
         .from('products')
         .select('*')
-        .eq('user_id', user?.id || '00000000-0000-0000-0000-000000000001')
+        .eq('user_id', user.id)
 
       if (productsError) {
         console.error('Error fetching products:', productsError)
+        throw new Error(`Failed to fetch products data: ${productsError.message}`)
       }
 
       // Calculate analytics
       const totalSales = sales?.length || 0
-      const totalRevenue = sales?.reduce((sum, sale) => sum + sale.total, 0) || 0
+      const totalRevenue = sales?.reduce((sum, sale) => sum + (sale.total || 0), 0) || 0
       const totalProducts = products?.length || 0
       const averageOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0
-      const salesGrowth = 15.3 // Mock data
-      const revenueGrowth = 12.7 // Mock data
-      const lowStockItems = products?.filter(p => p.stock <= 5).length || 0
+      // Calculate real growth data
+      const thirtyDaysAgo = new Date()
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+      const sixtyDaysAgo = new Date()
+      sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60)
 
-      // Generate mock chart data
-      const salesByDay = Array.from({ length: 7 }, (_, i) => ({
-        date: new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000).toLocaleDateString(),
-        sales: Math.floor(Math.random() * 10) + 1,
-        revenue: Math.floor(Math.random() * 50000) + 10000
-      }))
+      const recentSales = sales?.filter(sale => 
+        new Date(sale.created_at) >= thirtyDaysAgo
+      ) || []
+      const previousSales = sales?.filter(sale => 
+        new Date(sale.created_at) >= sixtyDaysAgo && 
+        new Date(sale.created_at) < thirtyDaysAgo
+      ) || []
 
-      const salesByMonth = Array.from({ length: 12 }, (_, i) => ({
-        month: new Date(2024, i).toLocaleDateString('en-US', { month: 'short' }),
-        sales: Math.floor(Math.random() * 50) + 10,
-        revenue: Math.floor(Math.random() * 200000) + 50000
-      }))
+      const recentRevenue = recentSales.reduce((sum, sale) => sum + (sale.total || 0), 0)
+      const previousRevenue = previousSales.reduce((sum, sale) => sum + (sale.total || 0), 0)
 
-      const topProducts = products?.slice(0, 5).map(product => ({
-        name: product.name,
-        sales: Math.floor(Math.random() * 20) + 1,
-        revenue: product.price * (Math.floor(Math.random() * 20) + 1)
-      })) || []
+      const salesGrowth = previousSales.length > 0 
+        ? ((recentSales.length - previousSales.length) / previousSales.length) * 100 
+        : 0
+      const revenueGrowth = previousRevenue > 0 
+        ? ((recentRevenue - previousRevenue) / previousRevenue) * 100 
+        : 0
+      const lowStockItems = products?.filter(p => (p.stock || 0) <= 5).length || 0
 
-      setAnalyticsData({
+      console.log('Analytics data calculated:', {
         totalSales,
         totalRevenue,
         totalProducts,
         averageOrderValue,
         salesGrowth,
         revenueGrowth,
-        topProducts,
+        lowStockItems
+      })
+
+      // Generate real chart data from actual sales
+      const salesByDay = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date()
+        date.setDate(date.getDate() - (6 - i))
+        const daySales = sales?.filter(sale => {
+          const saleDate = new Date(sale.created_at)
+          return saleDate.toDateString() === date.toDateString()
+        }) || []
+        
+        return {
+          date: date.toLocaleDateString('en-US', { weekday: 'short' }),
+          sales: daySales.length,
+          revenue: daySales.reduce((sum, sale) => sum + (sale.total || 0), 0)
+        }
+      })
+
+      const salesByMonth = Array.from({ length: 12 }, (_, i) => {
+        const date = new Date()
+        date.setMonth(date.getMonth() - (11 - i))
+        const monthSales = sales?.filter(sale => {
+          const saleDate = new Date(sale.created_at)
+          return saleDate.getMonth() === date.getMonth() && 
+                 saleDate.getFullYear() === date.getFullYear()
+        }) || []
+        
+        return {
+          month: date.toLocaleDateString('en-US', { month: 'short' }),
+          sales: monthSales.length,
+          revenue: monthSales.reduce((sum, sale) => sum + (sale.total || 0), 0)
+        }
+      })
+
+      // Calculate real top products based on sales
+      const productSales = products?.map(product => {
+        const productSales = sales?.filter(sale => 
+          sale.sale_items?.some(item => item.product?.name === product.name)
+        ) || []
+        const totalRevenue = productSales.reduce((sum, sale) => sum + (sale.total || 0), 0)
+        
+        return {
+          name: product.name,
+          sales: productSales.length,
+          revenue: totalRevenue
+        }
+      }).sort((a, b) => b.revenue - a.revenue).slice(0, 5) || []
+
+      const analyticsData = {
+        totalSales,
+        totalRevenue,
+        totalProducts,
+        averageOrderValue,
+        salesGrowth,
+        revenueGrowth,
+        topProducts: productSales,
         salesByDay,
         salesByMonth,
         lowStockItems
-      })
+      }
+
+      console.log('Setting analytics data:', analyticsData)
+      setAnalyticsData(analyticsData)
     } catch (error) {
       console.error('Error fetching analytics data:', error)
+      setError(error instanceof Error ? error.message : 'An unknown error occurred')
     } finally {
       setLoading(false)
     }
-  }
+  }, [user?.id])
+
+  useEffect(() => {
+    if (user) {
+      fetchAnalyticsData()
+    }
+  }, [user, fetchAnalyticsData])
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
+        {/* Header Skeleton */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-6 w-32 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="h-6 w-20 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-8 w-16 bg-gray-200 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content Skeleton */}
+        <main className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <div className="h-8 w-64 bg-gray-200 rounded animate-pulse mb-2"></div>
+            <div className="h-4 w-96 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+
+          {/* AI Chat Bot Skeleton */}
+          <div className="mb-8">
+            <ChartSkeleton />
+          </div>
+
+          {/* AI Insights Grid Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+
+          {/* AI Predictions Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (!analyticsData || error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#faa51a]"></div>
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Unable to Load Data</h2>
+              <p className="text-gray-600 mb-4">
+                {error || 'There was an error connecting to the database. Please check your internet connection and try again.'}
+              </p>
+              <div className="space-x-4">
+                <Button 
+                  onClick={() => {
+                    setError(null)
+                    fetchAnalyticsData()
+                  }}
+                  className="bg-[#faa51a] hover:bg-[#faa51a]/90"
+                >
+                  Retry
+                </Button>
+                <Button 
+                  onClick={() => navigate('/dashboard')}
+                  variant="outline"
+                >
+                  Back to Dashboard
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

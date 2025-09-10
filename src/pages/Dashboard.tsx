@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { OticAPI } from '@/services/api'
@@ -41,45 +41,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { DashboardSkeleton, CardSkeleton } from '@/components/ui/skeletons'
 import { useIsMobile, ResponsiveContainer as MobileResponsiveContainer, MobileCard } from '@/components/MobileOptimizations'
 
-// Helper function for fallback stats fetching
-const fetchStatsIndividually = async (userId: string) => {
-  try {
-    // Parallel queries for better performance
-    const [salesResult, productsResult, lowStockResult] = await Promise.all([
-      supabase
-        .from('sales')
-        .select('total')
-        .eq('user_id', userId),
-      supabase
-        .from('products')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId),
-      supabase
-        .from('products')
-        .select('*')
-        .eq('user_id', userId)
-        .lte('stock', 5)
-    ])
-
-    const totalRevenue = salesResult.data?.reduce((sum, sale) => sum + sale.total, 0) || 0
-    const totalSales = salesResult.data?.length || 0
-
-    return {
-      totalSales,
-      totalProducts: productsResult.count || 0,
-      totalRevenue,
-      lowStockItems: lowStockResult.data?.length || 0
-    }
-  } catch (error) {
-    console.error('Error in fallback stats fetch:', error)
-    return {
-      totalSales: 0,
-      totalProducts: 0,
-      totalRevenue: 0,
-      lowStockItems: 0
-    }
-  }
-}
 
 const Dashboard = () => {
   const { profile, signOut, user, loading: authLoading } = useAuth()
@@ -108,13 +69,7 @@ const Dashboard = () => {
       console.log('Loaded stats:', statsData)
       } catch (error) {
       console.error('Error loading stats:', error)
-      // Set fallback stats to prevent infinite loading
-      setStats({
-          totalSales: 0,
-          totalProducts: 0,
-          totalRevenue: 0,
-          lowStockItems: 0
-      })
+      // Don't set fallback data - let error state handle this
     } finally {
       setStatsLoading(false)
     }
@@ -249,7 +204,7 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center space-x-3">
+            <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
               <img 
                 src="/Otic icon@2x.png" 
                 alt="Otic Business Logo" 
@@ -259,7 +214,7 @@ const Dashboard = () => {
                 <span className="text-lg font-bold text-[#040458]">Otic</span>
                 <span className="text-xs text-[#faa51a] -mt-1">Business</span>
               </div>
-            </div>
+            </Link>
 
             {/* Centered Navigation Menu */}
             <div className="hidden lg:flex items-center space-x-1">
@@ -336,38 +291,8 @@ const Dashboard = () => {
                 </Button>
               </div>
 
-            {/* Right side - Search, Notifications, Profile */}
+            {/* Right side - Profile */}
             <div className="flex items-center space-x-2">
-              {/* Search Bar */}
-              <div className="hidden md:flex items-center">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="w-48 px-3 py-2 pl-8 pr-3 text-sm border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#040458] focus:border-transparent"
-                  />
-                  <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                    <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Notifications */}
-              <Button variant="ghost" size="sm" className="relative">
-                <svg className="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5v-5z" />
-                </svg>
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
-              </Button>
-
-              {/* Help */}
-              <Button variant="ghost" size="sm">
-                <svg className="h-5 w-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </Button>
 
               {/* Mobile Menu Button */}
               <Button 
@@ -670,11 +595,37 @@ const Dashboard = () => {
                     { name: 'Sun', sales: 40, revenue: 800 }
                   ]}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="sales" stroke="#faa51a" strokeWidth={3} />
-                    <Line type="monotone" dataKey="revenue" stroke="#040458" strokeWidth={3} />
+                    <XAxis 
+                      dataKey="name" 
+                      label={{ value: 'Day', position: 'insideBottom', offset: -10 }}
+                      fontSize={12}
+                    />
+                    <YAxis 
+                      label={{ value: 'Value', angle: -90, position: 'insideLeft' }}
+                      fontSize={12}
+                    />
+                    <Tooltip 
+                      formatter={(value, name) => [
+                        name === 'sales' ? `${value} sales` : `UGX ${value.toLocaleString()}`,
+                        name === 'sales' ? 'Sales' : 'Revenue'
+                      ]}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="sales" 
+                      stroke="#faa51a" 
+                      strokeWidth={3}
+                      name="Sales"
+                      dot={{ fill: '#faa51a', strokeWidth: 2, r: 4 }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="revenue" 
+                      stroke="#040458" 
+                      strokeWidth={3}
+                      name="Revenue"
+                      dot={{ fill: '#040458', strokeWidth: 2, r: 4 }}
+                    />
                   </LineChart>
                 </ResponsiveContainer>
                 </div>

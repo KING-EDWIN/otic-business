@@ -43,49 +43,7 @@ const TierGuide = () => {
       setQuestions(data || []);
     } catch (error) {
       console.error('Error loading questions:', error);
-      // Fallback questions if database is not available
-      setQuestions([
-        {
-          id: '1',
-          question_text: 'How many employees does your business have?',
-          question_type: 'multiple_choice',
-          options: ['1-5', '6-20', '21-50', '51-100', '100+'],
-          tier_weights: { basic: 0.8, standard: 0.6, premium: 0.2 },
-          order_index: 1
-        },
-        {
-          id: '2',
-          question_text: 'What is your monthly revenue in UGX?',
-          question_type: 'multiple_choice',
-          options: ['Under 1M', '1M-5M', '5M-20M', '20M-50M', '50M+'],
-          tier_weights: { basic: 0.9, standard: 0.7, premium: 0.3 },
-          order_index: 2
-        },
-        {
-          id: '3',
-          question_text: 'How many locations do you operate from?',
-          question_type: 'multiple_choice',
-          options: ['1 location', '2-3 locations', '4-10 locations', '10+ locations'],
-          tier_weights: { basic: 0.9, standard: 0.6, premium: 0.2 },
-          order_index: 3
-        },
-        {
-          id: '4',
-          question_text: 'Do you need multi-user access?',
-          question_type: 'multiple_choice',
-          options: ['No, just me', '2-5 users', '6-20 users', '20+ users'],
-          tier_weights: { basic: 0.2, standard: 0.7, premium: 0.9 },
-          order_index: 4
-        },
-        {
-          id: '5',
-          question_text: 'Do you need advanced reporting and analytics?',
-          question_type: 'multiple_choice',
-          options: ['Basic reports only', 'Standard reports', 'Advanced analytics', 'AI-powered insights'],
-          tier_weights: { basic: 0.8, standard: 0.6, premium: 0.3 },
-          order_index: 5
-        }
-      ]);
+      // Don't set fallback data - let error state handle this
     } finally {
       setLoading(false);
     }

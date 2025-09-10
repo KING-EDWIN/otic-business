@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContextHybrid'
 
 const SignInClean = () => {
   const [email, setEmail] = useState('')
@@ -15,8 +15,17 @@ const SignInClean = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   
-  const { signIn, signInWithGoogle } = useAuth()
+  const { signIn, signInWithGoogle, getDashboardRoute, user, profile, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+
+  // Handle routing once user and profile are loaded
+  useEffect(() => {
+    if (user && profile && !authLoading) {
+      const dashboardRoute = getDashboardRoute()
+      console.log('SignInClean: Redirecting to dashboard route:', dashboardRoute)
+      navigate(dashboardRoute)
+    }
+  }, [user, profile, authLoading, getDashboardRoute, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,8 +38,8 @@ const SignInClean = () => {
       setError(error.message || 'Failed to sign in')
       setLoading(false)
     } else {
-      // Redirect to dashboard on successful login
-      navigate('/dashboard')
+      // Don't navigate immediately - let the AuthContext handle routing
+      // The AuthContext will redirect to the appropriate dashboard once profile is loaded
     }
   }
 

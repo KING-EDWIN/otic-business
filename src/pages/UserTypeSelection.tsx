@@ -193,9 +193,6 @@ const UserTypeSelection = () => {
             Not sure which account type is right for you?
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="outline" className="text-[#040458] border-[#040458] hover:bg-[#040458] hover:text-white">
-              Contact Support
-            </Button>
             <Button variant="ghost" className="text-[#faa51a] hover:bg-orange-50">
               Learn More
             </Button>
