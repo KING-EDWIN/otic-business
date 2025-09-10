@@ -76,21 +76,21 @@ const FeaturesOverview = () => {
   ];
 
   return (
-    <section className="py-20 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
+    <section className="py-12 sm:py-16 lg:py-20 bg-white">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 sm:mb-16">
           <Badge className="mb-4 bg-[#faa51a]/10 text-[#faa51a] border-[#faa51a]/20">
             Powerful Features
           </Badge>
-          <h2 className="text-4xl lg:text-5xl font-bold text-[#040458] mb-6">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-[#040458] mb-4 sm:mb-6 px-4">
             Everything You Need to Grow
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4">
             Our comprehensive business management platform includes all the tools you need to streamline operations and boost profitability.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {features.map((feature, index) => (
             <Card key={feature.title} className="group bg-white border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
               <div className="relative">
@@ -132,31 +132,54 @@ const FeaturesOverview = () => {
           ))}
         </div>
 
+        {/* Start Free Trial Section */}
+        <div className="text-center mt-12 sm:mt-16 lg:mt-20 mb-8 sm:mb-12">
+          <div className="bg-white border-2 border-[#faa51a] rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 relative overflow-hidden">
+            <div className="relative z-10">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 px-4 text-[#040458]">
+                Start Your Free Trial Today
+              </h3>
+              <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
+                No credit card required. Get full access to all features for 14 days.
+              </p>
+              <Link to="/user-type">
+                <Button 
+                  size="lg"
+                  className="bg-[#faa51a] hover:bg-[#040458] text-white font-semibold px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg rounded-lg transition-all duration-300 shadow-xl w-full sm:w-auto"
+                >
+                  Start Free Trial
+                  <ChevronRight className="ml-2 h-4 w-4 sm:h-6 sm:w-6" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* View Pricing Section */}
-        <div className="text-center mt-20 mb-16">
-          <div className="bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-3xl p-12 text-white relative overflow-hidden">
+        <div className="text-center mb-12 sm:mb-16">
+          <div className="bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 text-white relative overflow-hidden">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-10">
-              <div className="absolute top-8 left-8 w-32 h-32 border-2 border-white/30 rounded-full"></div>
-              <div className="absolute bottom-8 right-8 w-24 h-24 border-2 border-white/20 rounded-full"></div>
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border border-white/10 rounded-full"></div>
+              <div className="absolute top-4 sm:top-8 left-4 sm:left-8 w-16 sm:w-32 h-16 sm:h-32 border-2 border-white/30 rounded-full"></div>
+              <div className="absolute bottom-4 sm:bottom-8 right-4 sm:right-8 w-12 sm:w-24 h-12 sm:h-24 border-2 border-white/20 rounded-full"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-24 sm:w-48 h-24 sm:h-48 border border-white/10 rounded-full"></div>
             </div>
             
             <div className="relative z-10">
-              <h3 className="text-4xl font-bold mb-4">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 px-4">
                 Ready to Transform Your Business?
               </h3>
-              <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg lg:text-xl text-white/90 mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
                 Choose the perfect plan for your business needs and start your free trial today. 
                 No credit card required for the first 14 days.
               </p>
               <Link to="/pricing">
                 <Button 
                   size="lg"
-                  className="bg-white text-[#040458] hover:bg-white/90 font-semibold px-8 py-4 text-lg rounded-lg transition-all duration-300 shadow-xl"
+                  className="bg-white text-[#040458] hover:bg-white/90 font-semibold px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg rounded-lg transition-all duration-300 shadow-xl w-full sm:w-auto"
                 >
                   View Pricing Plans
-                  <ChevronRight className="ml-2 h-6 w-6" />
+                  <ChevronRight className="ml-2 h-4 w-4 sm:h-6 sm:w-6" />
                 </Button>
               </Link>
             </div>
@@ -164,18 +187,18 @@ const FeaturesOverview = () => {
         </div>
 
         <div className="text-center">
-          <div className="inline-flex items-center space-x-4 text-[#040458]">
+          <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 text-[#040458]">
             <div className="flex items-center space-x-2">
-              <Zap className="h-5 w-5 text-[#faa51a]" />
-              <span className="font-semibold">Lightning Fast</span>
+              <Zap className="h-4 w-4 sm:h-5 sm:w-5 text-[#faa51a]" />
+              <span className="text-sm sm:text-base font-semibold">Lightning Fast</span>
             </div>
             <div className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5 text-green-500" />
-              <span className="font-semibold">Proven Results</span>
+              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+              <span className="text-sm sm:text-base font-semibold">Proven Results</span>
             </div>
             <div className="flex items-center space-x-2">
-              <ShieldCheck className="h-5 w-5 text-blue-500" />
-              <span className="font-semibold">Secure & Reliable</span>
+              <ShieldCheck className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+              <span className="text-sm sm:text-base font-semibold">Secure & Reliable</span>
             </div>
           </div>
         </div>

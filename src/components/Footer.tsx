@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 const Footer = () => {
   return (
     <footer className="bg-[#040458] text-white">
-      <div className="container mx-auto px-4 py-16">
-        <div className="grid md:grid-cols-4 gap-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
@@ -64,18 +64,18 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-white/20 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-white/60">
+        <div className="border-t border-white/20 mt-8 sm:mt-12 pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+          <p className="text-white/60 text-sm sm:text-base text-center sm:text-left">
             © 2024 Otic Business Solution. All rights reserved.
           </p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <Link to="/privacy" className="text-white/60 hover:text-[#faa51a] transition-colors">
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6 text-center sm:text-left">
+            <Link to="/privacy" className="text-white/60 hover:text-[#faa51a] transition-colors text-sm">
               Privacy Policy
             </Link>
-            <Link to="/terms" className="text-white/60 hover:text-[#faa51a] transition-colors">
+            <Link to="/terms" className="text-white/60 hover:text-[#faa51a] transition-colors text-sm">
               Terms of Service
             </Link>
-            <a href="#cookies" className="text-white/60 hover:text-[#faa51a] transition-colors">
+            <a href="#cookies" className="text-white/60 hover:text-[#faa51a] transition-colors text-sm">
               Cookie Policy
             </a>
           </div>

@@ -22,8 +22,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import posImage from "@/assets/pos-system.jpg";
-import dashboardImage from "@/assets/dashboard-analytics.jpg";
 
 const Features = () => {
   const navigate = useNavigate();
@@ -42,7 +40,7 @@ const Features = () => {
       icon: <Smartphone className="h-12 w-12" />,
       title: "Mobile POS System",
       description: "Transform any smartphone into a powerful point-of-sale terminal with advanced barcode scanning, instant sales processing, and digital receipt generation.",
-      image: posImage,
+      image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
       highlights: [
         "Camera-based barcode scanning",
         "Real-time inventory updates",
@@ -62,7 +60,7 @@ const Features = () => {
       icon: <BarChart3 className="h-12 w-12" />,
       title: "AI-Powered Analytics",
       description: "Leverage artificial intelligence to gain deep insights into your business performance, predict trends, and make data-driven decisions.",
-      image: dashboardImage,
+      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
       highlights: [
         "Sales trend prediction",
         "Customer behavior analysis",
@@ -82,6 +80,7 @@ const Features = () => {
       icon: <Package className="h-12 w-12" />,
       title: "Smart Inventory Management",
       description: "Automate your inventory tracking with intelligent stock management, automated reordering, and demand prediction capabilities.",
+      image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
       highlights: [
         "Real-time stock level tracking",
         "Automated low-stock alerts",
@@ -101,6 +100,7 @@ const Features = () => {
       icon: <CreditCard className="h-12 w-12" />,
       title: "Payment Integration",
       description: "Accept all payment methods including Mobile Money, cards, and digital payments with automated reconciliation and reporting.",
+      image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
       highlights: [
         "Mobile Money integration (MTN, Airtel)",
         "Card payment processing",
@@ -120,6 +120,7 @@ const Features = () => {
       icon: <Users className="h-12 w-12" />,
       title: "Multi-User Management",
       description: "Manage your team with role-based access control, ensuring security while enabling collaboration across your organization.",
+      image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
       highlights: [
         "Role-based permissions",
         "User activity tracking",
@@ -139,6 +140,7 @@ const Features = () => {
       icon: <Shield className="h-12 w-12" />,
       title: "Automated Compliance",
       description: "Stay compliant with local regulations through automated tax computation, VAT analysis, and regulatory reporting.",
+      image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
       highlights: [
         "Automated tax calculations",
         "VAT analysis and reporting",
@@ -158,6 +160,7 @@ const Features = () => {
       icon: <Globe className="h-12 w-12" />,
       title: "Multi-Branch Support",
       description: "Synchronize operations across multiple locations with centralized management and consolidated reporting.",
+      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
       highlights: [
         "Centralized inventory management",
         "Cross-branch sales tracking",
@@ -173,47 +176,32 @@ const Features = () => {
         "Gain enterprise-wide visibility"
       ]
     },
-    {
-      icon: <FileText className="h-12 w-12" />,
-      title: "QuickBooks Integration",
-      description: "Seamlessly sync with QuickBooks for professional accounting, automated bookkeeping, and comprehensive financial management.",
-      highlights: [
-        "Real-time data synchronization",
-        "Automated journal entries",
-        "Financial report generation",
-        "Tax preparation support",
-        "Audit trail maintenance",
-        "Multi-currency support"
-      ],
-      benefits: [
-        "Eliminate double data entry",
-        "Ensure accounting accuracy",
-        "Streamline tax preparation",
-        "Professional financial reporting"
-      ]
-    }
   ];
 
   const additionalFeatures = [
     {
       icon: <Brain className="h-8 w-8" />,
       title: "AI Business Assistant",
-      description: "Get personalized business advice and insights powered by advanced AI technology."
+      description: "Get personalized business advice and insights powered by advanced AI technology.",
+      image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80"
     },
     {
       icon: <TrendingUp className="h-8 w-8" />,
       title: "Performance Tracking",
-      description: "Monitor key performance indicators and track business growth over time."
+      description: "Monitor key performance indicators and track business growth over time.",
+      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80"
     },
     {
       icon: <Calculator className="h-8 w-8" />,
       title: "Financial Forecasting",
-      description: "Predict future revenue and expenses with AI-powered forecasting models."
+      description: "Predict future revenue and expenses with AI-powered forecasting models.",
+      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80"
     },
     {
       icon: <Clock className="h-8 w-8" />,
       title: "Real-Time Notifications",
-      description: "Get instant alerts for important business events and opportunities."
+      description: "Get instant alerts for important business events and opportunities.",
+      image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80"
     }
   ];
 
@@ -336,16 +324,26 @@ const Features = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {additionalFeatures.map((feature, index) => (
-              <Card key={index} className="p-6 text-center hover:shadow-lg transition-shadow duration-300 border border-gray-200">
-                <div className="p-3 bg-[#faa51a] rounded-xl text-white w-fit mx-auto mb-4">
-                  {feature.icon}
+              <Card key={index} className="p-0 text-center hover:shadow-lg transition-shadow duration-300 border border-gray-200 overflow-hidden group">
+                <div className="relative h-48 overflow-hidden">
+                  <img 
+                    src={feature.image} 
+                    alt={feature.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-300"></div>
+                  <div className="absolute top-4 right-4 p-2 bg-[#faa51a] rounded-lg text-white">
+                    {feature.icon}
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold text-[#040458] mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {feature.description}
-                </p>
+                <div className="p-6">
+                  <h3 className="text-lg font-semibold text-[#040458] mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600 text-sm">
+                    {feature.description}
+                  </p>
+                </div>
               </Card>
             ))}
           </div>

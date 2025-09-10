@@ -1,0 +1,573 @@
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  Search, 
+  ChevronDown, 
+  ChevronUp, 
+  ArrowLeft, 
+  Home, 
+  HelpCircle,
+  Crown,
+  ExternalLink,
+  Clock,
+  ThumbsUp,
+  ThumbsDown
+} from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'sonner';
+
+interface FAQCategory {
+  id: string;
+  name: string;
+  description: string;
+  sort_order: number;
+}
+
+interface FAQQuestion {
+  id: string;
+  category_id: string;
+  question: string;
+  answer: string;
+  tier_required: string | null;
+  feature_name: string | null;
+  page_location: string | null;
+  usage_instructions: string | null;
+  keywords: string[];
+  is_active: boolean;
+  view_count: number;
+  helpful_count: number;
+  not_helpful_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+const FAQ = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState<FAQCategory[]>([]);
+  const [questions, setQuestions] = useState<FAQQuestion[]>([]);
+  const [filteredQuestions, setFilteredQuestions] = useState<FAQQuestion[]>([]);
+  const [expandedQuestions, setExpandedQuestions] = useState<Set<string>>(new Set());
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  // Load FAQ data
+  useEffect(() => {
+    loadFAQData();
+  }, []);
+
+  // Filter questions based on search and category
+  useEffect(() => {
+    filterQuestions();
+  }, [searchQuery, selectedCategory, questions]);
+
+  const loadFAQData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load categories
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('faq_categories')
+        .select('*')
+        .order('sort_order');
+
+      if (categoriesError) {
+        console.error('Error loading categories:', categoriesError);
+        // Use fallback categories
+        setCategories(getFallbackCategories());
+      } else {
+        setCategories(categoriesData || []);
+      }
+
+      // Load questions
+      const { data: questionsData, error: questionsError } = await supabase
+        .from('faq_questions')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (questionsError) {
+        console.error('Error loading questions:', questionsError);
+        // Use fallback questions
+        setQuestions(getFallbackQuestions());
+      } else {
+        setQuestions(questionsData || []);
+      }
+    } catch (error) {
+      console.error('Error loading FAQ data:', error);
+      // Use fallback data instead of showing error
+      setCategories(getFallbackCategories());
+      setQuestions(getFallbackQuestions());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fallback data in case database is not accessible
+  const getFallbackCategories = (): FAQCategory[] => [
+    { id: '1', name: 'Getting Started', description: 'Basic setup questions', sort_order: 1 },
+    { id: '2', name: 'POS System', description: 'Point of Sale questions', sort_order: 2 },
+    { id: '3', name: 'Inventory Management', description: 'Inventory questions', sort_order: 3 },
+    { id: '4', name: 'Analytics & Reports', description: 'Analytics questions', sort_order: 4 },
+    { id: '5', name: 'User Management', description: 'User account questions', sort_order: 5 },
+    { id: '6', name: 'Billing & Subscriptions', description: 'Billing questions', sort_order: 6 }
+  ];
+
+  const getFallbackQuestions = (): FAQQuestion[] => [
+    {
+      id: '1',
+      category_id: '1',
+      question: 'How do I create my account?',
+      answer: 'To create your account, click "Get Started" on the homepage, select "Business Account", fill in your details, and verify your email. You can start with a 14-day free trial.',
+      tier_required: 'free_trial',
+      feature_name: 'Account Creation',
+      page_location: '/user-type',
+      usage_instructions: '1. Go to homepage 2. Click "Get Started" 3. Select "Business Account" 4. Fill in details 5. Verify email',
+      keywords: ['account', 'signup', 'register', 'create', 'getting started'],
+      is_active: true,
+      view_count: 0,
+      helpful_count: 0,
+      not_helpful_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    {
+      id: '2',
+      category_id: '1',
+      question: 'What is included in the free trial?',
+      answer: 'The free trial includes full access to all features: POS system, inventory management, AI analytics, multi-user access (up to 3 users), all payment methods, and priority support.',
+      tier_required: 'free_trial',
+      feature_name: 'Free Trial',
+      page_location: '/pricing',
+      usage_instructions: 'All features are available during the 14-day free trial period with no credit card required.',
+      keywords: ['trial', 'free', 'features', 'included', '14 days'],
+      is_active: true,
+      view_count: 0,
+      helpful_count: 0,
+      not_helpful_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    {
+      id: '3',
+      category_id: '2',
+      question: 'How do I process a sale?',
+      answer: 'To process a sale: 1. Go to the POS page 2. Scan or search for products 3. Add quantities 4. Select payment method 5. Complete the transaction. Receipts are automatically generated.',
+      tier_required: 'free_trial',
+      feature_name: 'POS System',
+      page_location: '/pos',
+      usage_instructions: 'Navigate to POS → Scan/Search products → Add to cart → Select payment → Complete sale',
+      keywords: ['pos', 'sale', 'transaction', 'payment', 'receipt'],
+      is_active: true,
+      view_count: 0,
+      helpful_count: 0,
+      not_helpful_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    {
+      id: '4',
+      category_id: '3',
+      question: 'How do I add new products?',
+      answer: 'To add products: 1. Go to Inventory page 2. Click "Add Product" 3. Fill in product details (name, price, SKU, etc.) 4. Upload product image 5. Save. Products are immediately available in POS.',
+      tier_required: 'free_trial',
+      feature_name: 'Add Products',
+      page_location: '/inventory',
+      usage_instructions: 'Inventory → Add Product → Fill details → Upload image → Save',
+      keywords: ['inventory', 'products', 'add', 'new', 'stock'],
+      is_active: true,
+      view_count: 0,
+      helpful_count: 0,
+      not_helpful_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    },
+    {
+      id: '5',
+      category_id: '4',
+      question: 'Where can I view my sales reports?',
+      answer: 'Sales reports are available in the Reports page. You can view daily, weekly, monthly, and custom period reports. Export options include PDF and Excel formats.',
+      tier_required: 'start_smart',
+      feature_name: 'Sales Reports',
+      page_location: '/reports',
+      usage_instructions: 'Reports → Sales Reports → Select period → View/Export',
+      keywords: ['reports', 'sales', 'analytics', 'export', 'pdf'],
+      is_active: true,
+      view_count: 0,
+      helpful_count: 0,
+      not_helpful_count: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+  ];
+
+  const filterQuestions = () => {
+    let filtered = questions;
+
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(q => q.category_id === selectedCategory);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(q => 
+        q.question.toLowerCase().includes(query) ||
+        q.answer.toLowerCase().includes(query) ||
+        q.keywords.some(keyword => keyword.toLowerCase().includes(query)) ||
+        (q.feature_name && q.feature_name.toLowerCase().includes(query))
+      );
+    }
+
+    setFilteredQuestions(filtered);
+  };
+
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    setSearchLoading(true);
+
+    // Log search query (only if user is authenticated)
+    if (user && query.trim()) {
+      try {
+        await supabase
+          .from('faq_search_logs')
+          .insert({
+            user_id: user.id,
+            search_query: query,
+            results_count: filteredQuestions.length
+          });
+      } catch (error) {
+        console.error('Error logging search:', error);
+        // Don't show error to user, just log it
+      }
+    }
+
+    setSearchLoading(false);
+  };
+
+  const toggleQuestion = (questionId: string) => {
+    const newExpanded = new Set(expandedQuestions);
+    if (newExpanded.has(questionId)) {
+      newExpanded.delete(questionId);
+    } else {
+      newExpanded.add(questionId);
+      // Increment view count
+      incrementViewCount(questionId);
+    }
+    setExpandedQuestions(newExpanded);
+  };
+
+  const incrementViewCount = async (questionId: string) => {
+    try {
+      const question = questions.find(q => q.id === questionId);
+      if (question) {
+        await supabase
+          .from('faq_questions')
+          .update({ view_count: question.view_count + 1 })
+          .eq('id', questionId);
+      }
+    } catch (error) {
+      console.error('Error incrementing view count:', error);
+      // Don't show error to user, just log it
+    }
+  };
+
+  const handleHelpful = async (questionId: string, isHelpful: boolean) => {
+    try {
+      const question = questions.find(q => q.id === questionId);
+      if (!question) return;
+
+      const updateData = isHelpful 
+        ? { helpful_count: question.helpful_count + 1 }
+        : { not_helpful_count: question.not_helpful_count + 1 };
+
+      await supabase
+        .from('faq_questions')
+        .update(updateData)
+        .eq('id', questionId);
+
+      // Update local state
+      setQuestions(prev => prev.map(q => 
+        q.id === questionId 
+          ? { ...q, ...updateData }
+          : q
+      ));
+    } catch (error) {
+      console.error('Error updating helpful count:', error);
+      // Don't show error to user, just log it
+    }
+  };
+
+  const getTierColor = (tier: string | null) => {
+    if (!tier) return 'bg-gray-100 text-gray-800';
+    switch (tier) {
+      case 'free_trial': return 'bg-blue-100 text-blue-800';
+      case 'start_smart': return 'bg-green-100 text-green-800';
+      case 'grow_intelligence': return 'bg-purple-100 text-purple-800';
+      case 'enterprise_advantage': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getTierDisplayName = (tier: string | null) => {
+    if (!tier) return 'All Tiers';
+    switch (tier) {
+      case 'free_trial': return 'Free Trial';
+      case 'start_smart': return 'Start Smart';
+      case 'grow_intelligence': return 'Grow with Intelligence';
+      case 'enterprise_advantage': return 'Enterprise Advantage';
+      default: return tier;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#040458]"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Desktop Header */}
+          <div className="hidden md:flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              {/* Logo */}
+              <div className="flex items-center space-x-3">
+                <img 
+                  src="/Otic icon@2x.png" 
+                  alt="Otic Business Logo" 
+                  className="h-10 w-10"
+                />
+                <div className="flex flex-col">
+                  <span className="text-xl font-bold text-[#040458]">Otic</span>
+                  <span className="text-sm text-[#faa51a] -mt-1">Business</span>
+                </div>
+              </div>
+              
+              {/* Navigation Buttons */}
+              <div className="flex items-center space-x-2 ml-6">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate(-1)}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-[#040458] hover:border-[#040458]"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Back</span>
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/')}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-[#040458] hover:border-[#040458]"
+                >
+                  <Home className="h-4 w-4" />
+                  <span>Home</span>
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Header */}
+          <div className="md:hidden space-y-4">
+            <div className="flex items-center justify-between">
+              {/* Logo */}
+              <div className="flex items-center space-x-3">
+                <img 
+                  src="/Otic icon@2x.png" 
+                  alt="Otic Business Logo" 
+                  className="h-8 w-8"
+                />
+                <div className="flex flex-col">
+                  <span className="text-lg font-bold text-[#040458]">Otic</span>
+                  <span className="text-xs text-[#faa51a] -mt-1">Business</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Navigation Buttons */}
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate(-1)}
+                className="flex items-center space-x-2 text-gray-600 hover:text-[#040458] hover:border-[#040458] flex-1"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/')}
+                className="flex items-center space-x-2 text-gray-600 hover:text-[#040458] hover:border-[#040458] flex-1"
+              >
+                <Home className="h-4 w-4" />
+                <span>Home</span>
+              </Button>
+            </div>
+          </div>
+          
+          {/* Page Title */}
+          <div className="mt-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#040458] flex items-center">
+              <HelpCircle className="h-8 w-8 mr-3 text-[#faa51a]" />
+              Frequently Asked Questions
+            </h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">
+              Find answers to common questions about Otic Business features and functionality
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Search Bar */}
+        <div className="mb-8">
+          <div className="relative max-w-2xl mx-auto">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search FAQs... (e.g., 'how to add products', 'POS system', 'inventory')"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10 pr-4 py-3 text-base border-2 border-gray-200 focus:border-[#040458] rounded-lg"
+            />
+            {searchLoading && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#040458]"></div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Categories and Questions */}
+        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 mb-6">
+            <TabsTrigger value="all">All</TabsTrigger>
+            {categories.map((category) => (
+              <TabsTrigger key={category.id} value={category.id} className="text-xs sm:text-sm">
+                {category.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <TabsContent value={selectedCategory} className="space-y-4">
+            {filteredQuestions.length === 0 ? (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <HelpCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No questions found</h3>
+                  <p className="text-gray-600">
+                    {searchQuery ? 'Try a different search term' : 'No questions available for this category'}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : (
+              filteredQuestions.map((question) => (
+                <Card key={question.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader 
+                    className="cursor-pointer"
+                    onClick={() => toggleQuestion(question.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-base sm:text-lg text-[#040458] hover:text-[#faa51a] transition-colors">
+                          {question.question}
+                        </CardTitle>
+                        <div className="flex items-center space-x-2 mt-2">
+                          {question.tier_required && (
+                            <Badge className={`${getTierColor(question.tier_required)} text-xs`}>
+                              <Crown className="h-3 w-3 mr-1" />
+                              {getTierDisplayName(question.tier_required)}
+                            </Badge>
+                          )}
+                          {question.feature_name && (
+                            <Badge variant="outline" className="text-xs">
+                              {question.feature_name}
+                            </Badge>
+                          )}
+                          <span className="text-xs text-gray-500">
+                            {question.view_count} views
+                          </span>
+                        </div>
+                      </div>
+                      {expandedQuestions.has(question.id) ? (
+                        <ChevronUp className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-400" />
+                      )}
+                    </div>
+                  </CardHeader>
+                  
+                  {expandedQuestions.has(question.id) && (
+                    <CardContent className="pt-0">
+                      <div className="space-y-4">
+                        <div className="prose prose-sm max-w-none">
+                          <p className="text-gray-700 leading-relaxed">{question.answer}</p>
+                        </div>
+                        
+                        {question.usage_instructions && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 className="font-semibold text-blue-900 mb-2">How to use:</h4>
+                            <p className="text-blue-800 text-sm">{question.usage_instructions}</p>
+                          </div>
+                        )}
+                        
+                        {question.page_location && (
+                          <div className="flex items-center space-x-2 text-sm text-gray-600">
+                            <ExternalLink className="h-4 w-4" />
+                            <span>Find this feature at: {question.page_location}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                          <div className="flex items-center space-x-4">
+                            <button
+                              onClick={() => handleHelpful(question.id, true)}
+                              className="flex items-center space-x-1 text-sm text-gray-600 hover:text-green-600 transition-colors"
+                            >
+                              <ThumbsUp className="h-4 w-4" />
+                              <span>Helpful ({question.helpful_count})</span>
+                            </button>
+                            <button
+                              onClick={() => handleHelpful(question.id, false)}
+                              className="flex items-center space-x-1 text-sm text-gray-600 hover:text-red-600 transition-colors"
+                            >
+                              <ThumbsDown className="h-4 w-4" />
+                              <span>Not helpful ({question.not_helpful_count})</span>
+                            </button>
+                          </div>
+                          <div className="flex items-center space-x-1 text-xs text-gray-500">
+                            <Clock className="h-3 w-3" />
+                            <span>Updated {new Date(question.updated_at).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              ))
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+};
+
+export default FAQ;

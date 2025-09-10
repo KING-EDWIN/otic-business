@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import posImage from "@/assets/pos-system.jpg";
 import dashboardImage from "@/assets/dashboard-analytics.jpg";
+import barcodeScannerImage from "@/assets/barcode-scanner.jpg";
+import multiBranchImage from "@/assets/multi-branch-business.jpg";
 
 const FeaturesSection = () => {
   const features = [
@@ -19,7 +21,7 @@ const FeaturesSection = () => {
       title: "Mobile POS System",
       description: "Scan barcodes with your phone camera, process sales instantly, and generate digital receipts.",
       color: "text-[#faa51a]",
-      image: posImage,
+      image: barcodeScannerImage,
     },
     {
       icon: <BarChart3 className="h-8 w-8" />,
@@ -54,7 +56,7 @@ const FeaturesSection = () => {
       title: "Multi-Branch Support",
       description: "Synchronize operations across multiple locations with consolidated reporting.",
       color: "text-[#faa51a]",
-      image: "https://images.unsplash.com/photo-1529101091764-c3526daf38fe?w=1200&q=60&auto=format&fit=crop", // map pins / locations
+      image: multiBranchImage,
     },
     {
       icon: <CreditCard className="h-8 w-8" />,
@@ -65,8 +67,8 @@ const FeaturesSection = () => {
     },
     {
       icon: <FileText className="h-8 w-8" />,
-      title: "QuickBooks Integration",
-      description: "Seamlessly sync with QuickBooks for professional accounting and reporting.",
+      title: "Advanced Reporting",
+      description: "Generate comprehensive financial reports and analytics for better business insights.",
       color: "text-[#faa51a]",
       image: "https://images.unsplash.com/photo-1554224155-1696413565d3?w=1200&q=60&auto=format&fit=crop", // accounting
     }
@@ -149,8 +151,8 @@ const FeaturesSection = () => {
             </div>
             <div className="relative">
               <img 
-                src={posImage} 
-                alt="Modern POS system interface"
+                src={barcodeScannerImage} 
+                alt="Barcode scanner for POS system"
                 className="w-full rounded-lg shadow-business"
               />
             </div>

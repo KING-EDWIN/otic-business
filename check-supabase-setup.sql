@@ -49,3 +49,4 @@ SELECT COUNT(*) as profile_count FROM user_profiles;
 
 -- Test auth.uid() function
 SELECT auth.uid() as current_user_id;
+

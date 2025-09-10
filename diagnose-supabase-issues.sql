@@ -63,3 +63,4 @@ SELECT COUNT(*) as profile_count FROM user_profiles;
 
 -- Test a simple query to see if we can access data
 SELECT COUNT(*) as sales_count FROM sales LIMIT 1;
+

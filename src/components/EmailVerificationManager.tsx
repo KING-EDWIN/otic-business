@@ -158,15 +158,15 @@ export const EmailVerificationManager: React.FC<EmailVerificationManagerProps> =
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-6 border-b">
+      <div className="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b flex-shrink-0">
           <h2 className="text-2xl font-bold text-[#040458]">Email Verification Management</h2>
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           {/* Search and Filter Bar */}
           <div className="mb-6 space-y-4">
             <div className="flex items-center space-x-4">

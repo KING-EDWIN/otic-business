@@ -77,7 +77,6 @@ const Pricing = () => {
       popular: true,
       features: [
         "Everything in Start Smart",
-        "QuickBooks API integration",
         "Tax computation & VAT analysis",
         "AI sales trend analytics",
         "Multi-user access (up to 5 users)",
@@ -226,26 +225,26 @@ const Pricing = () => {
       <Navbar />
       
       {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-br from-[#040458] via-purple-600 to-[#faa51a] text-white">
-        <div className="container mx-auto px-4">
+      <section className="pt-16 sm:pt-20 lg:pt-24 pb-12 sm:pb-16 bg-gradient-to-br from-[#040458] via-purple-600 to-[#faa51a] text-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-4xl mx-auto">
-            <h1 className="text-5xl lg:text-6xl font-bold mb-6">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 px-4">
               Simple, Transparent Pricing
             </h1>
-            <p className="text-xl lg:text-2xl mb-8 opacity-90">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-6 sm:mb-8 opacity-90 px-4">
               Choose the perfect plan for your business. Start free, scale as you grow.
             </p>
-            <div className="flex items-center justify-center space-x-8 text-sm">
+            <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-4 lg:space-x-8 text-xs sm:text-sm px-4">
               <div className="flex items-center space-x-2">
-                <CheckCircle className="h-4 w-4" />
+                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>No setup fees</span>
               </div>
               <div className="flex items-center space-x-2">
-                <CheckCircle className="h-4 w-4" />
+                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>Cancel anytime</span>
               </div>
               <div className="flex items-center space-x-2">
-                <CheckCircle className="h-4 w-4" />
+                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
                 <span>14-day free trial</span>
               </div>
             </div>
@@ -254,9 +253,9 @@ const Pricing = () => {
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
+      <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto">
             {tiers.map((tier, index) => (
               <Card 
                 key={tier.name} 

@@ -69,3 +69,4 @@ JOIN pg_namespace nsp ON nsp.oid = rel.relnamespace
 WHERE nsp.nspname = 'public'
   AND rel.relname = 'individual_profiles'
 ORDER BY pol.polname;
+

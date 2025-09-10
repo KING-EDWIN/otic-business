@@ -71,3 +71,4 @@ JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
 JOIN pg_type t ON t.oid = a.atttypid
 WHERE i.indrelid = 'public.user_profiles'::regclass
   AND i.indisprimary = true;
+

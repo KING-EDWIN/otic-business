@@ -22,3 +22,4 @@ WHERE schemaname = 'public'
 ORDER BY tablename;
 
 -- To re-enable RLS later, run the fix-rls-policies-comprehensive.sql script
+

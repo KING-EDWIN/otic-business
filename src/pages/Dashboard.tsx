@@ -221,9 +221,10 @@ const Dashboard = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
+                onClick={() => navigate('/my-extras')}
                 className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
               >
-                Overview
+                My Extras
               </Button>
                 <Button 
                   variant="ghost" 

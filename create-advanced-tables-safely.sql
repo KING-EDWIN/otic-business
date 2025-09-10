@@ -201,3 +201,4 @@ FROM information_schema.tables
 WHERE table_schema = 'public' 
   AND table_name IN ('individual_profiles', 'business_invitations', 'professional_services', 'business_relationships')
 ORDER BY table_name;
+

@@ -61,71 +61,12 @@ const IndividualSignIn = () => {
       console.log('IndividualSignIn: Auth successful, user:', data.user?.id)
 
       if (data.user) {
-        // First check user_profiles to validate account type
-        console.log('IndividualSignIn: Checking user_profiles for user:', data.user.id)
-        const { data: userProfile, error: userProfileError } = await supabase
-          .from('user_profiles')
-          .select('user_type')
-          .eq('id', data.user.id)
-          .single()
-
-        console.log('IndividualSignIn: userProfile result:', userProfile, 'error:', userProfileError)
-
-        if (userProfileError && userProfileError.code !== 'PGRST116') {
-          console.error('IndividualSignIn: userProfile error:', userProfileError)
-          throw userProfileError
-        }
-
-        if (userProfile && userProfile.user_type === 'business') {
-          // This is a business account, show error
-          console.log('IndividualSignIn: Business account detected, showing error')
-          setError('This account is a business account. Please use the business sign-in instead.')
-          toast.error('This account is a business account. Please use the business sign-in instead.')
-          // Sign out the user since they used the wrong form
-          await supabase.auth.signOut()
-          return
-        }
-
-        // Check if user has individual profile (handle 406 error gracefully)
-        console.log('IndividualSignIn: Checking individual_profiles for user:', data.user.id)
-        let individualProfile = null
-        let profileError = null
+        // Individual sign-in: go directly to individual dashboard
+        console.log('IndividualSignIn: Auth successful, redirecting to individual dashboard')
+        toast.success('Welcome back, professional!')
         
-        try {
-          const { data: profileData, error: profileErr } = await supabase
-            .from('individual_profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single()
-          
-          individualProfile = profileData
-          profileError = profileErr
-        } catch (err) {
-          console.log('IndividualSignIn: individual_profiles table error (406 or similar):', err)
-          // Continue without individual profile - this is expected if table doesn't exist
-          profileError = { code: 'PGRST116' } // Treat as "not found"
-        }
-
-        console.log('IndividualSignIn: individualProfile result:', individualProfile, 'error:', profileError)
-
-        // If user is not a business account, treat them as individual
-        if (!userProfile || userProfile.user_type !== 'business') {
-          // User is an individual (or no specific type), redirect to individual dashboard
-          console.log('IndividualSignIn: Treating as individual user, redirecting to individual dashboard')
-          toast.success('Welcome back, professional!')
-          console.log('IndividualSignIn: Forcing navigation to /individual-dashboard');
-          
-          // Use window.location.href for immediate redirect to prevent auth context interference
-          window.location.href = '/individual-dashboard'
-        } else {
-          // User is a business account, show error
-          console.log('IndividualSignIn: Business account detected, showing error')
-          setError('This account is a business account. Please use the business sign-in instead.')
-          toast.error('This account is a business account. Please use the business sign-in instead.')
-          // Sign out the user since they used the wrong form
-          await supabase.auth.signOut()
-          return
-        }
+        // Immediate redirect to individual dashboard
+        window.location.href = '/individual-dashboard'
       }
     } catch (error: any) {
       console.error('IndividualSignIn: Sign in error:', error)

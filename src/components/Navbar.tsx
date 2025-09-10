@@ -48,6 +48,9 @@ const Navbar = () => {
             <Link to="/pricing" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
               Pricing
             </Link>
+            <Link to="/faq" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
+              FAQ
+            </Link>
             <Link to="/about" className="text-[#040458] hover:text-[#faa51a] transition-colors font-medium">
               About
             </Link>
@@ -128,6 +131,9 @@ const Navbar = () => {
               </Link>
               <Link to="/pricing" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
                 Pricing
+              </Link>
+              <Link to="/faq" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
+                FAQ
               </Link>
               <Link to="/about" className="text-[#040458] hover:text-[#faa51a] px-4 py-2 transition-colors font-medium">
                 About

@@ -193,7 +193,7 @@ const About = () => {
                 <p className="text-sm text-gray-600 mb-4">Ideal for growing SMEs</p>
                 <ul className="text-xs text-gray-600 space-y-1">
                   <li>• Everything in Start Smart</li>
-                  <li>• QuickBooks integration</li>
+                  <li>• Advanced financial reporting</li>
                   <li>• AI analytics</li>
                   <li>• Multi-user (up to 5)</li>
                 </ul>

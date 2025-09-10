@@ -213,29 +213,35 @@ Could you be more specific? I can help with sales analysis, inventory management
   }
 
   return (
-    <Card className="h-[400px] flex flex-col border-[#faa51a]/20">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center text-[#040458]">
-          <Bot className="h-5 w-5 mr-2 text-[#faa51a]" />
+    <Card className="h-[600px] flex flex-col border-2 border-[#faa51a] bg-gradient-to-br from-white to-[#faa51a]/5 shadow-xl">
+      <CardHeader className="pb-4 bg-gradient-to-r from-[#040458] to-[#faa51a] text-white rounded-t-lg">
+        <CardTitle className="flex items-center text-white text-xl">
+          <Bot className="h-6 w-6 mr-3 text-[#faa51a] bg-white rounded-full p-1" />
           AI Business Assistant
-          <Badge className="ml-2 bg-[#faa51a] text-white">
+          <Badge className="ml-3 bg-white text-[#040458] border-0 text-sm font-semibold">
             Live AI
           </Badge>
         </CardTitle>
+        <p className="text-sm text-white/90 mt-2">
+          Ask me anything about your business performance, get insights, and receive AI-powered recommendations
+        </p>
       </CardHeader>
       
       <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
         {/* Quick Questions */}
-        <div className="p-4 border-b border-gray-200">
-          <p className="text-sm text-gray-600 mb-2">Quick questions:</p>
-          <div className="flex flex-wrap gap-2">
+        <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-[#faa51a]/5 to-[#040458]/5">
+          <p className="text-sm font-semibold text-[#040458] mb-3 flex items-center">
+            <Brain className="h-4 w-4 mr-2" />
+            Quick questions to get started:
+          </p>
+          <div className="flex flex-wrap gap-3">
             {quickQuestions.map((question, index) => (
               <Button
                 key={index}
                 variant="outline"
                 size="sm"
                 onClick={() => handleQuickQuestion(question)}
-                className="text-xs text-[#040458] border-[#faa51a] hover:bg-[#faa51a] hover:text-white"
+                className="text-sm text-[#040458] border-2 border-[#faa51a] hover:bg-[#faa51a] hover:text-white hover:border-[#faa51a] transition-all duration-200 font-medium"
               >
                 {question}
               </Button>
@@ -244,18 +250,18 @@ Could you be more specific? I can help with sales analysis, inventory management
         </div>
 
         {/* Messages - Fixed height with scroll */}
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4">
+        <ScrollArea className="flex-1 p-6">
+          <div className="space-y-6">
             {messages.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
+                  className={`max-w-[85%] rounded-xl p-4 shadow-lg ${
                     message.type === 'user'
                       ? 'bg-[#faa51a] text-white'
-                      : 'bg-gray-100 text-gray-800'
+                      : 'bg-[#040458] text-white'
                   }`}
                 >
                   <div className="flex items-start space-x-2">
@@ -265,8 +271,8 @@ Could you be more specific? I can help with sales analysis, inventory management
                       <User className="h-4 w-4 mt-1" />
                     )}
                     <div className="flex-1">
-                      <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
-                      <p className="text-xs opacity-70 mt-1">
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{message.content}</p>
+                      <p className="text-xs opacity-70 mt-2">
                         {message.timestamp.toLocaleTimeString()}
                       </p>
                     </div>
@@ -276,11 +282,11 @@ Could you be more specific? I can help with sales analysis, inventory management
             ))}
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-100 rounded-lg p-3">
+                <div className="bg-[#040458] text-white rounded-lg p-3 shadow-md">
                   <div className="flex items-center space-x-2">
                     <Bot className="h-4 w-4 text-[#faa51a]" />
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm text-gray-600">AI is thinking...</span>
+                    <Loader2 className="h-4 w-4 animate-spin text-[#faa51a]" />
+                    <span className="text-sm">AI is thinking...</span>
                   </div>
                 </div>
               </div>
@@ -290,24 +296,39 @@ Could you be more specific? I can help with sales analysis, inventory management
         </ScrollArea>
 
         {/* Input */}
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex space-x-2">
-            <Input
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask me anything about your business..."
-              className="flex-1"
-              disabled={isLoading}
-            />
+        <div className="p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-[#faa51a]/5">
+          <div className="flex space-x-3">
+            <div className="flex-1 relative">
+              <Input
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask me anything about your business performance, sales trends, inventory management, or get AI recommendations..."
+                disabled={isLoading}
+                className="h-12 text-base border-2 border-[#040458] focus:border-[#faa51a] focus:ring-2 focus:ring-[#faa51a]/20 rounded-lg pr-12"
+              />
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <MessageSquare className="h-5 w-5 text-[#040458]/50" />
+              </div>
+            </div>
             <Button
               onClick={handleSendMessage}
               disabled={!inputMessage.trim() || isLoading}
-              className="bg-[#faa51a] hover:bg-[#040458] text-white"
+              className="h-12 px-6 bg-[#040458] hover:bg-[#040458]/90 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
             >
-              <Send className="h-4 w-4" />
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <Send className="h-5 w-5 mr-2" />
+                  Send
+                </>
+              )}
             </Button>
           </div>
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            💡 Try asking: "How are my sales performing?" or "What should I restock?"
+          </p>
         </div>
       </CardContent>
     </Card>

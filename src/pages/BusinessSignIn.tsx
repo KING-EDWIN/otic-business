@@ -5,23 +5,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Building2, ArrowRight } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContextHybrid';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 
 const BusinessSignIn = () => {
   const navigate = useNavigate();
-  const { signIn, loading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
     
     try {
-      const { error: signInError } = await signIn(email, password, 'business'); // Pass user_type
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
       if (signInError) {
         setError(signInError.message || 'Failed to sign in. Please check your credentials.');
@@ -29,36 +32,20 @@ const BusinessSignIn = () => {
         return;
       }
 
-      // Wait a moment for the profile to load, then validate account type and route
-      setTimeout(async () => {
-        try {
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('user_type')
-            .eq('email', email)
-            .single();
-
-          if (profile && profile.user_type !== 'business') {
-            setError('This account is not a business account. Please use the individual sign-in instead.');
-            toast.error('This account is not a business account. Please use the individual sign-in instead.');
-            // Sign out the user since they used the wrong form
-            await supabase.auth.signOut();
-            return;
-          }
-
-          // Force navigation to business dashboard
-          console.log('BusinessSignIn: Forcing navigation to /dashboard');
-          console.log('BusinessSignIn: profile:', profile);
-          // Use window.location.href for immediate redirect to prevent auth context interference
-          window.location.href = '/dashboard';
-        } catch (error) {
-          console.error('Error validating account type:', error);
-        }
-      }, 1000);
+      if (data.user) {
+        // Business sign-in: go directly to business dashboard
+        console.log('BusinessSignIn: Auth successful, redirecting to business dashboard')
+        toast.success('Welcome back to your business dashboard!')
+        
+        // Immediate redirect to business dashboard
+        window.location.href = '/dashboard'
+      }
       
-    } catch (error) {
+    } catch (error: any) {
       setError('An unexpected error occurred. Please try again.');
       toast.error('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 

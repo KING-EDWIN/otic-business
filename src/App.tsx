@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContextHybrid";
+import { BusinessProvider } from "@/contexts/BusinessContext";
 import Index from "./pages/Index";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
@@ -16,7 +17,7 @@ import AIChat from "./pages/AIChat";
 import Dashboard from "./pages/Dashboard";
 import MainDashboard from "./pages/MainDashboard";
 import POS from "./pages/POS";
-import Inventory from "./pages/Inventory";
+import Inventory from "./pages/ComprehensiveInventory";
 import Analytics from "./pages/Analytics";
 import Accounting from "./pages/AccountingNew";
 import QuickBooksCallback from "./pages/QuickBooksCallback";
@@ -36,6 +37,8 @@ import Privacy from "./pages/Privacy";
 import UserTypeSelection from "./pages/UserTypeSelection";
 import BusinessSignup from "./pages/BusinessSignup";
 import IndividualSignup from "./pages/IndividualSignup";
+import MyExtras from "./pages/MyExtras";
+import FAQ from "./pages/FAQ";
 import TrialConfirmation from "./pages/TrialConfirmation";
 import TierSelection from "./pages/TierSelection";
 import TierGuide from "./pages/TierGuide";
@@ -66,8 +69,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
   // Not logged in → go to sign in
   if (!user) {
-    console.log('ProtectedRoute: No user, redirecting to /signin');
-    return <Navigate to="/signin" />;
+    console.log('ProtectedRoute: No user, redirecting to /login-type');
+    return <Navigate to="/login-type" />;
   }
 
   // Logged in but not yet admin-verified → block with friendly screen
@@ -84,7 +87,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
           </p>
           <p className="text-sm text-gray-500">If you believe this is a mistake, please contact your administrator.</p>
           <a
-            href="/signin"
+            href="/login-type"
             className="inline-flex items-center justify-center w-full rounded-lg bg-[#faa51a] text-white font-semibold py-2 hover:bg-[#040458] transition-colors"
           >
             Return to Sign In
@@ -131,10 +134,12 @@ const App = () => {
           }}
         >
           <AuthProvider>
-            <Routes>
+            <BusinessProvider>
+              <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/features" element={<Features />} />
                 <Route path="/pricing" element={<Pricing />} />
+                <Route path="/faq" element={<FAQ />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/terms" element={<Terms />} />
@@ -150,7 +155,6 @@ const App = () => {
                 <Route path="/login-type" element={<LoginTypeSelection />} />
                 <Route path="/business-signin" element={<PublicRoute><BusinessSignIn /></PublicRoute>} />
                 <Route path="/individual-signin" element={<PublicRoute><IndividualSignIn /></PublicRoute>} />
-                <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
                 <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
                 <Route path="/get-started" element={<GetStarted />} />
                 <Route path="/complete-profile" element={<CompleteProfile />} />
@@ -158,6 +162,7 @@ const App = () => {
                 <Route path="/ai-insights" element={<AIInsightsPage />} />
                 <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+                <Route path="/my-extras" element={<ProtectedRoute><MyExtras /></ProtectedRoute>} />
                 <Route path="/simple-dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
                 <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
@@ -175,6 +180,7 @@ const App = () => {
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+            </BusinessProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

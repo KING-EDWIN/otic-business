@@ -59,7 +59,7 @@ const IndexMinimal = () => {
             
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
               <h3 className="text-xl font-semibold mb-3">Accounting Integration</h3>
-              <p className="text-white/80">Seamless integration with QuickBooks and other accounting software.</p>
+              <p className="text-white/80">Seamless integration with accounting software and financial systems.</p>
             </div>
           </div>
         </div>

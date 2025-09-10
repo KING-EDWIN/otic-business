@@ -311,13 +311,13 @@ const Inventory = () => {
     return products.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
                            product.barcode?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-      
-      if (filterStatus === 'low_stock') {
-        return matchesSearch && product.stock <= product.min_stock
-      }
-      
-      return matchesSearch
-    })
+    
+    if (filterStatus === 'low_stock') {
+      return matchesSearch && product.stock <= product.min_stock
+    }
+    
+    return matchesSearch
+  })
   }, [products, debouncedSearchTerm, filterStatus])
 
   // Memoized pagination logic
@@ -481,7 +481,7 @@ const Inventory = () => {
                 {isSearching ? (
                   <RefreshCw className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 animate-spin" />
                 ) : (
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 )}
                 <Input
                   placeholder="Search by name or barcode..."
@@ -592,7 +592,7 @@ const Inventory = () => {
             </Card>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {paginatedProducts.map((product) => {
                 const stockStatus = getStockStatus(product.stock, product.min_stock)
                 const StatusIcon = stockStatus.icon
@@ -748,7 +748,7 @@ const Inventory = () => {
                       Next
                     </Button>
                   </div>
-                </div>
+            </div>
               )}
             </>
           )}

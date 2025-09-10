@@ -46,3 +46,4 @@ supabase
       console.log('products data:', data)
     }
   })
+

@@ -109,7 +109,6 @@ INSERT INTO features (name, description, category) VALUES
 ('compliance_reporting', 'Advanced compliance reporting', 'analytics'),
 
 -- Integration Features
-('quickbooks_integration', 'QuickBooks API integration', 'integration'),
 ('third_party_apis', 'Third-party API integrations', 'integration'),
 ('multi_branch_sync', 'Multi-branch synchronization', 'integration'),
 
@@ -121,7 +120,8 @@ INSERT INTO features (name, description, category) VALUES
 
 -- System Features
 ('audit_logs', 'Audit logs and advanced permissions', 'system'),
-('unlimited_users', 'Unlimited user access', 'system')
+('unlimited_users', 'Unlimited user access', 'system'),
+('multi_business_management', 'Create and manage multiple businesses', 'system')
 ON CONFLICT (name) DO NOTHING;
 
 -- Insert tiers (only if they don't exist)
@@ -135,11 +135,11 @@ INSERT INTO tiers (name, display_name, tier_type, price_usd, price_ugx, trial_da
  1, 2),
 
 ('grow_intelligence', 'Grow with Intelligence', 'grow_intelligence', 852.45, 852.45, 0, 'Ideal for growing SMEs ready for advanced automation',
- ARRAY['pos_system', 'inventory_management', 'sales_reporting', 'receipt_generation', 'csv_pdf_exports', 'quickbooks_integration', 'tax_computation', 'ai_sales_trends', 'multi_user_access', 'role_based_permissions', 'financial_reports', 'priority_support'],
+ ARRAY['pos_system', 'inventory_management', 'sales_reporting', 'receipt_generation', 'csv_pdf_exports', 'tax_computation', 'ai_sales_trends', 'multi_user_access', 'role_based_permissions', 'financial_reports', 'priority_support'],
  5, 3),
 
-('enterprise_advantage', 'Enterprise Advantage', 'enterprise_advantage', 1420.00, 1420.00, 0, 'Enterprise solution for multi-branch operations',
- ARRAY['pos_system', 'inventory_management', 'sales_reporting', 'receipt_generation', 'csv_pdf_exports', 'quickbooks_integration', 'tax_computation', 'ai_sales_trends', 'multi_user_access', 'role_based_permissions', 'financial_reports', 'multi_branch_sync', 'ai_forecasting', 'compliance_reporting', 'unlimited_users', 'third_party_apis', 'audit_logs', 'dedicated_manager', 'phone_support'],
+('enterprise_advantage', 'Enterprise Advantage', 'enterprise_advantage', 1420.00, 1420.00, 0, 'Enterprise solution for multi-branch operations and multi-business management',
+ ARRAY['pos_system', 'inventory_management', 'sales_reporting', 'receipt_generation', 'csv_pdf_exports', 'tax_computation', 'ai_sales_trends', 'multi_user_access', 'role_based_permissions', 'financial_reports', 'multi_branch_sync', 'ai_forecasting', 'compliance_reporting', 'unlimited_users', 'third_party_apis', 'audit_logs', 'multi_business_management', 'dedicated_manager', 'phone_support'],
  -1, 4)
 ON CONFLICT (name) DO NOTHING;
 

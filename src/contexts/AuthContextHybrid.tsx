@@ -129,25 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error loading user profile:', error)
-        
-        // If profile doesn't exist, try to complete missing setup
-        if (error.code === 'PGRST116') {
-          console.log('User profile not found, attempting to complete setup...')
-          const setupResult = await SignupService.completeMissingSetup(userId, { email: user?.email })
-          if (setupResult.success) {
-            // Try to load profile again
-            const { data: newData } = await supabase
-              .from('user_profiles')
-              .select('*')
-              .eq('id', userId)
-              .single()
-            
-            if (newData) {
-              setProfile(newData)
-              return
-            }
-          }
-        }
+        // Don't automatically create profiles - let sign-in forms handle this
         return
       }
 
@@ -356,8 +338,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Fall back to profile user type
     if (!profile) {
-      console.log('No profile, defaulting to /dashboard')
-      return '/dashboard'
+      console.log('No profile, defaulting to /individual-dashboard')
+      return '/individual-dashboard'
     }
     
     const route = profile.user_type === 'individual' ? '/individual-dashboard' : '/dashboard'
