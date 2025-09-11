@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContextHybrid";
 import { BusinessProvider } from "@/contexts/BusinessContext";
+import { BusinessManagementProvider } from "@/contexts/BusinessManagementContext";
 import Index from "./pages/Index";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
@@ -47,6 +48,10 @@ import IndividualSettings from "./pages/IndividualSettings";
 import LoginTypeSelection from "./pages/LoginTypeSelection";
 import BusinessSignIn from "./pages/BusinessSignIn";
 import IndividualSignIn from "./pages/IndividualSignIn";
+import BusinessManagement from "./pages/BusinessManagement";
+import CreateBusiness from "./pages/CreateBusiness";
+import BusinessMembers from "./pages/BusinessMembers";
+import BusinessDashboard from "./pages/BusinessDashboard";
 import NotFound from "./pages/NotFound";
 import OAuthCallback from "./components/OAuthCallback";
 
@@ -135,7 +140,8 @@ const App = () => {
         >
           <AuthProvider>
             <BusinessProvider>
-              <Routes>
+              <BusinessManagementProvider>
+                <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/features" element={<Features />} />
                 <Route path="/pricing" element={<Pricing />} />
@@ -173,6 +179,10 @@ const App = () => {
                 <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/business-management" element={<ProtectedRoute><BusinessManagement /></ProtectedRoute>} />
+                <Route path="/business-management/create" element={<ProtectedRoute><CreateBusiness /></ProtectedRoute>} />
+                <Route path="/business-management/:businessId" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
+                <Route path="/business-management/:businessId/members" element={<ProtectedRoute><BusinessMembers /></ProtectedRoute>} />
                 <Route path="/test-auth" element={<TestAuth />} />
                 <Route path="/simple-test" element={<SimpleTest />} />
                 <Route path="/auth-test" element={<AuthTest />} />
@@ -180,6 +190,7 @@ const App = () => {
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </BusinessManagementProvider>
             </BusinessProvider>
           </AuthProvider>
         </BrowserRouter>

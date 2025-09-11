@@ -43,18 +43,29 @@ export const PaymentVerification: React.FC = () => {
         .from('payment_requests')
         .select(`
           *,
-          user_profiles!inner(email, business_name)
+          user_profiles!inner(
+            email,
+            business_name,
+            phone,
+            tier
+          )
         `)
         .order('created_at', { ascending: false })
 
       if (error) throw error
 
-      const formattedPayments = data?.map(payment => ({
-        ...payment,
-        user_email: payment.user_profiles?.email || 'Unknown',
-        user_name: payment.user_profiles?.business_name || 'Unknown'
-      })) || []
+      console.log('Raw payment data:', data)
+      
+      const formattedPayments = data?.map(payment => {
+        console.log('Processing payment:', payment.id, 'user_profiles:', payment.user_profiles)
+        return {
+          ...payment,
+          user_email: payment.user_profiles?.[0]?.email || 'Unknown',
+          user_name: payment.user_profiles?.[0]?.business_name || 'Unknown'
+        }
+      }) || []
 
+      console.log('Formatted payments:', formattedPayments)
       setPayments(formattedPayments)
     } catch (error) {
       console.error('Error fetching payments:', error)

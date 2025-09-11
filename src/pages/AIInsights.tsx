@@ -81,7 +81,7 @@ const AIInsightsPage = () => {
         
         const salesResult = await Promise.race([
           salesPromise,
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Sales fetch timeout')), 10000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Sales fetch timeout')), 3000))
         ]) as any
 
         if (salesResult.error) {

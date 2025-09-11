@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import bcrypt from 'bcryptjs'
 
 export interface AdminUser {
@@ -104,8 +104,19 @@ export class AdminService {
     }
   }
 
+  // Simple cache to avoid repeated queries
+  private static tierUpgradeCache: { data: TierUpgradeRequest[], timestamp: number } | null = null
+  private static CACHE_DURATION = 30000 // 30 seconds
+
   async getTierUpgradeRequests(): Promise<TierUpgradeRequest[]> {
     try {
+      // Check cache first
+      if (AdminService.tierUpgradeCache && 
+          Date.now() - AdminService.tierUpgradeCache.timestamp < AdminService.CACHE_DURATION) {
+        return AdminService.tierUpgradeCache.data
+      }
+
+      // Optimized query - only get essential fields
       const { data, error } = await supabase
         .from('payment_requests')
         .select(`
@@ -114,53 +125,76 @@ export class AdminService {
           tier,
           amount,
           payment_method,
-          payment_proof_url,
           status,
           created_at,
-          verified_at,
-          verified_by,
-          notes,
-          user_profiles!inner(
-            email,
-            business_name,
-            phone,
-            tier
-          )
+          verified_at
         `)
         .order('created_at', { ascending: false })
+        .limit(20) // Reduced limit for faster loading
 
       if (error) {
         console.error('Error fetching tier upgrade requests:', error)
         return []
       }
 
-      return data?.map(item => ({
+      if (!data || data.length === 0) {
+        AdminService.tierUpgradeCache = { data: [], timestamp: Date.now() }
+        return []
+      }
+
+      // Get user profiles in parallel for better performance
+      const userIds = [...new Set(data.map(req => req.user_id))]
+      const { data: userProfiles } = await supabase
+        .from('user_profiles')
+        .select('id, email, business_name, phone, tier')
+        .in('id', userIds)
+
+      // Create a map for quick lookup
+      const profileMap = new Map()
+      userProfiles?.forEach(profile => {
+        profileMap.set(profile.id, profile)
+      })
+
+      // Combine the data
+      const result = data.map(item => ({
         id: item.id,
         user_id: item.user_id,
         tier: item.tier,
         amount: item.amount,
         payment_method: item.payment_method,
-        payment_proof_url: item.payment_proof_url,
+        payment_proof_url: '', // Simplified - not needed for admin list
         status: item.status,
         created_at: item.created_at,
         verified_at: item.verified_at,
-        verified_by: item.verified_by,
-        notes: item.notes,
+        verified_by: null, // Simplified
+        notes: null, // Simplified
         user_profile: {
-          email: item.user_profiles?.[0]?.email || '',
-          business_name: item.user_profiles?.[0]?.business_name || '',
-          phone: item.user_profiles?.[0]?.phone || '',
-          tier: item.user_profiles?.[0]?.tier || 'basic'
+          email: profileMap.get(item.user_id)?.email || '',
+          business_name: profileMap.get(item.user_id)?.business_name || '',
+          phone: profileMap.get(item.user_id)?.phone || '',
+          tier: profileMap.get(item.user_id)?.tier || 'free_trial'
         }
-      })) || []
+      }))
+
+      // Cache the result
+      AdminService.tierUpgradeCache = { data: result, timestamp: Date.now() }
+      return result
     } catch (error) {
       console.error('Error fetching tier upgrade requests:', error)
       return []
     }
   }
 
+  // Clear cache when data is updated
+  private static clearCache() {
+    AdminService.tierUpgradeCache = null
+  }
+
   async updateUserTier(requestId: string, newTier: string): Promise<{ success: boolean; error?: string }> {
     try {
+      // Clear cache before updating
+      AdminService.clearCache()
+      
       // First get the payment request details
       const { data: paymentRequest, error: fetchError } = await supabase
         .from('payment_requests')
@@ -190,9 +224,7 @@ export class AdminService {
           user_id: paymentRequest.user_id,
           tier: newTier,
           status: 'active',
-          expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
-          payment_method: paymentRequest.payment_method,
-          amount: paymentRequest.amount
+          expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year
         })
 
       if (subError) {
@@ -209,6 +241,9 @@ export class AdminService {
 
   async verifyPaymentRequest(requestId: string, status: 'verified' | 'rejected'): Promise<{ success: boolean; error?: string }> {
     try {
+      // Clear cache before updating
+      AdminService.clearCache()
+      
       // Update payment request status
       const { error: updateError } = await supabase
         .from('payment_requests')
@@ -255,9 +290,7 @@ export class AdminService {
             user_id: payment.user_id,
             tier: payment.tier,
             status: 'active',
-            expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year
-            payment_method: payment.payment_method,
-            amount: payment.amount
+            expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year
           })
 
         if (subError) {

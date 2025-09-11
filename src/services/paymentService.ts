@@ -28,9 +28,9 @@ export interface PaymentMethod {
 
 export class PaymentService {
   private tierPricing = {
-    basic: 50000,
-    standard: 150000,
-    premium: 300000
+    basic: 1000000, // Start Smart
+    standard: 3000000, // Grow with Intelligence
+    premium: 5000000 // Enterprise Advantage
   }
 
   private paymentMethods: PaymentMethod[] = [
@@ -92,7 +92,8 @@ export class PaymentService {
 
         if (uploadError) {
           console.error('Error uploading proof:', uploadError)
-          return { success: false, error: 'Failed to upload payment proof' }
+          console.error('Upload error details:', JSON.stringify(uploadError, null, 2))
+          return { success: false, error: `Failed to upload payment proof: ${uploadError.message || 'Unknown error'}` }
         }
 
         // Try public URL first (if bucket is public). Fallback to signed URL.

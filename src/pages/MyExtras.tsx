@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBusiness } from '@/contexts/BusinessContext';
+import { useBusinessManagement } from '@/contexts/BusinessManagementContext';
 import { toast } from 'sonner';
 
 interface TierFeature {
@@ -40,6 +41,7 @@ interface TierFeature {
   availableIn: string[];
   isPremium: boolean;
   action?: () => void;
+  showCondition?: () => boolean;
 }
 
 const MyExtras = () => {
@@ -47,6 +49,15 @@ const MyExtras = () => {
   const { currentBusiness, userBusinesses, canCreateBusiness } = useBusiness();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('features');
+  
+  // Safely get business management context
+  let businesses = []
+  try {
+    const businessContext = useBusinessManagement()
+    businesses = businessContext.businesses
+  } catch (error) {
+    console.log('BusinessManagementProvider not available, using empty array')
+  }
 
   // Define all features with their tier availability
   const allFeatures: TierFeature[] = [
@@ -213,16 +224,11 @@ const MyExtras = () => {
       description: 'Create and manage multiple businesses',
       icon: <Building2 className="h-6 w-6" />,
       category: 'system',
-      availableIn: ['enterprise_advantage'],
+      availableIn: ['start_smart', 'grow_intelligence', 'enterprise_advantage'],
       isPremium: true,
-      action: () => {
-        if (canCreateBusiness) {
-          // Show business switcher or create new business
-          toast.info('Multi-business management is available!');
-        } else {
-          toast.error('Upgrade to Enterprise Advantage to manage multiple businesses');
-        }
-      }
+      action: () => navigate('/business-management'),
+      // Only show if user has more than one business or can create more
+      showCondition: () => businesses.length > 1 || canCreateBusiness
     },
     {
       id: 'unlimited_users',
@@ -290,15 +296,20 @@ const MyExtras = () => {
 
   const currentTier = profile?.tier || 'free_trial';
   const userFeatures = allFeatures.filter(feature => 
-    feature.availableIn.includes(currentTier)
+    feature.availableIn.includes(currentTier) && 
+    (!feature.showCondition || feature.showCondition())
   );
   const lockedFeatures = allFeatures.filter(feature => 
-    !feature.availableIn.includes(currentTier)
+    !feature.availableIn.includes(currentTier) ||
+    (feature.showCondition && !feature.showCondition())
   );
 
   const getTierColor = (tier: string) => {
     switch (tier) {
       case 'free_trial': return 'bg-blue-100 text-blue-800';
+      case 'basic': return 'bg-gray-100 text-gray-800';
+      case 'standard': return 'bg-green-100 text-green-800';
+      case 'premium': return 'bg-purple-100 text-purple-800';
       case 'start_smart': return 'bg-green-100 text-green-800';
       case 'grow_intelligence': return 'bg-purple-100 text-purple-800';
       case 'enterprise_advantage': return 'bg-orange-100 text-orange-800';

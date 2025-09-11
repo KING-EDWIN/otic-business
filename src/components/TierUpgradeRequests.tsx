@@ -59,6 +59,7 @@ export const TierUpgradeRequests: React.FC<TierUpgradeRequestsProps> = ({ isOpen
     } catch (error) {
       console.error('Error loading upgrade requests:', error)
       toast.error('Failed to load upgrade requests')
+      setRequests([]) // Set empty array on error
     } finally {
       setLoading(false)
     }

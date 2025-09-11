@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ArrowLeft, CreditCard, Smartphone, Building2, Upload, Check, Copy, Clock, CheckCircle, XCircle, Star, Crown, TrendingUp, DollarSign, Users, Calendar, RefreshCw, Download, Eye, MoreVertical } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import PaymentInstructions from '@/components/PaymentInstructions'
 import { paymentService, PaymentRequest } from '@/services/paymentService'
@@ -18,11 +18,14 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 const Payments: React.FC = () => {
   const navigate = useNavigate()
   const { user, profile } = useAuth()
+  const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState('subscription')
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedTier, setSelectedTier] = useState<'basic' | 'standard' | 'premium' | null>(null)
   const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([])
   const [loading, setLoading] = useState(true)
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [isSubmittingUpgrade, setIsSubmittingUpgrade] = useState(false)
   const [paymentStats, setPaymentStats] = useState({
     totalRevenue: 0,
     monthlyRevenue: 0,
@@ -34,9 +37,30 @@ const Payments: React.FC = () => {
   const [revenueData, setRevenueData] = useState([])
 
   useEffect(() => {
-    // Always load payment stats, even if user is not loaded yet
-    loadPaymentStats()
-  }, [])
+    // Check URL parameters for tier selection
+    const tierParam = searchParams.get('tier')
+    if (tierParam) {
+      // Map tier names from pricing page to our internal tier names
+      const tierMapping: { [key: string]: 'basic' | 'standard' | 'premium' } = {
+        'free trial': 'basic',
+        'start smart': 'basic',
+        'grow with intelligence': 'standard',
+        'enterprise advantage': 'premium'
+      }
+      
+      const mappedTier = tierMapping[tierParam.toLowerCase()]
+      if (mappedTier) {
+        setSelectedTier(mappedTier)
+        setShowPaymentModal(true)
+        setActiveTab('subscription')
+      }
+    }
+    
+    // Load payment stats only if user is available
+    if (user?.id) {
+      loadPaymentStats()
+    }
+  }, [searchParams, user])
 
   const loadPaymentData = async () => {
     try {
@@ -59,20 +83,31 @@ const Payments: React.FC = () => {
 
   const loadPaymentStats = async () => {
     try {
-      if (!user?.id) return
+      if (!user?.id) {
+        console.log('No user ID, skipping payment stats')
+        return
+      }
 
       console.log('Loading payment stats for user:', user.id)
-      setLoading(true)
 
-      // Get all payments for this user
+      // Get all payment requests for this user
       const { data: payments, error } = await supabase
-        .from('payments')
+        .from('payment_requests')
         .select('*')
         .eq('user_id', user.id)
 
       if (error) {
         console.error('Payment fetch error:', error)
-        throw error
+        // Don't throw error, just set empty stats
+        setPaymentStats({
+          totalRevenue: 0,
+          monthlyRevenue: 0,
+          totalPayments: 0,
+          pendingPayments: 0,
+          verifiedPayments: 0,
+          rejectedPayments: 0
+        })
+        return
       }
       
       console.log('Found payments:', payments?.length || 0)
@@ -105,6 +140,15 @@ const Payments: React.FC = () => {
 
     } catch (error) {
       console.error('Error loading payment stats:', error)
+      // Set empty stats on error
+      setPaymentStats({
+        totalRevenue: 0,
+        monthlyRevenue: 0,
+        totalPayments: 0,
+        pendingPayments: 0,
+        verifiedPayments: 0,
+        rejectedPayments: 0
+      })
     }
   }
 
@@ -137,21 +181,35 @@ const Payments: React.FC = () => {
 
   const handlePaymentProofUpload = async (file: File) => {
     if (!selectedTier) return
+    
+    // Store the uploaded file for the upgrade button
+    setUploadedFile(file)
+    toast.success('Payment proof uploaded! Click "Submit Upgrade Request" to proceed.')
+  }
+
+  const handleUpgradeRequest = async () => {
+    if (!selectedTier || !uploadedFile) return
 
     try {
-      const result = await paymentService.createPaymentRequest(selectedTier, 'mtn_mobile_money', file)
+      setIsSubmittingUpgrade(true)
+      const result = await paymentService.createPaymentRequest(selectedTier, 'mtn_mobile_money', uploadedFile)
       
       if (result.success) {
-        toast.success('Payment request submitted! You will be notified once verified.')
+        toast.success('Upgrade request submitted! You will be notified once verified by admin.')
         setShowPaymentModal(false)
         setSelectedTier(null)
-        loadPaymentData()
+        setUploadedFile(null)
+        // Refresh payment requests without calling loadPaymentStats
+        const requests = await paymentService.getPaymentRequests()
+        setPaymentRequests(requests)
       } else {
         toast.error(`Error: ${result.error}`)
       }
     } catch (error) {
-      console.error('Error submitting payment:', error)
-      toast.error('Failed to submit payment request')
+      console.error('Error submitting upgrade request:', error)
+      toast.error('Failed to submit upgrade request')
+    } finally {
+      setIsSubmittingUpgrade(false)
     }
   }
 
@@ -616,6 +674,9 @@ const Payments: React.FC = () => {
               <PaymentInstructions
                 tier={selectedTier}
                 onPaymentProofUpload={handlePaymentProofUpload}
+                onUpgradeRequest={handleUpgradeRequest}
+                uploadedFile={uploadedFile}
+                isUpgrading={isSubmittingUpgrade}
               />
             </div>
           </div>

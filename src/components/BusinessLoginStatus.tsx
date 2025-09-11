@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContextHybrid'
+import { useBusinessManagement } from '@/contexts/BusinessManagementContext'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
@@ -10,11 +11,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, User, Settings, Building2 } from 'lucide-react'
+import { LogOut, User, Settings, Building2, ArrowRight, Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 const BusinessLoginStatus = () => {
   const { user, profile, signOut } = useAuth()
+  const { businesses, currentBusiness, switchBusiness, canCreateBusiness } = useBusinessManagement()
   const navigate = useNavigate()
   const [isSigningOut, setIsSigningOut] = useState(false)
 
@@ -37,6 +39,25 @@ const BusinessLoginStatus = () => {
 
   const handleDashboard = () => {
     navigate('/dashboard')
+  }
+
+  const handleBusinessManagement = () => {
+    navigate('/business-management')
+  }
+
+  const handleCreateBusiness = () => {
+    navigate('/business-management/create')
+  }
+
+  const handleSwitchBusiness = async (businessId: string) => {
+    try {
+      const result = await switchBusiness(businessId)
+      if (result.success) {
+        window.location.reload()
+      }
+    } catch (error) {
+      console.error('Error switching business:', error)
+    }
   }
 
   if (!user) {
@@ -78,7 +99,7 @@ const BusinessLoginStatus = () => {
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuContent className="w-64" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">{displayName}</p>
@@ -87,7 +108,9 @@ const BusinessLoginStatus = () => {
               </p>
               <div className="flex items-center space-x-1 mt-1">
                 <Building2 className="h-3 w-3 text-[#040458]" />
-                <span className="text-xs text-[#040458] font-medium">Business Account</span>
+                <span className="text-xs text-[#040458] font-medium">
+                  {currentBusiness ? currentBusiness.name : 'Business Account'}
+                </span>
               </div>
             </div>
           </DropdownMenuLabel>
@@ -96,6 +119,54 @@ const BusinessLoginStatus = () => {
             <User className="mr-2 h-4 w-4" />
             <span>Dashboard</span>
           </DropdownMenuItem>
+          
+          {/* Business Management Section */}
+          <DropdownMenuLabel className="text-xs font-semibold text-gray-500 px-2 py-1.5">
+            BUSINESS MANAGEMENT
+          </DropdownMenuLabel>
+          
+          {businesses.length > 0 && (
+            <>
+              <DropdownMenuLabel className="text-xs font-medium text-gray-700 px-2 py-1">
+                Switch Business
+              </DropdownMenuLabel>
+              {businesses.slice(0, 3).map((business) => (
+                <DropdownMenuItem
+                  key={business.id}
+                  onClick={() => handleSwitchBusiness(business.id)}
+                  className="cursor-pointer pl-6"
+                >
+                  <Building2 className="mr-2 h-3 w-3" />
+                  <span className="truncate">{business.name}</span>
+                  {business.id === currentBusiness?.id && (
+                    <ArrowRight className="ml-auto h-3 w-3 text-[#040458]" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+              {businesses.length > 3 && (
+                <DropdownMenuItem
+                  onClick={handleBusinessManagement}
+                  className="cursor-pointer pl-6 text-xs text-gray-500"
+                >
+                  View all {businesses.length} businesses...
+                </DropdownMenuItem>
+              )}
+            </>
+          )}
+          
+          <DropdownMenuItem onClick={handleBusinessManagement} className="cursor-pointer">
+            <Building2 className="mr-2 h-4 w-4" />
+            <span>Manage Businesses</span>
+          </DropdownMenuItem>
+          
+          {canCreateBusiness && (
+            <DropdownMenuItem onClick={handleCreateBusiness} className="cursor-pointer">
+              <Plus className="mr-2 h-4 w-4" />
+              <span>Create Business</span>
+            </DropdownMenuItem>
+          )}
+          
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSettings} className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" />
             <span>Settings</span>

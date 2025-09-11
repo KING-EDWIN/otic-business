@@ -13,8 +13,10 @@ const Pricing = () => {
 
   const handlePlanSelection = (tier: string) => {
     if (user) {
-      navigate('/dashboard');
+      // Navigate to payments page with the selected tier
+      navigate(`/payments?tier=${tier}`);
     } else {
+      // For non-logged in users, go to signup first
       navigate('/user-type');
     }
   };

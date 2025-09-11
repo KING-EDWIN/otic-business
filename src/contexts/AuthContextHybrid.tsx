@@ -10,7 +10,7 @@ interface UserProfile {
   business_name?: string
   phone?: string
   address?: string
-  tier: 'basic' | 'standard' | 'premium' | 'free_trial'
+  tier: 'free_trial' | 'start_smart' | 'grow_intelligence' | 'enterprise_advantage'
   user_type: 'business' | 'individual'
   email_verified: boolean
   created_at: string
@@ -196,7 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           business_name: 'Demo Business Store',
           phone: '+256 700 000 000',
           address: 'Kampala, Uganda',
-          tier: 'standard' as const,
+          tier: 'grow_intelligence' as const,
           user_type: userType || 'business' as const,
           email_verified: true,
           created_at: '2025-09-08T11:14:31.149382Z',

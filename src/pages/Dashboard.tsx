@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
+import { useBusinessManagement } from '@/contexts/BusinessManagementContext'
 import { OticAPI } from '@/services/api'
 import { AIAnalytics } from '@/services/aiService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,6 +15,7 @@ import { AdvancedReports } from '@/components/AdvancedReports'
 import PaymentVerification from '@/components/PaymentVerification'
 import { EmailNotificationSettings } from '@/components/EmailNotificationSettings'
 import BusinessLoginStatus from '@/components/BusinessLoginStatus'
+import BusinessSwitcher from '@/components/BusinessSwitcher'
 import { 
   Building2, 
   ShoppingCart, 
@@ -45,6 +47,15 @@ import { useIsMobile, ResponsiveContainer as MobileResponsiveContainer, MobileCa
 const Dashboard = () => {
   const { profile, signOut, user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
+  
+  // Safely get business management context
+  let currentBusiness = null
+  try {
+    const businessContext = useBusinessManagement()
+    currentBusiness = businessContext.currentBusiness
+  } catch (error) {
+    console.log('BusinessManagementProvider not available, using fallback')
+  }
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const isMobile = useIsMobile()
   
@@ -269,6 +280,15 @@ const Dashboard = () => {
               <Button 
                 variant="ghost" 
                 size="sm" 
+                onClick={() => navigate('/business-management')}
+                className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
+              >
+                <Building2 className="h-4 w-4 mr-2" />
+                Businesses
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
                 onClick={() => navigate('/customers')}
                 className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
               >
@@ -339,6 +359,15 @@ const Dashboard = () => {
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Analytics
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { navigate('/business-management'); setMobileMenuOpen(false); }} 
+                  className="justify-start text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg"
+                >
+                  <Building2 className="h-4 w-4 mr-2" />
+                  Businesses
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -423,7 +452,9 @@ const Dashboard = () => {
         {/* Welcome Banner */}
         <div className="mb-8 bg-gradient-to-r from-[#040458] via-purple-600 to-[#faa51a] rounded-2xl p-8 text-white relative overflow-hidden">
           <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-2">Welcome back!</h1>
+            <h1 className="text-4xl font-bold mb-2">
+              Welcome back to {currentBusiness?.name || profile?.business_name || 'your business'}!
+            </h1>
             <p className="text-xl opacity-90">Here's what's happening with your business today.</p>
           </div>
           <div className="absolute right-6 top-6 opacity-30">

@@ -102,7 +102,7 @@ class BusinessService {
     try {
       // Try the RPC function first
       const { data, error } = await supabase.rpc('get_user_businesses', {
-        user_uuid: userId
+        user_id_param: userId
       });
       
       if (error) {

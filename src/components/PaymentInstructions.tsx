@@ -9,12 +9,15 @@ import { toast } from 'sonner'
 interface PaymentInstructionsProps {
   tier: 'basic' | 'standard' | 'premium'
   onPaymentProofUpload: (file: File) => void
+  onUpgradeRequest?: () => void
+  uploadedFile?: File | null
+  isUpgrading?: boolean
 }
 
 const tierPricing = {
-  basic: { price: 50000, name: 'Basic Plan' },
-  standard: { price: 150000, name: 'Standard Plan' },
-  premium: { price: 300000, name: 'Premium Plan' }
+  basic: { price: 1000000, name: 'Start Smart' },
+  standard: { price: 3000000, name: 'Grow with Intelligence' },
+  premium: { price: 5000000, name: 'Enterprise Advantage' }
 }
 
 const paymentMethods = [
@@ -68,7 +71,10 @@ const paymentMethods = [
 
 export const PaymentInstructions: React.FC<PaymentInstructionsProps> = ({ 
   tier, 
-  onPaymentProofUpload 
+  onPaymentProofUpload,
+  onUpgradeRequest,
+  uploadedFile,
+  isUpgrading = false
 }) => {
   const [selectedMethod, setSelectedMethod] = useState<string>('mtn')
   const [copied, setCopied] = useState<string | null>(null)
@@ -230,6 +236,44 @@ export const PaymentInstructions: React.FC<PaymentInstructionsProps> = ({
               className="mt-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#040458] file:text-white hover:file:bg-[#030345]"
             />
           </div>
+          
+          {/* File Upload Status and Upgrade Button */}
+          {uploadedFile && (
+            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Check className="h-5 w-5 text-green-600" />
+                  <div>
+                    <p className="text-sm font-medium text-green-800">
+                      Payment proof uploaded successfully!
+                    </p>
+                    <p className="text-xs text-green-600">
+                      File: {uploadedFile.name}
+                    </p>
+                  </div>
+                </div>
+                {onUpgradeRequest && (
+                  <Button
+                    onClick={onUpgradeRequest}
+                    disabled={isUpgrading}
+                    className="bg-[#040458] hover:bg-[#040458]/90 text-white font-semibold px-6 py-2"
+                  >
+                    {isUpgrading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Submitting...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Submit Upgrade Request
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
