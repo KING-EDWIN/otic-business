@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { isOfflineMode, getCurrentConfig } from '@/config/storageConfig'
 import { SignupService } from '@/services/signupService'
+import { errorReportingService } from '@/services/errorReportingService'
 
 interface UserProfile {
   id: string
@@ -129,7 +130,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('Error loading user profile:', error)
-        // Don't automatically create profiles - let sign-in forms handle this
+        
+        // Report system error instead of creating fallback
+        if (errorReportingService.isOnline()) {
+          await errorReportingService.logSystemError({
+            errorType: 'USER_PROFILE_ACCESS_ERROR',
+            errorMessage: `Failed to access user profile: ${error.message}`,
+            errorDetails: {
+              userId,
+              errorCode: error.code,
+              errorMessage: error.message,
+              timestamp: new Date().toISOString()
+            }
+          })
+        }
+        
+        // Create a basic profile if access fails
+        const basicProfile = {
+          id: userId,
+          email: user?.email || '',
+          full_name: user?.user_metadata?.full_name || '',
+          tier: 'free_trial' as const,
+          user_type: 'business' as const,
+          email_verified: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        
+        setProfile(basicProfile)
         return
       }
 
@@ -138,6 +166,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setPendingUserType(null)
     } catch (error) {
       console.error('Error loading user profile:', error)
+      
+      // Create a basic profile if connection fails
+      const basicProfile = {
+        id: userId,
+        email: user?.email || '',
+        full_name: user?.user_metadata?.full_name || '',
+        tier: 'free_trial' as const,
+        user_type: 'business' as const,
+        email_verified: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      
+      setProfile(basicProfile)
     }
   }
 

@@ -34,28 +34,28 @@ import BusinessLoginStatus from '@/components/BusinessLoginStatus';
 
 interface Product {
   id: string;
-  product_code: string;
   name: string;
-  category_id: string;
-  category_name?: string;
-  weight_grams: number;
-  size_value: number;
-  size_unit: string;
-  quantity_per_carton: number;
-  buying_price: number;
-  selling_price: number;
-  carton_discount: number;
-  quantity_bought_cartons: number;
-  current_stock_units: number;
-  current_stock_cartons: number;
-  reorder_level: number;
-  purchase_date: string;
-  expiry_date?: string;
-  supplier_name: string;
-  supplier_contact: string;
-  how_sold: string;
-  units_sold: number;
-  min_stock: number;
+  description?: string;
+  sku?: string;
+  barcode?: string;
+  barcode_type?: string;
+  cost_price?: number;
+  wholesale_price?: number;
+  retail_price?: number;
+  current_stock?: number;
+  min_stock?: number;
+  max_stock?: number;
+  unit_type?: string;
+  items_per_package?: number;
+  package_type?: string;
+  product_image_url?: string;
+  barcode_image_url?: string;
+  brand?: string;
+  manufacturer?: string;
+  business_id?: string;
+  category_id?: string;
+  supplier_id?: string;
+  status?: string;
   created_at: string;
   updated_at: string;
 }
@@ -121,7 +121,7 @@ const ComprehensiveInventory: React.FC = () => {
       // Load products with comprehensive data and fallback
       try {
         const { data: productsData, error: productsError } = await supabase
-          .from('inventory_comprehensive')
+          .from('products')
           .select('*')
           .order('created_at', { ascending: false });
 
@@ -293,18 +293,19 @@ const ComprehensiveInventory: React.FC = () => {
   };
 
   const getStockStatus = (product: Product) => {
-    if (product.current_stock_units <= 0) return { status: 'Out of Stock', color: 'destructive' };
-    if (product.current_stock_units <= product.reorder_level) return { status: 'Low Stock', color: 'destructive' };
-    if (product.expiry_date && new Date(product.expiry_date) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)) {
-      return { status: 'Expiring Soon', color: 'secondary' };
-    }
+    const currentStock = product.current_stock || 0;
+    const minStock = product.min_stock || 0;
+    
+    if (currentStock <= 0) return { status: 'Out of Stock', color: 'destructive' };
+    if (currentStock <= minStock) return { status: 'Low Stock', color: 'destructive' };
     return { status: 'In Stock', color: 'default' };
   };
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.product_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.supplier_name.toLowerCase().includes(searchTerm.toLowerCase());
+                         (product.barcode && product.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (product.brand && product.brand.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (product.manufacturer && product.manufacturer.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesCategory = selectedCategory === 'all' || product.category_id === selectedCategory;
     
@@ -312,7 +313,6 @@ const ComprehensiveInventory: React.FC = () => {
     const matchesStatus = filterStatus === 'all' || 
                          (filterStatus === 'low' && stockStatus.status === 'Low Stock') ||
                          (filterStatus === 'out' && stockStatus.status === 'Out of Stock') ||
-                         (filterStatus === 'expiring' && stockStatus.status === 'Expiring Soon') ||
                          (filterStatus === 'in-stock' && stockStatus.status === 'In Stock');
     
     return matchesSearch && matchesCategory && matchesStatus;
@@ -385,6 +385,22 @@ const ComprehensiveInventory: React.FC = () => {
               >
                 <RefreshCw className="h-4 w-4" />
                 Refresh
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/commodity-registration')}
+                className="flex items-center gap-2"
+              >
+                <Package className="h-4 w-4" />
+                Register Commodity
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/restock')}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Restock
               </Button>
               <Button
                 onClick={handleAddProduct}
@@ -515,14 +531,14 @@ const ComprehensiveInventory: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Product Code</TableHead>
+                    <TableHead>Barcode</TableHead>
                     <TableHead>Name</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Size</TableHead>
-                    <TableHead>Stock (Units/Cartons)</TableHead>
-                    <TableHead>Buying Price</TableHead>
-                    <TableHead>Selling Price</TableHead>
-                    <TableHead>Supplier</TableHead>
+                    <TableHead>Brand</TableHead>
+                    <TableHead>Stock</TableHead>
+                    <TableHead>Cost Price</TableHead>
+                    <TableHead>Wholesale Price</TableHead>
+                    <TableHead>Retail Price</TableHead>
+                    <TableHead>Manufacturer</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -533,32 +549,31 @@ const ComprehensiveInventory: React.FC = () => {
                     return (
                       <TableRow key={product.id}>
                         <TableCell className="font-mono text-sm">
-                          {product.product_code}
+                          {product.barcode || 'N/A'}
                         </TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>{product.category_name || 'N/A'}</TableCell>
-                        <TableCell>
-                          {product.size_value} {product.size_unit}
-                          {product.weight_grams > 0 && (
-                            <div className="text-xs text-gray-500">
-                              {product.weight_grams}g
-                            </div>
-                          )}
-                        </TableCell>
+                        <TableCell>{product.brand || 'N/A'}</TableCell>
                         <TableCell>
                           <div className="flex flex-col">
-                            <span className="font-medium">{product.current_stock_units} units</span>
-                            <span className="text-xs text-gray-500">
-                              {product.current_stock_cartons} cartons
-                            </span>
+                            <span className="font-medium">{product.current_stock || 0} {product.unit_type || 'units'}</span>
+                            {product.min_stock && (
+                              <span className="text-xs text-gray-500">
+                                Min: {product.min_stock}
+                              </span>
+                            )}
                           </div>
                         </TableCell>
-                        <TableCell>UGX {product.buying_price.toLocaleString()}</TableCell>
-                        <TableCell>UGX {product.selling_price.toLocaleString()}</TableCell>
+                        <TableCell>UGX {(product.cost_price || 0).toLocaleString()}</TableCell>
+                        <TableCell>UGX {(product.wholesale_price || 0).toLocaleString()}</TableCell>
+                        <TableCell>UGX {(product.retail_price || 0).toLocaleString()}</TableCell>
                         <TableCell>
                           <div className="flex flex-col">
-                            <span className="font-medium">{product.supplier_name}</span>
-                            <span className="text-xs text-gray-500">{product.supplier_contact}</span>
+                            <span className="font-medium">{product.manufacturer || 'N/A'}</span>
+                            {product.description && (
+                              <span className="text-xs text-gray-500 truncate max-w-32">
+                                {product.description}
+                              </span>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>

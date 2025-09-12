@@ -108,7 +108,8 @@ const BusinessManagement: React.FC = () => {
       const result = await switchBusiness(businessId)
       if (result.success) {
         toast.success('Switched business successfully')
-        window.location.reload()
+        // Navigate to dashboard instead of reloading
+        navigate('/dashboard')
       } else {
         toast.error(result.error || 'Failed to switch business')
       }
@@ -127,7 +128,7 @@ const BusinessManagement: React.FC = () => {
   }
 
   const handleSelectBusiness = (businessId: string) => {
-    navigate(`/business-management/${businessId}`)
+    navigate(`/business-management/${businessId}/dashboard`)
   }
 
   if (loading) {
@@ -348,7 +349,7 @@ const BusinessManagement: React.FC = () => {
                         className="flex-1 bg-[#040458] hover:bg-[#faa51a] text-white"
                       >
                         <ArrowRight className="h-3 w-3 mr-1" />
-                        Select Business
+                        Dashboard
                       </Button>
                       <Button
                         size="sm"

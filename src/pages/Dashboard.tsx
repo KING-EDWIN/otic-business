@@ -16,6 +16,9 @@ import PaymentVerification from '@/components/PaymentVerification'
 import { EmailNotificationSettings } from '@/components/EmailNotificationSettings'
 import BusinessLoginStatus from '@/components/BusinessLoginStatus'
 import BusinessSwitcher from '@/components/BusinessSwitcher'
+import BusinessDropdown from '@/components/BusinessDropdown'
+import AnalyticsReportsDropdown from '@/components/AnalyticsReportsDropdown'
+import MyExtrasDropdown from '@/components/MyExtrasDropdown'
 import { 
   Building2, 
   ShoppingCart, 
@@ -229,14 +232,7 @@ const Dashboard = () => {
 
             {/* Centered Navigation Menu */}
             <div className="hidden lg:flex items-center space-x-1">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/my-extras')}
-                className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
-              >
-                My Extras
-              </Button>
+              <MyExtrasDropdown />
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -261,31 +257,8 @@ const Dashboard = () => {
               >
                 Accounting
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate('/analytics')}
-                className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
-                >
-                  Analytics
-                </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/reports')}
-                className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
-              >
-                Reports
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/business-management')}
-                className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
-              >
-                <Building2 className="h-4 w-4 mr-2" />
-                Businesses
-              </Button>
+              <AnalyticsReportsDropdown />
+              <BusinessDropdown />
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -333,6 +306,9 @@ const Dashboard = () => {
           {mobileMenuOpen && (
             <div className="md:hidden mt-4 pb-4 border-t border-gray-200">
               <div className="flex flex-col space-y-2 pt-4">
+                <div className="px-3 py-2">
+                  <MyExtrasDropdown />
+                </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 
@@ -351,24 +327,12 @@ const Dashboard = () => {
                   <Package className="h-4 w-4 mr-2" />
                   Inventory
                 </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => { navigate('/analytics'); setMobileMenuOpen(false); }} 
-                  className="justify-start text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg"
-                >
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Analytics
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => { navigate('/business-management'); setMobileMenuOpen(false); }} 
-                  className="justify-start text-[#040458] hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg"
-                >
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Businesses
-                </Button>
+                <div className="px-3 py-2">
+                  <AnalyticsReportsDropdown />
+                </div>
+                <div className="px-3 py-2">
+                  <BusinessDropdown />
+                </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { useAuth } from './AuthContext'
 import { businessManagementService, Business, BusinessMember } from '@/services/businessManagementService'
 import { supabase } from '@/lib/supabase'
@@ -37,6 +37,8 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
   const [businessMembers, setBusinessMembers] = useState<BusinessMember[]>([])
   const [loading, setLoading] = useState(true)
   const [canCreateBusiness, setCanCreateBusiness] = useState(false)
+  const loadedBusinessMembersRef = useRef<string | null>(null)
+  const isLoadingBusinessesRef = useRef(false)
 
   // Load businesses when user changes
   useEffect(() => {
@@ -55,21 +57,37 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
     const savedBusinessId = localStorage.getItem('current_business_id')
     if (savedBusinessId && businesses.length > 0) {
       const business = businesses.find(b => b.id === savedBusinessId)
-      if (business) {
+      if (business && (!currentBusiness || currentBusiness.id !== business.id)) {
         setCurrentBusiness(business)
-        loadBusinessMembers(business.id)
+        if (loadedBusinessMembersRef.current !== business.id) {
+          loadBusinessMembers(business.id)
+          loadedBusinessMembersRef.current = business.id
+        }
       }
-    } else if (businesses.length > 0) {
+    } else if (businesses.length > 0 && !currentBusiness) {
       // Set first business as current if none selected
       setCurrentBusiness(businesses[0])
-      loadBusinessMembers(businesses[0].id)
+      if (loadedBusinessMembersRef.current !== businesses[0].id) {
+        loadBusinessMembers(businesses[0].id)
+        loadedBusinessMembersRef.current = businesses[0].id
+      }
     }
-  }, [businesses])
+  }, [businesses.length]) // Only depend on length, not the entire array
 
   const loadBusinesses = async () => {
+    // Prevent multiple simultaneous loads
+    if (isLoadingBusinessesRef.current) {
+      console.log('Businesses already loading, skipping...')
+      return
+    }
+    
     try {
+      isLoadingBusinessesRef.current = true
       setLoading(true)
+      
+      console.log('Loading businesses for user:', user?.id)
       const userBusinesses = await businessManagementService.getUserBusinesses()
+      console.log('Loaded businesses:', userBusinesses.length, userBusinesses)
       
       // If user has no businesses, create a default one
       if (userBusinesses.length === 0 && user) {
@@ -77,6 +95,7 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
         await createDefaultBusiness()
         // Reload businesses after creating default
         const updatedBusinesses = await businessManagementService.getUserBusinesses()
+        console.log('Updated businesses after creation:', updatedBusinesses.length, updatedBusinesses)
         setBusinesses(updatedBusinesses)
       } else {
         setBusinesses(userBusinesses)
@@ -85,21 +104,32 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
       // Check if user can create more businesses
       const { data: { user: currentUser } } = await supabase.auth.getUser()
       if (currentUser) {
-        const { data: canCreate } = await supabase.rpc('can_create_business', {
-          user_id_param: currentUser.id
-        })
-        setCanCreateBusiness(canCreate || false)
+        try {
+          const { data: canCreate } = await supabase.rpc('can_create_business', {
+            user_id_param: currentUser.id
+          })
+          setCanCreateBusiness(canCreate || false)
+        } catch (rpcError) {
+          console.error('RPC can_create_business failed:', rpcError)
+          setCanCreateBusiness(true) // Fallback to allow business creation
+        }
       }
     } catch (error) {
       console.error('Error loading businesses:', error)
+      // Set empty businesses array on error to prevent infinite loops
+      setBusinesses([])
     } finally {
       setLoading(false)
+      isLoadingBusinessesRef.current = false
     }
   }
 
   const createDefaultBusiness = async () => {
     try {
-      if (!user || !profile) return
+      if (!user || !profile) {
+        console.log('Cannot create default business: user or profile missing', { user: !!user, profile: !!profile })
+        return
+      }
 
       const defaultBusinessData = {
         name: profile.business_name || 'My Business',
@@ -113,9 +143,10 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
         country: 'Uganda'
       }
 
+      console.log('Creating default business with data:', defaultBusinessData)
       const result = await businessManagementService.createBusiness(defaultBusinessData)
       if (result.success) {
-        console.log('Default business created successfully')
+        console.log('Default business created successfully:', result.business)
       } else {
         console.error('Failed to create default business:', result.error)
       }
@@ -126,10 +157,15 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
 
   const loadBusinessMembers = async (businessId: string) => {
     try {
+      console.log('Loading business members for:', businessId)
       const members = await businessManagementService.getBusinessMembers(businessId)
+      console.log('Loaded business members:', members.length)
       setBusinessMembers(members)
+      loadedBusinessMembersRef.current = businessId
     } catch (error) {
       console.error('Error loading business members:', error)
+      // Set empty array on error to prevent undefined issues
+      setBusinessMembers([])
     }
   }
 
@@ -182,6 +218,7 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
             setCurrentBusiness(remainingBusinesses[0])
             localStorage.setItem('current_business_id', remainingBusinesses[0].id)
             loadBusinessMembers(remainingBusinesses[0].id)
+            loadedBusinessMembersRef.current = remainingBusinesses[0].id
           } else {
             setCurrentBusiness(null)
             setBusinessMembers([])
@@ -205,6 +242,7 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
           setCurrentBusiness(business)
           localStorage.setItem('current_business_id', id)
           await loadBusinessMembers(id)
+          loadedBusinessMembersRef.current = id
         }
       }
       return result

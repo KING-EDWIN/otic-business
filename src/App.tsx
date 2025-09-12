@@ -19,6 +19,8 @@ import Dashboard from "./pages/Dashboard";
 import MainDashboard from "./pages/MainDashboard";
 import POS from "./pages/POS";
 import Inventory from "./pages/ComprehensiveInventory";
+import CommodityRegistration from "./pages/CommodityRegistration";
+import Restock from "./pages/Restock";
 import Analytics from "./pages/Analytics";
 import Accounting from "./pages/AccountingNew";
 import QuickBooksCallback from "./pages/QuickBooksCallback";
@@ -172,6 +174,8 @@ const App = () => {
                 <Route path="/simple-dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
                 <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+                <Route path="/commodity-registration" element={<ProtectedRoute><CommodityRegistration /></ProtectedRoute>} />
+                <Route path="/restock" element={<ProtectedRoute><Restock /></ProtectedRoute>} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
                 <Route path="/accounting" element={<ProtectedRoute><Accounting /></ProtectedRoute>} />
                 <Route path="/quickbooks/callback" element={<QuickBooksCallback />} />
@@ -182,6 +186,7 @@ const App = () => {
                 <Route path="/business-management" element={<ProtectedRoute><BusinessManagement /></ProtectedRoute>} />
                 <Route path="/business-management/create" element={<ProtectedRoute><CreateBusiness /></ProtectedRoute>} />
                 <Route path="/business-management/:businessId" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
+                <Route path="/business-management/:businessId/dashboard" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
                 <Route path="/business-management/:businessId/members" element={<ProtectedRoute><BusinessMembers /></ProtectedRoute>} />
                 <Route path="/test-auth" element={<TestAuth />} />
                 <Route path="/simple-test" element={<SimpleTest />} />

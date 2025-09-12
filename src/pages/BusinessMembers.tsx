@@ -42,9 +42,12 @@ import {
   MoreHorizontal,
   Trash2,
   UserPlus,
-  ArrowLeft
+  ArrowLeft,
+  Home
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useSystemError } from '@/hooks/useSystemError'
+import SystemErrorPopup from '@/components/SystemErrorPopup'
 
 const BusinessMembers: React.FC = () => {
   const { businessId } = useParams<{ businessId: string }>()
@@ -55,9 +58,11 @@ const BusinessMembers: React.FC = () => {
     loading, 
     inviteUser, 
     removeUser, 
-    updateUserRole,
+    updateUserRole, 
     refreshMembers 
   } = useBusinessManagement()
+  
+  const { error, isErrorPopupOpen, hideError, handleDataFetchError } = useSystemError()
   
   const [searchTerm, setSearchTerm] = useState('')
   const [showInviteDialog, setShowInviteDialog] = useState(false)
@@ -68,10 +73,15 @@ const BusinessMembers: React.FC = () => {
   const [inviteLoading, setInviteLoading] = useState(false)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
+  // Members are loaded by the BusinessManagementContext
+  // No need for useEffect here as it causes unnecessary refreshes
+
   const filteredMembers = businessMembers.filter(member =>
-    member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.role.toLowerCase().includes(searchTerm.toLowerCase())
+    member && (
+      member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.role?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   )
 
   const getRoleIcon = (role: string) => {
@@ -235,6 +245,15 @@ const BusinessMembers: React.FC = () => {
               >
                 <ArrowLeft className="h-4 w-4" />
                 <span>Back</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center space-x-2"
+              >
+                <Home className="h-4 w-4" />
+                <span>Dashboard</span>
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
@@ -433,7 +452,7 @@ const BusinessMembers: React.FC = () => {
                             <div className="font-medium text-gray-900">
                               {member.full_name || member.business_name || 'Unknown'}
                             </div>
-                            <div className="text-sm text-gray-500">{member.email}</div>
+                            <div className="text-sm text-gray-500">{member.email || 'No email'}</div>
                           </div>
                         </div>
                       </TableCell>
@@ -477,7 +496,7 @@ const BusinessMembers: React.FC = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleRemoveUser(member.user_id, member.email)}
+                                onClick={() => handleRemoveUser(member.user_id, member.email || 'Unknown')}
                                 disabled={actionLoading === member.user_id}
                                 className="text-red-600 hover:text-red-700"
                               >
@@ -495,6 +514,15 @@ const BusinessMembers: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+      
+      {/* System Error Popup */}
+      {error && (
+        <SystemErrorPopup
+          isOpen={isErrorPopupOpen}
+          onClose={hideError}
+          error={error}
+        />
+      )}
     </div>
   )
 }

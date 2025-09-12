@@ -57,28 +57,28 @@ const AIInsightsPage = () => {
       let products: any[] = []
       
       try {
-        // First, let's test the connection and user authentication
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-        if (sessionError) {
-          console.error('Session error:', sessionError)
-          throw new Error(`Authentication error: ${sessionError.message}`)
-        }
-        
-        if (!session) {
-          throw new Error('No active session found')
-        }
-        
-        console.log('Current session:', session)
-        console.log('Session user ID:', session.user.id)
-        console.log('Context user ID:', user.id)
-        
+      // First, let's test the connection and user authentication
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      if (sessionError) {
+        console.error('Session error:', sessionError)
+        throw new Error(`Authentication error: ${sessionError.message}`)
+      }
+      
+      if (!session) {
+        throw new Error('No active session found')
+      }
+      
+      console.log('Current session:', session)
+      console.log('Session user ID:', session.user.id)
+      console.log('Context user ID:', user.id)
+      
         // Fetch sales data with timeout
-        console.log('Fetching sales data...')
+      console.log('Fetching sales data...')
         const salesPromise = supabase
-          .from('sales')
-          .select('*')
-          .eq('user_id', user.id)
-        
+        .from('sales')
+        .select('*')
+        .eq('user_id', user.id)
+
         const salesResult = await Promise.race([
           salesPromise,
           new Promise((_, reject) => setTimeout(() => reject(new Error('Sales fetch timeout')), 3000))
@@ -91,12 +91,12 @@ const AIInsightsPage = () => {
         sales = salesResult.data || []
 
         // Fetch products data with timeout
-        console.log('Fetching products data...')
+      console.log('Fetching products data...')
         const productsPromise = supabase
-          .from('products')
-          .select('*')
-          .eq('user_id', user.id)
-        
+        .from('products')
+        .select('*')
+        .eq('user_id', user.id)
+
         const productsResult = await Promise.race([
           productsPromise,
           new Promise((_, reject) => setTimeout(() => reject(new Error('Products fetch timeout')), 10000))
@@ -235,7 +235,7 @@ const AIInsightsPage = () => {
   useEffect(() => {
     if (user?.id) {
       fetchAnalyticsData()
-    }
+  }
   }, [user?.id]) // Only depend on user.id, not the entire fetchAnalyticsData function
 
   if (loading) {
@@ -378,16 +378,16 @@ const AIInsightsPage = () => {
         <div className="mb-12">
           <div className="bg-gradient-to-br from-[#040458] to-[#faa51a] p-1 rounded-xl shadow-2xl">
             <div className="bg-white rounded-lg p-2">
-              <AIChatBot 
-                businessData={{
-                  sales: analyticsData?.salesByDay || [],
-                  products: [], // This would be populated with actual product data
-                  revenue: analyticsData?.totalRevenue || 0,
-                  growth: analyticsData?.salesGrowth || 0,
-                  lowStockItems: [],
-                  user: user
-                }}
-              />
+          <AIChatBot 
+            businessData={{
+              sales: analyticsData?.salesByDay || [],
+              products: [], // This would be populated with actual product data
+              revenue: analyticsData?.totalRevenue || 0,
+              growth: analyticsData?.salesGrowth || 0,
+              lowStockItems: [],
+              user: user
+            }}
+          />
             </div>
           </div>
         </div>

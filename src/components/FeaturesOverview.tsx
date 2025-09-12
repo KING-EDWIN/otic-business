@@ -161,43 +161,43 @@ const FeaturesOverview = () => {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {features.slice(3, 6).map((feature, index) => (
-              <Card key={feature.title} className="group bg-white border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
-                <div className="relative">
-                  <div className="h-56 relative overflow-hidden">
-                    <img 
-                      src={feature.image} 
-                      alt={feature.title}
-                      className="w-full h-full object-cover"
-                    />
+            <Card key={feature.title} className="group bg-white border-0 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 overflow-hidden">
+              <div className="relative">
+                <div className="h-56 relative overflow-hidden">
+                  <img 
+                    src={feature.image} 
+                    alt={feature.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+              
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl font-bold text-[#040458] group-hover:text-[#faa51a] transition-colors">
+                  {feature.title}
+                </CardTitle>
+              </CardHeader>
+              
+              <CardContent className="pt-0 space-y-4">
+                <CardDescription className="text-gray-600 leading-relaxed text-sm">
+                  {feature.description}
+                </CardDescription>
+                
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-[#040458]">Key Features:</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {feature.features.map((item, idx) => (
+                      <div key={idx} className="flex items-center space-x-2">
+                        <div className="w-1.5 h-1.5 bg-[#faa51a] rounded-full"></div>
+                        <span className="text-xs text-gray-600">{item}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-xl font-bold text-[#040458] group-hover:text-[#faa51a] transition-colors">
-                    {feature.title}
-                  </CardTitle>
-                </CardHeader>
-                
-                <CardContent className="pt-0 space-y-4">
-                  <CardDescription className="text-gray-600 leading-relaxed text-sm">
-                    {feature.description}
-                  </CardDescription>
-                  
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-semibold text-[#040458]">Key Features:</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {feature.features.map((item, idx) => (
-                        <div key={idx} className="flex items-center space-x-2">
-                          <div className="w-1.5 h-1.5 bg-[#faa51a] rounded-full"></div>
-                          <span className="text-xs text-gray-600">{item}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
         </div>
 
         {/* Financial & Reporting Section */}
@@ -352,16 +352,16 @@ const FeaturesOverview = () => {
                     <ChevronRight className="ml-2 h-4 w-4 sm:h-6 sm:w-6" />
                   </Button>
                 </Link>
-                <Link to="/pricing">
-                  <Button 
-                    size="lg"
+              <Link to="/pricing">
+                <Button 
+                  size="lg"
                     variant="outline"
                     className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#040458] font-semibold px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg rounded-lg transition-all duration-300 shadow-xl w-full sm:w-auto"
-                  >
-                    View Pricing Plans
+                >
+                  View Pricing Plans
                     <ChevronRight className="ml-2 h-4 w-4 sm:h-6 sm:w-6" />
-                  </Button>
-                </Link>
+                </Button>
+              </Link>
               </div>
             </div>
           </div>

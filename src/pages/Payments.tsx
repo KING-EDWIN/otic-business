@@ -58,7 +58,7 @@ const Payments: React.FC = () => {
     
     // Load payment stats only if user is available
     if (user?.id) {
-      loadPaymentStats()
+    loadPaymentStats()
     }
   }, [searchParams, user])
 

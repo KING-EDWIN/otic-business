@@ -201,12 +201,21 @@ const MyExtras = () => {
     {
       id: 'multi_user_access',
       name: 'Multi-User Access',
-      description: 'Support for multiple users',
+      description: 'Invite individual users to access your business dashboard',
       icon: <Users className="h-6 w-6" />,
       category: 'system',
       availableIn: ['free_trial', 'grow_intelligence', 'enterprise_advantage'],
       isPremium: true,
-      action: () => navigate('/settings')
+      action: () => {
+        // Check if user has businesses, if not go to business management first
+        if (businesses.length === 0) {
+          navigate('/business-management')
+        } else if (currentBusiness) {
+          navigate(`/business-management/${currentBusiness.id}/members`)
+        } else {
+          navigate('/business-management')
+        }
+      }
     },
     {
       id: 'role_based_permissions',
@@ -229,16 +238,6 @@ const MyExtras = () => {
       action: () => navigate('/business-management'),
       // Only show if user has more than one business or can create more
       showCondition: () => businesses.length > 1 || canCreateBusiness
-    },
-    {
-      id: 'unlimited_users',
-      name: 'Unlimited Users',
-      description: 'Unlimited user access',
-      icon: <Users className="h-6 w-6" />,
-      category: 'system',
-      availableIn: ['enterprise_advantage'],
-      isPremium: true,
-      action: () => navigate('/settings')
     },
     {
       id: 'audit_logs',
@@ -390,13 +389,15 @@ const MyExtras = () => {
               <Badge className={`${getTierColor(currentTier)} px-3 py-1`}>
                 {getTierDisplayName(currentTier)}
               </Badge>
-              <Button 
-                onClick={handleUpgrade}
-                className="bg-[#faa51a] hover:bg-[#040458] text-white"
-              >
-                <Crown className="h-4 w-4 mr-2" />
-                Upgrade Plan
-              </Button>
+              {currentTier !== 'enterprise_advantage' && (
+                <Button 
+                  onClick={handleUpgrade}
+                  className="bg-[#faa51a] hover:bg-[#040458] text-white"
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade Plan
+                </Button>
+              )}
             </div>
           </div>
 
@@ -443,13 +444,15 @@ const MyExtras = () => {
                 <Home className="h-4 w-4" />
                 <span>Home</span>
               </Button>
-              <Button 
-                onClick={handleUpgrade}
-                className="bg-[#faa51a] hover:bg-[#040458] text-white flex-1"
-              >
-                <Crown className="h-4 w-4 mr-2" />
-                Upgrade
-              </Button>
+              {currentTier !== 'enterprise_advantage' && (
+                <Button 
+                  onClick={handleUpgrade}
+                  className="bg-[#faa51a] hover:bg-[#040458] text-white flex-1"
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Upgrade
+                </Button>
+              )}
             </div>
           </div>
           

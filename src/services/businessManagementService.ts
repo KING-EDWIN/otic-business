@@ -78,8 +78,12 @@ export class BusinessManagementService {
   async getUserBusinesses(): Promise<Business[]> {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('User not authenticated')
+      if (!user) {
+        console.error('User not authenticated')
+        throw new Error('User not authenticated')
+      }
 
+      console.log('Calling get_user_businesses RPC for user:', user.id)
       const { data, error } = await supabase.rpc('get_user_businesses', {
         user_id_param: user.id
       })
@@ -89,6 +93,7 @@ export class BusinessManagementService {
         return []
       }
 
+      console.log('RPC get_user_businesses returned:', data?.length || 0, 'businesses')
       return data || []
     } catch (error) {
       console.error('Error in getUserBusinesses:', error)

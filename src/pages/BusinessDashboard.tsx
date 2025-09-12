@@ -42,9 +42,11 @@ const BusinessDashboard: React.FC = () => {
   const [inviteLoading, setInviteLoading] = useState(false)
 
   const filteredMembers = businessMembers.filter(member =>
-    member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.role.toLowerCase().includes(searchTerm.toLowerCase())
+    member && (
+      member.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.role?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
   )
 
   const getRoleIcon = (role: string) => {
@@ -368,7 +370,7 @@ const BusinessDashboard: React.FC = () => {
                           <p className="text-sm font-medium text-gray-900">
                             {member.full_name || member.business_name || 'Unknown'}
                           </p>
-                          <p className="text-xs text-gray-500">{member.email}</p>
+                          <p className="text-xs text-gray-500">{member.email || 'No email'}</p>
                         </div>
                       </div>
                       <Badge className={getRoleColor(member.role)}>
