@@ -27,7 +27,7 @@ import {
   ArrowLeft,
   Home
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContextHybrid';
 import { useBusiness } from '@/contexts/BusinessContext';
 import { useBusinessManagement } from '@/contexts/BusinessManagementContext';
 import { toast } from 'sonner';

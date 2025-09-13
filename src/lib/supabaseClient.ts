@@ -9,9 +9,19 @@ export const supabase = createClient(url, anonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce'
+  },
+  global: {
+    headers: {
+      'apikey': anonKey
+    }
   }
 })
+
+// Add debugging
+console.log('🔧 Supabase client initialized with URL:', url)
+console.log('🔧 Supabase client initialized with anon key:', anonKey ? 'Present' : 'Missing')
 
 // Export configuration for other files
 export { getSupabaseConfig, isOfflineMode }

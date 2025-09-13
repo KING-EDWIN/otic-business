@@ -25,7 +25,8 @@ import {
   Eye,
   Trash2,
   Edit,
-  ArrowRight
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -43,11 +44,13 @@ const BusinessManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [deletingBusiness, setDeletingBusiness] = useState<string | null>(null)
 
-  const filteredBusinesses = businesses.filter(business =>
-    business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    business.business_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    business.industry?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredBusinesses = businesses
+    .filter(business => business && business.name) // Remove null/undefined businesses
+    .filter(business =>
+      business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      business.business_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      business.industry?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
 
   const getRoleIcon = (role?: string) => {
     switch (role) {
@@ -158,11 +161,22 @@ const BusinessManagement: React.FC = () => {
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Business Management</h1>
-              <p className="text-gray-600 mt-1">
-                Manage your businesses and switch between them
-              </p>
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Back to Dashboard</span>
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Business Management</h1>
+                <p className="text-gray-600 mt-1">
+                  Manage your businesses and switch between them
+                </p>
+              </div>
             </div>
             {canCreateBusiness && (
               <Button

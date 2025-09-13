@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
-import { useAuth } from './AuthContext'
+import { useAuth } from './AuthContextHybrid'
 import { businessManagementService, Business, BusinessMember } from '@/services/businessManagementService'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 
 interface BusinessManagementContextType {
   businesses: Business[]
@@ -42,7 +42,8 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
 
   // Load businesses when user changes
   useEffect(() => {
-    if (user) {
+    if (user && profile) {
+      // Only load businesses when both user and profile are available
       loadBusinesses()
     } else {
       setBusinesses([])
@@ -50,7 +51,7 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
       setBusinessMembers([])
       setLoading(false)
     }
-  }, [user])
+  }, [user, profile])
 
   // Set current business from localStorage on mount
   useEffect(() => {
@@ -71,8 +72,11 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
         loadBusinessMembers(businesses[0].id)
         loadedBusinessMembersRef.current = businesses[0].id
       }
+    } else if (businesses.length === 0 && user && profile) {
+      // If no businesses found but user is authenticated, try to create a default one
+      console.log('No businesses found for authenticated user, will create default business')
     }
-  }, [businesses.length]) // Only depend on length, not the entire array
+  }, [businesses.length, user, profile]) // Depend on user and profile too
 
   const loadBusinesses = async () => {
     // Prevent multiple simultaneous loads
@@ -86,7 +90,15 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
       setLoading(true)
       
       console.log('Loading businesses for user:', user?.id)
-      const userBusinesses = await businessManagementService.getUserBusinesses()
+      
+      // Add timeout to prevent hanging
+      const userBusinesses = await Promise.race([
+        businessManagementService.getUserBusinesses(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Business loading timeout')), 15000)
+        )
+      ]) as Business[]
+      
       console.log('Loaded businesses:', userBusinesses.length, userBusinesses)
       
       // If user has no businesses, create a default one
@@ -116,6 +128,12 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
       }
     } catch (error) {
       console.error('Error loading businesses:', error)
+      
+      // Handle timeout errors gracefully
+      if (error instanceof Error && error.message.includes('timeout')) {
+        console.log('Business loading timed out, using empty array')
+      }
+      
       // Set empty businesses array on error to prevent infinite loops
       setBusinesses([])
     } finally {
@@ -157,6 +175,12 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
 
   const loadBusinessMembers = async (businessId: string) => {
     try {
+      if (!businessId) {
+        console.log('No businessId provided, skipping member load')
+        setBusinessMembers([])
+        return
+      }
+      
       console.log('Loading business members for:', businessId)
       const members = await businessManagementService.getBusinessMembers(businessId)
       console.log('Loaded business members:', members.length)

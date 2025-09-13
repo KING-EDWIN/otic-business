@@ -47,6 +47,7 @@ import TierSelection from "./pages/TierSelection";
 import TierGuide from "./pages/TierGuide";
 import IndividualDashboard from "./pages/IndividualDashboard";
 import IndividualSettings from "./pages/IndividualSettings";
+import BusinessDashboardForIndividual from "./pages/BusinessDashboardForIndividual";
 import LoginTypeSelection from "./pages/LoginTypeSelection";
 import BusinessSignIn from "./pages/BusinessSignIn";
 import IndividualSignIn from "./pages/IndividualSignIn";
@@ -54,6 +55,8 @@ import BusinessManagement from "./pages/BusinessManagement";
 import CreateBusiness from "./pages/CreateBusiness";
 import BusinessMembers from "./pages/BusinessMembers";
 import BusinessDashboard from "./pages/BusinessDashboard";
+import BusinessInvitationManager from "./components/BusinessInvitationManager";
+import NetworkStatusIndicator from "./components/NetworkStatusIndicator";
 import NotFound from "./pages/NotFound";
 import OAuthCallback from "./components/OAuthCallback";
 
@@ -143,6 +146,7 @@ const App = () => {
           <AuthProvider>
             <BusinessProvider>
               <BusinessManagementProvider>
+                <NetworkStatusIndicator />
                 <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/features" element={<Features />} />
@@ -160,6 +164,7 @@ const App = () => {
                 <Route path="/tier-guide" element={<TierGuide />} />
                 <Route path="/individual-dashboard" element={<ProtectedRoute><IndividualDashboard /></ProtectedRoute>} />
                 <Route path="/individual-settings" element={<ProtectedRoute><IndividualSettings /></ProtectedRoute>} />
+                <Route path="/business-dashboard/:businessId" element={<ProtectedRoute><BusinessDashboardForIndividual /></ProtectedRoute>} />
                 <Route path="/login-type" element={<LoginTypeSelection />} />
                 <Route path="/business-signin" element={<PublicRoute><BusinessSignIn /></PublicRoute>} />
                 <Route path="/individual-signin" element={<PublicRoute><IndividualSignIn /></PublicRoute>} />
@@ -188,6 +193,7 @@ const App = () => {
                 <Route path="/business-management/:businessId" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
                 <Route path="/business-management/:businessId/dashboard" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
                 <Route path="/business-management/:businessId/members" element={<ProtectedRoute><BusinessMembers /></ProtectedRoute>} />
+                <Route path="/business-management/:businessId/invitations" element={<ProtectedRoute><BusinessInvitationManager /></ProtectedRoute>} />
                 <Route path="/test-auth" element={<TestAuth />} />
                 <Route path="/simple-test" element={<SimpleTest />} />
                 <Route path="/auth-test" element={<AuthTest />} />

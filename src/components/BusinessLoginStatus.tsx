@@ -130,9 +130,9 @@ const BusinessLoginStatus = () => {
               <DropdownMenuLabel className="text-xs font-medium text-gray-700 px-2 py-1">
                 Switch Business
               </DropdownMenuLabel>
-              {businesses.slice(0, 3).map((business) => (
+              {businesses.slice(0, 3).map((business, index) => (
                 <DropdownMenuItem
-                  key={business.id}
+                  key={`business-${business.id}-${index}`}
                   onClick={() => handleSwitchBusiness(business.id)}
                   className="cursor-pointer pl-6"
                 >

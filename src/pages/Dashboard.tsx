@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContextHybrid'
 import { useBusinessManagement } from '@/contexts/BusinessManagementContext'
 import { OticAPI } from '@/services/api'
 import { AIAnalytics } from '@/services/aiService'
@@ -413,6 +413,7 @@ const Dashboard = () => {
           </div>
         )}
         
+
         {/* Welcome Banner */}
         <div className="mb-8 bg-gradient-to-r from-[#040458] via-purple-600 to-[#faa51a] rounded-2xl p-8 text-white relative overflow-hidden">
           <div className="relative z-10">

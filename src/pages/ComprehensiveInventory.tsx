@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContextHybrid';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,6 @@ import {
   Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
-import ComprehensiveInventoryForm from '@/components/ComprehensiveInventoryForm';
 import BusinessLoginStatus from '@/components/BusinessLoginStatus';
 
 interface Product {
@@ -74,8 +73,6 @@ const ComprehensiveInventory: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -84,6 +81,7 @@ const ComprehensiveInventory: React.FC = () => {
   }, []);
 
   const loadData = async () => {
+    if (loading) return; // Prevent multiple simultaneous calls
     try {
       setLoading(true);
       
@@ -185,15 +183,7 @@ const ComprehensiveInventory: React.FC = () => {
     }
   };
 
-  const handleAddProduct = () => {
-    setEditingProduct(null);
-    setIsFormOpen(true);
-  };
 
-  const handleEditProduct = (product: Product) => {
-    setEditingProduct(product);
-    setIsFormOpen(true);
-  };
 
   const handleDeleteProduct = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
@@ -217,80 +207,6 @@ const ComprehensiveInventory: React.FC = () => {
     }
   };
 
-  const handleFormSubmit = async (productData: Product) => {
-    try {
-      if (editingProduct) {
-        // Update existing product
-        const { error } = await supabase
-          .from('products')
-          .update({
-            name: productData.name,
-            category_id: productData.category_id,
-            weight_grams: productData.weight_grams,
-            size_value: productData.size_value,
-            size_unit: productData.size_unit,
-            quantity_per_carton: productData.quantity_per_carton,
-            buying_price: productData.buying_price,
-            selling_price: productData.selling_price,
-            carton_discount: productData.carton_discount,
-            quantity_bought_cartons: productData.quantity_bought_cartons,
-            reorder_level: productData.reorder_level,
-            purchase_date: productData.purchase_date,
-            expiry_date: productData.expiry_date || null,
-            supplier_name: productData.supplier_name,
-            supplier_contact: productData.supplier_contact,
-            how_sold: productData.how_sold,
-            min_stock: productData.min_stock
-          })
-          .eq('id', editingProduct.id);
-
-        if (error) {
-          toast.error('Failed to update product');
-          console.error('Error updating product:', error);
-        } else {
-          toast.success('Product updated successfully');
-          setIsFormOpen(false);
-          loadData();
-        }
-      } else {
-        // Create new product
-        const { error } = await supabase
-          .from('products')
-          .insert({
-            name: productData.name,
-            category_id: productData.category_id,
-            weight_grams: productData.weight_grams,
-            size_value: productData.size_value,
-            size_unit: productData.size_unit,
-            quantity_per_carton: productData.quantity_per_carton,
-            buying_price: productData.buying_price,
-            selling_price: productData.selling_price,
-            carton_discount: productData.carton_discount,
-            quantity_bought_cartons: productData.quantity_bought_cartons,
-            reorder_level: productData.reorder_level,
-            purchase_date: productData.purchase_date,
-            expiry_date: productData.expiry_date || null,
-            supplier_name: productData.supplier_name,
-            supplier_contact: productData.supplier_contact,
-            how_sold: productData.how_sold,
-            min_stock: productData.min_stock,
-            user_id: user?.id
-          });
-
-        if (error) {
-          toast.error('Failed to create product');
-          console.error('Error creating product:', error);
-        } else {
-          toast.success('Product created successfully');
-          setIsFormOpen(false);
-          loadData();
-        }
-      }
-    } catch (error) {
-      toast.error('Failed to save product');
-      console.error('Error saving product:', error);
-    }
-  };
 
   const getStockStatus = (product: Product) => {
     const currentStock = product.current_stock || 0;
@@ -325,11 +241,9 @@ const ComprehensiveInventory: React.FC = () => {
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
-  const lowStockProducts = products.filter(p => p.current_stock_units <= p.reorder_level);
-  const outOfStockProducts = products.filter(p => p.current_stock_units <= 0);
-  const expiringProducts = products.filter(p => 
-    p.expiry_date && new Date(p.expiry_date) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  );
+  const lowStockProducts = products.filter(p => (p.current_stock || 0) <= (p.min_stock || 0));
+  const outOfStockProducts = products.filter(p => (p.current_stock || 0) <= 0);
+  const expiringProducts = products.filter(p => false); // No expiry date in current Product interface
 
   if (loading) {
     return (
@@ -371,12 +285,10 @@ const ComprehensiveInventory: React.FC = () => {
                 Back to Dashboard
               </Button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Inventory Tracking System</h1>
-                <p className="text-sm text-gray-500">Comprehensive inventory management with 17 tracking fields</p>
+                <h1 className="text-2xl font-bold text-gray-900">Inventory Management</h1>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <BusinessLoginStatus />
               <Button
                 variant="outline"
                 size="sm"
@@ -402,13 +314,7 @@ const ComprehensiveInventory: React.FC = () => {
                 <RefreshCw className="h-4 w-4" />
                 Restock
               </Button>
-              <Button
-                onClick={handleAddProduct}
-                className="bg-[#040458] hover:bg-[#040458]/90 flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Product
-              </Button>
+              <BusinessLoginStatus />
             </div>
           </div>
         </div>
@@ -420,8 +326,8 @@ const ComprehensiveInventory: React.FC = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-lg">
+                  <Package className="h-6 w-6 text-white" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Total Products</p>
@@ -434,8 +340,8 @@ const ComprehensiveInventory: React.FC = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <AlertTriangle className="h-6 w-6 text-orange-600" />
+                <div className="p-2 bg-[#faa51a]/10 rounded-lg">
+                  <AlertTriangle className="h-6 w-6 text-[#faa51a]" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Low Stock</p>
@@ -462,8 +368,8 @@ const ComprehensiveInventory: React.FC = () => {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-yellow-600" />
+                <div className="p-2 bg-[#040458]/10 rounded-lg">
+                  <Clock className="h-6 w-6 text-[#040458]" />
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Expiring Soon</p>
@@ -520,10 +426,10 @@ const ComprehensiveInventory: React.FC = () => {
 
         {/* Products Table */}
         <Card>
-          <CardHeader>
-            <CardTitle>Products ({filteredProducts.length})</CardTitle>
-            <CardDescription>
-              Comprehensive inventory tracking with all 17 required fields
+          <CardHeader className="bg-gradient-to-r from-[#040458] to-[#faa51a] text-white rounded-t-lg">
+            <CardTitle className="text-white">Products ({filteredProducts.length})</CardTitle>
+            <CardDescription className="text-white/80">
+              Comprehensive inventory tracking with all product information
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -586,13 +492,6 @@ const ComprehensiveInventory: React.FC = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleEditProduct(product)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
                               onClick={() => handleDeleteProduct(product.id)}
                               className="text-red-600 hover:text-red-700"
                             >
@@ -640,15 +539,6 @@ const ComprehensiveInventory: React.FC = () => {
         </Card>
       </div>
 
-      {/* Comprehensive Form */}
-      <ComprehensiveInventoryForm
-        product={editingProduct}
-        categories={categories}
-        onSubmit={handleFormSubmit}
-        onCancel={() => setIsFormOpen(false)}
-        isOpen={isFormOpen}
-        title={editingProduct ? 'Edit Product' : 'Add New Product'}
-      />
     </div>
   );
 };

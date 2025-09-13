@@ -1,182 +1,208 @@
-import React, { useState } from 'react'
-import { useBusinessManagement } from '@/contexts/BusinessManagementContext'
-import { Button } from '@/components/ui/button'
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu'
-import { Badge } from '@/components/ui/badge'
-import { 
-  Building2, 
-  ChevronDown, 
-  Plus, 
-  Settings, 
-  Users,
-  Crown,
-  Shield,
-  User,
-  Eye
-} from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronDown, Building2, Users, CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
+import { supabase } from '@/lib/supabaseClient';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const BusinessSwitcher: React.FC = () => {
-  const { 
-    businesses, 
-    currentBusiness, 
-    loading, 
-    canCreateBusiness, 
-    switchBusiness 
-  } = useBusinessManagement()
-  const navigate = useNavigate()
-  const [isOpen, setIsOpen] = useState(false)
+interface BusinessAccess {
+  business_id: string;
+  business_name: string;
+  business_description: string;
+  access_level: string;
+  granted_at: string;
+  is_active: boolean;
+}
 
-  const getRoleIcon = (role?: string) => {
-    switch (role) {
-      case 'owner': return <Crown className="h-3 w-3 text-yellow-600" />
-      case 'admin': return <Shield className="h-3 w-3 text-blue-600" />
-      case 'manager': return <User className="h-3 w-3 text-green-600" />
-      case 'employee': return <User className="h-3 w-3 text-gray-600" />
-      case 'viewer': return <Eye className="h-3 w-3 text-gray-400" />
-      default: return <User className="h-3 w-3 text-gray-600" />
+interface BusinessSwitcherProps {
+  currentBusinessId?: string;
+  onBusinessChange?: (businessId: string) => void;
+}
+
+const BusinessSwitcher: React.FC<BusinessSwitcherProps> = ({ 
+  currentBusinessId, 
+  onBusinessChange 
+}) => {
+  const navigate = useNavigate();
+  const [businesses, setBusinesses] = useState<BusinessAccess[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadBusinesses();
+  }, []);
+
+  const loadBusinesses = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError('User not authenticated');
+        return;
+      }
+
+      const { data, error: fetchError } = await supabase.rpc('get_individual_businesses', {
+        user_id_param: user.id
+      });
+
+      if (fetchError) {
+        console.error('Error loading businesses:', fetchError);
+        setError('Failed to load businesses');
+        return;
+      }
+
+      setBusinesses(data || []);
+    } catch (error) {
+      console.error('Error loading businesses:', error);
+      setError('Failed to load businesses');
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
-  const getRoleColor = (role?: string) => {
-    switch (role) {
-      case 'owner': return 'bg-yellow-100 text-yellow-800'
-      case 'admin': return 'bg-blue-100 text-blue-800'
-      case 'manager': return 'bg-green-100 text-green-800'
-      case 'employee': return 'bg-gray-100 text-gray-800'
-      case 'viewer': return 'bg-gray-100 text-gray-400'
-      default: return 'bg-gray-100 text-gray-800'
+  const handleBusinessSelect = (businessId: string) => {
+    if (onBusinessChange) {
+      onBusinessChange(businessId);
     }
-  }
+    // Navigate to the business dashboard
+    navigate(`/business-dashboard/${businessId}`);
+  };
 
-  const handleBusinessSwitch = async (businessId: string) => {
-    const result = await switchBusiness(businessId)
-    if (result.success) {
-      setIsOpen(false)
-      // Refresh the page to update all business-specific data
-      window.location.reload()
+  const getAccessLevelColor = (level: string) => {
+    switch (level) {
+      case 'full':
+        return 'text-green-600 bg-green-50';
+      case 'standard':
+        return 'text-blue-600 bg-blue-50';
+      case 'limited':
+        return 'text-orange-600 bg-orange-50';
+      default:
+        return 'text-gray-600 bg-gray-50';
     }
-  }
+  };
 
-  const handleCreateBusiness = () => {
-    navigate('/business-management/create')
-    setIsOpen(false)
-  }
-
-  const handleManageBusinesses = () => {
-    navigate('/business-management')
-    setIsOpen(false)
-  }
+  const getAccessLevelIcon = (level: string) => {
+    switch (level) {
+      case 'full':
+        return <CheckCircle className="h-3 w-3" />;
+      case 'standard':
+        return <Users className="h-3 w-3" />;
+      case 'limited':
+        return <Building2 className="h-3 w-3" />;
+      default:
+        return <Building2 className="h-3 w-3" />;
+    }
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg animate-pulse">
-        <Building2 className="h-4 w-4 text-gray-400" />
-        <span className="text-sm text-gray-500">Loading...</span>
+      <div className="flex items-center space-x-2">
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-8 w-8" />
       </div>
-    )
+    );
   }
 
-  if (!currentBusiness) {
+  if (error) {
     return (
-      <Button
-        onClick={handleCreateBusiness}
-        variant="outline"
-        className="flex items-center space-x-2"
-      >
-        <Plus className="h-4 w-4" />
-        <span>Create Business</span>
-      </Button>
-    )
+      <div className="flex items-center space-x-2 text-red-600">
+        <Building2 className="h-4 w-4" />
+        <span className="text-sm">Error loading businesses</span>
+      </div>
+    );
   }
+
+  if (businesses.length === 0) {
+    return (
+      <div className="flex items-center space-x-2 text-gray-500">
+        <Building2 className="h-4 w-4" />
+        <span className="text-sm">No business access</span>
+      </div>
+    );
+  }
+
+  const currentBusiness = businesses.find(b => b.business_id === currentBusinessId);
 
   return (
-    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          className="flex items-center space-x-2 min-w-0 max-w-xs"
+        <Button 
+          variant="outline" 
+          className="flex items-center space-x-2 min-w-[200px] justify-between"
         >
-          <Building2 className="h-4 w-4 flex-shrink-0" />
-          <span className="truncate">{currentBusiness.name}</span>
-          <ChevronDown className="h-4 w-4 flex-shrink-0" />
+          <div className="flex items-center space-x-2">
+            <Building2 className="h-4 w-4" />
+            <span className="truncate">
+              {currentBusiness ? currentBusiness.business_name : 'Select Business'}
+            </span>
+          </div>
+          <ChevronDown className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      
-      <DropdownMenuContent align="start" className="w-80">
-        <div className="px-3 py-2 border-b">
+      <DropdownMenuContent className="w-80" align="end">
+        <DropdownMenuLabel className="text-center">
           <div className="flex items-center space-x-2">
-            <Building2 className="h-4 w-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-900">Switch Business</span>
+            <Building2 className="h-4 w-4" />
+            <span>Your Business Access</span>
           </div>
-        </div>
-
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        
         {businesses.map((business) => (
           <DropdownMenuItem
-            key={business.id}
-            onClick={() => handleBusinessSwitch(business.id)}
-            className="flex items-center justify-between px-3 py-2 cursor-pointer"
+            key={business.business_id}
+            onClick={() => handleBusinessSelect(business.business_id)}
+            className="flex flex-col items-start space-y-2 p-4 cursor-pointer"
           >
-            <div className="flex items-center space-x-3 min-w-0 flex-1">
-              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Building2 className="h-4 w-4 text-blue-600" />
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center space-x-2">
+                <Building2 className="h-4 w-4 text-[#040458]" />
+                <span className="font-medium text-[#040458]">
+                  {business.business_name}
+                </span>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-gray-900 truncate">
-                    {business.name}
-                  </span>
-                  {business.id === currentBusiness.id && (
-                    <Badge variant="secondary" className="text-xs">
-                      Current
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center space-x-2 mt-1">
-                  {getRoleIcon(business.user_role)}
-                  <span className="text-xs text-gray-500 capitalize">
-                    {business.user_role}
-                  </span>
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs ${getRoleColor(business.user_role)}`}
-                  >
-                    {business.business_type}
-                  </Badge>
-                </div>
+              <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${getAccessLevelColor(business.access_level)}`}>
+                {getAccessLevelIcon(business.access_level)}
+                <span className="capitalize">{business.access_level}</span>
               </div>
+            </div>
+            
+            {business.business_description && (
+              <p className="text-sm text-gray-600 line-clamp-2">
+                {business.business_description}
+              </p>
+            )}
+            
+            <div className="flex items-center space-x-4 text-xs text-gray-500">
+              <span>Access Level: {business.access_level}</span>
+              <span>•</span>
+              <span>
+                Joined: {new Date(business.granted_at).toLocaleDateString()}
+              </span>
             </div>
           </DropdownMenuItem>
         ))}
-
+        
         <DropdownMenuSeparator />
-
-        {canCreateBusiness && (
-          <DropdownMenuItem
-            onClick={handleCreateBusiness}
-            className="flex items-center space-x-2 px-3 py-2 cursor-pointer"
-          >
-            <Plus className="h-4 w-4 text-gray-500" />
-            <span className="text-sm text-gray-700">Create New Business</span>
-          </DropdownMenuItem>
-        )}
-
         <DropdownMenuItem
-          onClick={handleManageBusinesses}
-          className="flex items-center space-x-2 px-3 py-2 cursor-pointer"
+          onClick={() => navigate('/individual-dashboard')}
+          className="text-center text-gray-600"
         >
-          <Settings className="h-4 w-4 text-gray-500" />
-          <span className="text-sm text-gray-700">Manage Businesses</span>
+          Back to Individual Dashboard
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
+  );
+};
 
-export default BusinessSwitcher
+export default BusinessSwitcher;

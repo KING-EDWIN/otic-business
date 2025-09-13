@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 
 export interface Business {
   id: string;
@@ -261,7 +261,7 @@ class BusinessService {
   async getBusinessMembers(businessId: string): Promise<any[]> {
     try {
       const { data, error } = await supabase.rpc('get_business_members', {
-        business_uuid: businessId
+        business_id_param: businessId
       });
       
       if (error) {

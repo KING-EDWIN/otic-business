@@ -25,6 +25,8 @@ import {
 } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts'
 import IndividualLoginStatus from '@/components/IndividualLoginStatus'
+import BusinessSwitcher from '@/components/BusinessSwitcher'
+import InvitationNotification from '@/components/InvitationNotification'
 
 interface Expense {
   id: string
@@ -195,6 +197,7 @@ const IndividualDashboard = () => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              <BusinessSwitcher />
               <Button
                 variant="outline"
                 onClick={() => navigate('/individual-settings')}
@@ -210,6 +213,11 @@ const IndividualDashboard = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Business Invitations */}
+        <div className="mb-8">
+          <InvitationNotification />
+        </div>
+        
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContextHybrid'
+import { useBusinessManagement } from '@/contexts/BusinessManagementContext'
 import { getOfflineProducts } from '@/services/offlineData'
 
 interface Product {
@@ -37,7 +38,8 @@ interface SaleItem {
 }
 import { OticAPI } from '@/services/api'
 import { BrowserMultiFormatReader } from '@zxing/library'
-import QuaggaBarcodeScanner from '@/components/QuaggaBarcodeScanner'
+import EnhancedBarcodeScanner from '@/components/EnhancedBarcodeScanner'
+import { supabase } from '@/lib/supabase'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -80,6 +82,7 @@ interface CartItem {
 
 const POS = () => {
   const { user } = useAuth()
+  const { currentBusiness } = useBusinessManagement()
   const navigate = useNavigate()
   const [products, setProducts] = useState<Product[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
@@ -104,7 +107,7 @@ const POS = () => {
     // Always fetch products and initialize barcode reader
     fetchProducts()
     initializeBarcodeReader()
-  }, [])
+  }, [currentBusiness?.id])
 
   const initializeBarcodeReader = () => {
     try {
@@ -119,13 +122,51 @@ const POS = () => {
     try {
       setLoading(true)
       
-      // Use offline data for now
-      const offlineProducts = getOfflineProducts()
-      setProducts(offlineProducts)
-      console.log('Loaded offline products for POS:', offlineProducts)
+      if (!currentBusiness?.id) {
+        console.log('No business selected, using offline products')
+        const offlineProducts = getOfflineProducts()
+        setProducts(offlineProducts)
+        return
+      }
+      
+      // Try to load from database first - business specific
+      const { data: dbProducts, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('business_id', currentBusiness.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error loading products from database:', error)
+        // Fallback to offline data
+        const offlineProducts = getOfflineProducts()
+        setProducts(offlineProducts)
+        console.log('Using offline products for POS:', offlineProducts)
+      } else {
+        // Transform database products to match POS interface
+        const transformedProducts = (dbProducts || []).map(product => ({
+          id: product.id,
+          name: product.name,
+          barcode: product.barcode || '',
+          price: product.retail_price || product.wholesale_price || product.cost_price || 0,
+          cost: product.cost_price || 0,
+          stock: product.current_stock || 0,
+          min_stock: product.min_stock || 0,
+          category_id: product.category_id,
+          supplier_id: product.supplier_id,
+          user_id: product.business_id || '',
+          created_at: product.created_at,
+          updated_at: product.updated_at
+        }))
+        setProducts(transformedProducts)
+        console.log('Loaded business-specific products for POS:', transformedProducts)
+      }
     } catch (error) {
       console.error('Error fetching products:', error)
-      toast.error('Failed to load products')
+      // Fallback to offline data
+      const offlineProducts = getOfflineProducts()
+      setProducts(offlineProducts)
+      console.log('Using offline products for POS:', offlineProducts)
     } finally {
       setLoading(false)
     }
@@ -202,8 +243,9 @@ const POS = () => {
   }
 
   const handleBarcodeScanFromCamera = (barcode: string) => {
+    console.log('Camera scanned barcode:', barcode)
     setBarcodeInput(barcode)
-    handleBarcodeScan()
+    // Don't call handleBarcodeScan immediately, let user see the barcode first
     setShowBarcodeScanner(false)
   }
 
@@ -650,7 +692,7 @@ const POS = () => {
       </div>
 
       {/* Barcode Scanner Modal */}
-      <QuaggaBarcodeScanner
+      <EnhancedBarcodeScanner
         isOpen={showBarcodeScanner}
         onClose={() => setShowBarcodeScanner(false)}
         onScan={handleBarcodeScanFromCamera}

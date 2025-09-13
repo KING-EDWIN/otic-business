@@ -66,9 +66,9 @@ const BusinessSignIn = () => {
                 <p className="text-gray-600">Access your business account</p>
               </div>
             </div>
-            <Button variant="outline" onClick={() => navigate(-1)} className="flex items-center space-x-2">
+            <Button variant="outline" onClick={() => navigate('/login-type')} className="flex items-center space-x-2">
               <ArrowLeft className="h-4 w-4" />
-              <span>Back</span>
+              <span>Login Type</span>
             </Button>
           </div>
         </div>
