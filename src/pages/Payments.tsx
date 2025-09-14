@@ -11,8 +11,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import PaymentInstructions from '@/components/PaymentInstructions'
 import { paymentService, PaymentRequest } from '@/services/paymentService'
-import { useAuth } from '@/contexts/AuthContextHybrid'
-import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabaseClient'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
 
 const Payments: React.FC = () => {

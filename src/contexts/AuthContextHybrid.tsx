@@ -90,10 +90,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (initialSession) {
         setSession(initialSession)
         setUser(initialSession.user)
+        
+        // Save to localStorage for persistence
+        localStorage.setItem('otic_user', JSON.stringify(initialSession.user))
+        
         await loadUserProfile(initialSession.user.id)
+      } else {
+        // Try to load from localStorage as fallback
+        const savedUser = localStorage.getItem('otic_user')
+        const savedProfile = localStorage.getItem('otic_profile')
+        
+        if (savedUser) {
+          const userData = JSON.parse(savedUser)
+          const profileData = savedProfile ? JSON.parse(savedProfile) : null
+          setUser(userData)
+          setProfile(profileData)
+          setSession({ user: userData })
+          console.log('Restored user from localStorage')
+        }
       }
     } catch (error) {
       console.error('Error initializing Supabase:', error)
+      
+      // Try to load from localStorage as fallback
+      const savedUser = localStorage.getItem('otic_user')
+      const savedProfile = localStorage.getItem('otic_profile')
+      
+      if (savedUser) {
+        const userData = JSON.parse(savedUser)
+        const profileData = savedProfile ? JSON.parse(savedProfile) : null
+        setUser(userData)
+        setProfile(profileData)
+        setSession({ user: userData })
+        console.log('Restored user from localStorage after error')
+      }
     } finally {
       setLoading(false)
     }
@@ -106,11 +136,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (session) {
           setSession(session)
           setUser(session.user)
+          
+          // Save user to localStorage for persistence
+          localStorage.setItem('otic_user', JSON.stringify(session.user))
+          
           await loadUserProfile(session.user.id)
         } else {
           setSession(null)
           setUser(null)
           setProfile(null)
+          
+          // Clear localStorage when signed out
+          localStorage.removeItem('otic_user')
+          localStorage.removeItem('otic_profile')
         }
         
         setLoading(false)
@@ -131,18 +169,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('Error loading user profile:', error)
         
-        // Report system error instead of creating fallback
-        if (errorReportingService.isOnline()) {
-          await errorReportingService.logSystemError({
-            errorType: 'USER_PROFILE_ACCESS_ERROR',
-            errorMessage: `Failed to access user profile: ${error.message}`,
-            errorDetails: {
-              userId,
-              errorCode: error.code,
-              errorMessage: error.message,
-              timestamp: new Date().toISOString()
-            }
-          })
+        // Try to report system error, but don't fail if it doesn't work
+        try {
+          if (errorReportingService.isOnline()) {
+            await errorReportingService.logSystemError({
+              errorType: 'USER_PROFILE_ACCESS_ERROR',
+              errorMessage: `Failed to access user profile: ${error.message}`,
+              errorDetails: {
+                userId,
+                errorCode: error.code,
+                errorMessage: error.message,
+                timestamp: new Date().toISOString()
+              }
+            })
+          }
+        } catch (reportError) {
+          console.warn('Failed to report system error:', reportError)
         }
         
         // Create a basic profile if access fails
@@ -162,6 +204,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       setProfile(data)
+      
+      // Save profile to localStorage for persistence
+      localStorage.setItem('otic_profile', JSON.stringify(data))
+      
       // Clear pending user type once profile is loaded
       setPendingUserType(null)
     } catch (error) {

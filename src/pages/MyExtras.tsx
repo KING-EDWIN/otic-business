@@ -27,8 +27,7 @@ import {
   ArrowLeft,
   Home
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContextHybrid';
-import { useBusiness } from '@/contexts/BusinessContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useBusinessManagement } from '@/contexts/BusinessManagementContext';
 import { toast } from 'sonner';
 
@@ -46,7 +45,7 @@ interface TierFeature {
 
 const MyExtras = () => {
   const { user, profile } = useAuth();
-  const { currentBusiness, userBusinesses, canCreateBusiness } = useBusiness();
+  const { currentBusiness, businesses: userBusinesses, canCreateBusiness } = useBusinessManagement();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('features');
   

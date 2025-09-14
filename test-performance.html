@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Performance Test</h1>
+    <div id="status"></div>
+    <div id="results"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://jvgiyscchxxekcbdicco.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8'
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+        async function testPerformance() {
+            const statusDiv = document.getElementById('status')
+            const resultsDiv = document.getElementById('results')
+            
+            statusDiv.innerHTML = 'Testing performance...'
+            resultsDiv.innerHTML = ''
+
+            const startTime = performance.now()
+
+            try {
+                // Test 1: Auth initialization
+                console.log('Testing auth initialization...')
+                const authStart = performance.now()
+                const { data: { session }, error: authError } = await supabase.auth.getSession()
+                const authEnd = performance.now()
+                
+                if (authError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ Auth init error: ${authError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ Auth init: ${(authEnd - authStart).toFixed(2)}ms</p>`
+                }
+
+                // Test 2: Table access speed
+                console.log('Testing table access speed...')
+                const tableStart = performance.now()
+                
+                const [profilesResult, businessesResult] = await Promise.all([
+                    supabase.from('user_profiles').select('id, email').limit(1),
+                    supabase.from('businesses').select('id, name').limit(1)
+                ])
+                
+                const tableEnd = performance.now()
+                
+                if (profilesResult.error) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ user_profiles error: ${profilesResult.error.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ user_profiles: ${(tableEnd - tableStart).toFixed(2)}ms</p>`
+                }
+                
+                if (businessesResult.error) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ businesses error: ${businessesResult.error.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ businesses: ${(tableEnd - tableStart).toFixed(2)}ms</p>`
+                }
+
+                // Test 3: RPC function speed
+                console.log('Testing RPC function speed...')
+                const rpcStart = performance.now()
+                const { data: rpcResult, error: rpcError } = await supabase
+                    .rpc('get_user_businesses', { p_user_id: '00000000-0000-0000-0000-000000000000' })
+                const rpcEnd = performance.now()
+                
+                if (rpcError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ RPC error: ${rpcError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ RPC functions: ${(rpcEnd - rpcStart).toFixed(2)}ms</p>`
+                }
+
+                const totalTime = performance.now() - startTime
+                resultsDiv.innerHTML += `<p style="color: blue; font-weight: bold;">⏱️ Total time: ${totalTime.toFixed(2)}ms</p>`
+                
+                if (totalTime < 1000) {
+                    resultsDiv.innerHTML += `<p style="color: green; font-weight: bold;">🚀 Performance: EXCELLENT</p>`
+                } else if (totalTime < 3000) {
+                    resultsDiv.innerHTML += `<p style="color: orange; font-weight: bold;">⚠️ Performance: GOOD</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: red; font-weight: bold;">🐌 Performance: SLOW</p>`
+                }
+                
+                statusDiv.innerHTML = 'Performance test completed!'
+                
+            } catch (error) {
+                statusDiv.innerHTML = 'Performance test failed!'
+                resultsDiv.innerHTML += `<p style="color: red;">❌ General error: ${error.message}</p>`
+            }
+        }
+
+        // Run test when page loads
+        window.onload = testPerformance
+    </script>
+</body>
+</html>

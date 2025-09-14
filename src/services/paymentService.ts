@@ -1,5 +1,5 @@
 // Payment Service for handling payments and subscriptions
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { getCurrentUserInfo } from '@/utils/userUtils'
 
 export interface PaymentRequest {

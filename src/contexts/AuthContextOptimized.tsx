@@ -1,40 +1,33 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
+import { isOfflineMode, getCurrentConfig } from '@/config/storageConfig'
+// import { SignupService } from '@/services/signupService'
 
 interface UserProfile {
   id: string
   email: string
+  full_name?: string
   business_name?: string
   phone?: string
+  address?: string
   tier: 'free_trial' | 'start_smart' | 'grow_intelligence' | 'enterprise_advantage'
+  user_type: 'business' | 'individual'
   email_verified: boolean
   created_at: string
   updated_at: string
 }
 
-interface Subscription {
-  id: string
-  user_id: string
-  tier: string
-  status: string
-  starts_at: string
-  expires_at?: string
-  created_at: string
-  updated_at: string
-}
-
 interface AuthContextType {
-  user: User | null
+  user: any
   profile: UserProfile | null
-  subscription: Subscription | null
-  session: Session | null
+  session: any
   loading: boolean
-  signUp: (email: string, password: string, businessName: string) => Promise<{ error: any }>
-  signIn: (email: string, password: string) => Promise<{ error: any }>
+  signUp: (email: string, password: string, businessName: string, userType?: 'business' | 'individual') => Promise<{ error: any }>
+  signIn: (email: string, password: string, userType?: 'business' | 'individual') => Promise<{ error: any }>
   signInWithGoogle: () => Promise<{ error: any }>
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: any }>
+  getDashboardRoute: () => string
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -48,128 +41,183 @@ export const useAuth = () => {
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<any>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
+  const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [pendingUserType, setPendingUserType] = useState<'business' | 'individual' | null>(null)
+
+  // Check if we're in offline mode
+  const isOffline = isOfflineMode()
 
   useEffect(() => {
-    let isMounted = true
+    if (isOffline) {
+      // Offline mode - load from localStorage
+      loadOfflineUser()
+    } else {
+      // Online mode - use Supabase
+      initializeSupabase()
+    }
+  }, [isOffline])
 
-    // Quick timeout to prevent long loading
-    const timeout = setTimeout(() => {
-      if (isMounted) {
-        setLoading(false)
+  const loadOfflineUser = () => {
+    try {
+      const savedUser = localStorage.getItem('otic_user')
+      const savedProfile = localStorage.getItem('otic_profile')
+      
+      if (savedUser) {
+        const userData = JSON.parse(savedUser)
+        const profileData = savedProfile ? JSON.parse(savedProfile) : null
+        
+        setUser(userData)
+        setProfile(profileData)
+        setSession({ user: userData })
+        console.log('Loaded offline user:', userData)
       }
-    }, 2000) // 2 second max loading time
+    } catch (error) {
+      console.error('Error loading offline user:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession()
+  const initializeSupabase = async () => {
+    try {
+      // Get initial session
+      const { data: { session: initialSession } } = await supabase.auth.getSession()
+      
+      if (initialSession) {
+        setSession(initialSession)
+        setUser(initialSession.user)
         
-        if (error) {
-          console.warn('Auth session error:', error.message)
-        }
+        // Save to localStorage for persistence
+        localStorage.setItem('otic_user', JSON.stringify(initialSession.user))
         
-        if (isMounted) {
-          setSession(session)
-          setUser(session?.user ?? null)
-          
-          if (session?.user) {
-            // Fetch user data in parallel for better performance
-            const [profileResult, subscriptionResult] = await Promise.allSettled([
-              supabase
-                .from('user_profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single(),
-              supabase
-                .from('subscriptions')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single()
-            ])
-            
-            if (profileResult.status === 'fulfilled' && profileResult.value.data) {
-              setProfile(profileResult.value.data)
-            }
-            
-            if (subscriptionResult.status === 'fulfilled' && subscriptionResult.value.data) {
-              setSubscription(subscriptionResult.value.data)
-            }
-          }
-          
-          setLoading(false)
-        }
-      } catch (error) {
-        console.error('Auth initialization error:', error)
-        if (isMounted) {
-          setLoading(false)
-        }
+        // Load profile asynchronously without blocking
+        loadUserProfileAsync(initialSession.user.id)
+      } else {
+        // No session - user needs to sign in
+        setUser(null)
+        setProfile(null)
+        setSession(null)
+        console.log('No active session - user needs to sign in')
       }
+    } catch (error) {
+      console.error('Error initializing Supabase:', error)
+      
+      // On error, clear everything and require fresh login
+      setUser(null)
+      setProfile(null)
+      setSession(null)
+      localStorage.removeItem('otic_user')
+      localStorage.removeItem('otic_profile')
+    } finally {
+      setLoading(false)
     }
 
-    getInitialSession()
-
-    // Listen for auth changes
+    // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!isMounted) return
+        console.log('Auth state change:', event, session ? 'Session exists' : 'No session')
         
-        setSession(session)
-        setUser(session?.user ?? null)
-        
-        if (session?.user) {
-          // Fetch user data in parallel
-          const [profileResult, subscriptionResult] = await Promise.allSettled([
-            supabase
-              .from('user_profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single(),
-            supabase
-              .from('subscriptions')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .single()
-          ])
+        if (session) {
+          setSession(session)
+          setUser(session.user)
           
-          if (profileResult.status === 'fulfilled' && profileResult.value.data) {
-            setProfile(profileResult.value.data)
-          }
+          // Save user to localStorage for persistence
+          localStorage.setItem('otic_user', JSON.stringify(session.user))
           
-          if (subscriptionResult.status === 'fulfilled' && subscriptionResult.value.data) {
-            setSubscription(subscriptionResult.value.data)
-          }
+          // Load profile asynchronously without blocking
+          loadUserProfileAsync(session.user.id)
         } else {
+          setSession(null)
+          setUser(null)
           setProfile(null)
-          setSubscription(null)
+          
+          // Clear localStorage when signed out
+          localStorage.removeItem('otic_user')
+          localStorage.removeItem('otic_profile')
         }
         
         setLoading(false)
       }
     )
 
-    return () => {
-      isMounted = false
-      clearTimeout(timeout)
-      subscription.unsubscribe()
-    }
-  }, [])
+    return () => subscription.unsubscribe()
+  }
 
-  const signUp = async (email: string, password: string, businessName: string) => {
+  // Non-blocking profile loading
+  const loadUserProfileAsync = async (userId: string) => {
     try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+
+      if (error) {
+        console.warn('Profile access error, using fallback:', error.message)
+        
+        // Create a basic profile if access fails
+        const basicProfile = {
+          id: userId,
+          email: user?.email || '',
+          full_name: user?.user_metadata?.full_name || '',
+          tier: 'free_trial' as const,
+          user_type: 'business' as const,
+          email_verified: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        
+        setProfile(basicProfile)
+        localStorage.setItem('otic_profile', JSON.stringify(basicProfile))
+        return
+      }
+
+      // Keep original profile data, don't override display name
+      const enhancedProfile = {
+        ...data
+      }
+      
+      console.log('Profile loading - User email:', user?.email)
+      console.log('Profile loading - Database profile full_name:', data.full_name)
+      console.log('Profile loading - Enhanced profile full_name:', enhancedProfile.full_name)
+      
+      setProfile(enhancedProfile)
+      localStorage.setItem('otic_profile', JSON.stringify(enhancedProfile))
+      setPendingUserType(null)
+    } catch (error) {
+      console.warn('Profile loading error, using fallback:', error)
+      
+      // Create a basic profile on error
+      const basicProfile = {
+        id: userId,
+        email: user?.email || '',
+        full_name: user?.user_metadata?.full_name || '',
+        tier: 'free_trial' as const,
+        user_type: 'business' as const,
+        email_verified: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      
+      setProfile(basicProfile)
+      localStorage.setItem('otic_profile', JSON.stringify(basicProfile))
+    }
+  }
+
+  const signUp = async (email: string, password: string, businessName: string, userType: 'business' | 'individual' = 'business') => {
+    try {
+      setPendingUserType(userType)
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/signin`
+          data: {
+            business_name: businessName,
+            user_type: userType
+          }
         }
       })
 
@@ -177,64 +225,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error }
       }
 
-      if (data.user) {
-        // Create user profile
-        await supabase
-          .from('user_profiles')
-          .insert({
-            id: data.user.id,
-            email: data.user.email,
-            business_name: businessName,
-            tier: 'free_trial',
-            email_verified: false
-          })
-      }
-
       return { error: null }
     } catch (error) {
+      console.error('Sign up error:', error)
       return { error }
     }
   }
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, userType: 'business' | 'individual' = 'business') => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      setPendingUserType(userType)
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
-      return { error }
+
+      if (error) {
+        return { error }
+      }
+
+      return { error: null }
     } catch (error) {
+      console.error('Sign in error:', error)
       return { error }
     }
   }
 
   const signInWithGoogle = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
         }
       })
-      return { error }
+
+      if (error) {
+        return { error }
+      }
+
+      return { error: null }
     } catch (error) {
+      console.error('Google sign in error:', error)
       return { error }
     }
   }
 
   const signOut = async () => {
     try {
-      setLoading(true)
       await supabase.auth.signOut()
+      
+      // Clear all state
       setUser(null)
       setProfile(null)
-      setSubscription(null)
       setSession(null)
-      setLoading(false)
-      window.location.href = '/signin'
+      setPendingUserType(null)
+      
+      // Clear localStorage
+      localStorage.removeItem('otic_user')
+      localStorage.removeItem('otic_profile')
     } catch (error) {
-      console.error('Error signing out:', error)
-      setLoading(false)
+      console.error('Sign out error:', error)
     }
   }
 
@@ -244,26 +295,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: new Error('No user logged in') }
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('user_profiles')
         .update(updates)
         .eq('id', user.id)
+        .select()
+        .single()
 
       if (error) {
         return { error }
       }
 
-      setProfile(prev => prev ? { ...prev, ...updates } : null)
+      setProfile(data)
+      localStorage.setItem('otic_profile', JSON.stringify(data))
       return { error: null }
     } catch (error) {
+      console.error('Update profile error:', error)
       return { error }
+    }
+  }
+
+  const getDashboardRoute = () => {
+    if (!profile) return '/'
+    
+    if (profile.user_type === 'business') {
+      return '/business-dashboard'
+    } else {
+      return '/individual-dashboard'
     }
   }
 
   const value = {
     user,
     profile,
-    subscription,
     session,
     loading,
     signUp,
@@ -271,6 +335,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signInWithGoogle,
     signOut,
     updateProfile,
+    getDashboardRoute
   }
 
   return (

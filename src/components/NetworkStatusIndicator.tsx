@@ -23,11 +23,12 @@ export const NetworkStatusIndicator: React.FC<NetworkStatusIndicatorProps> = ({ 
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
 
-    // Check for slow network responses
+    // Check for slow network responses using a simple ping
     const checkNetworkHealth = async () => {
       try {
         const start = Date.now()
-        const response = await fetch('https://jvgiyscchxxekcbdicco.supabase.co/rest/v1/', {
+        // Use a simple ping endpoint instead of Supabase API
+        const response = await fetch('https://httpbin.org/status/200', {
           method: 'HEAD',
           mode: 'no-cors'
         })
@@ -37,7 +38,11 @@ export const NetworkStatusIndicator: React.FC<NetworkStatusIndicatorProps> = ({ 
           setShowWarning(true)
         }
       } catch (error) {
-        setShowWarning(true)
+        // Only show warning if it's a real network error, not a CORS error
+        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+          setShowWarning(true)
+        }
+        // Silently handle other errors to avoid console spam
       }
     }
 

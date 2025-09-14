@@ -33,12 +33,30 @@ const BusinessSignIn = () => {
       }
 
       if (data.user) {
-        // Business sign-in: go directly to business dashboard
-        console.log('BusinessSignIn: Auth successful, redirecting to business dashboard')
-        toast.success('Welcome back to your business dashboard!')
+        console.log('BusinessSignIn: Auth successful, checking user type...')
         
-        // Immediate redirect to business dashboard
-        window.location.href = '/dashboard'
+        // Check user profile to determine user type
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single()
+        
+        if (profileError) {
+          console.error('BusinessSignIn: Profile error:', profileError)
+          setError('Failed to load user profile')
+          return
+        }
+        
+        if (profile.user_type === 'business') {
+          console.log('BusinessSignIn: User is business, redirecting to business dashboard')
+          toast.success('Welcome back to your business dashboard!')
+          navigate('/dashboard')
+        } else {
+          console.log('BusinessSignIn: User is not business, redirecting to individual dashboard')
+          toast.error('This account is not set up as a business account')
+          navigate('/individual-signin')
+        }
       }
       
     } catch (error: any) {

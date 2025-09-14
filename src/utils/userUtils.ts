@@ -1,5 +1,5 @@
 // User utility functions for proper user data isolation
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { User } from '@supabase/supabase-js'
 
 export interface UserInfo {

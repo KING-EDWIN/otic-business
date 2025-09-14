@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
-import { useAuth } from './AuthContextHybrid'
+import { useAuth } from './AuthContext'
 import { businessManagementService, Business, BusinessMember } from '@/services/businessManagementService'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -42,10 +42,13 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
 
   // Load businesses when user changes
   useEffect(() => {
+    console.log('BusinessManagementContext - useEffect triggered:', { user: !!user, profile: !!profile })
     if (user && profile) {
       // Only load businesses when both user and profile are available
+      console.log('User and profile available, loading businesses...')
       loadBusinesses()
     } else {
+      console.log('User or profile not available, clearing businesses...')
       setBusinesses([])
       setCurrentBusiness(null)
       setBusinessMembers([])
@@ -91,7 +94,20 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
       
       console.log('Loading businesses for user:', user?.id)
       
-      // Add timeout to prevent hanging
+      // Wait a bit for auth to be fully established
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Double-check authentication before making the call
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (!currentUser) {
+        console.error('No authenticated user when loading businesses')
+        setBusinesses([])
+        return
+      }
+      
+      console.log('Confirmed authenticated user:', currentUser.id)
+      
+      // Get user businesses (which includes sub-businesses)
       const userBusinesses = await Promise.race([
         businessManagementService.getUserBusinesses(),
         new Promise((_, reject) => 
@@ -114,11 +130,11 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
       }
       
       // Check if user can create more businesses
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      if (currentUser) {
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (authUser) {
         try {
           const { data: canCreate } = await supabase.rpc('can_create_business', {
-            user_id_param: currentUser.id
+            user_id_param: authUser.id
           })
           setCanCreateBusiness(canCreate || false)
         } catch (rpcError) {
@@ -188,6 +204,14 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
       loadedBusinessMembersRef.current = businessId
     } catch (error) {
       console.error('Error loading business members:', error)
+      
+      // Handle specific RLS recursion error
+      if (error instanceof Error && error.message.includes('infinite recursion')) {
+        console.warn('RLS recursion detected, skipping member load')
+        setBusinessMembers([])
+        return
+      }
+      
       // Set empty array on error to prevent undefined issues
       setBusinessMembers([])
     }

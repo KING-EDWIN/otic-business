@@ -1,7 +1,7 @@
 // Akaunting + Supabase Hybrid Accounting Service
 // Real accounting integration using Akaunting API + Supabase database
 
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 
 export interface Invoice {
   id?: string

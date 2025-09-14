@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Eye, EyeOff, Check, ArrowLeft, Mail } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContextHybrid'
+import { useAuth } from '@/contexts/AuthContext'
 import TermsAndConditionsModal from '@/components/TermsAndConditionsModal'
 
 const SignUpClean = () => {

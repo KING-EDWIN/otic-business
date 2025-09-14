@@ -1,5 +1,5 @@
 // Subscription Service for Tier-based Access Control
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { getCurrentUserInfo } from '@/utils/userUtils'
 import { tierService, Tier, UserSubscription as NewUserSubscription } from './tierService'
 

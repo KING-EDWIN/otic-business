@@ -45,7 +45,7 @@ import {
   Package,
   Building2
 } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { getCurrentUserInfo } from '@/utils/userUtils'
 import { realQuickBooksService } from '@/services/realQuickBooksService'
 import { advancedQuickBooksService } from '@/services/advancedQuickBooksService'

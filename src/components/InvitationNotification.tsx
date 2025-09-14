@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { InvitationService, BusinessInvitation } from '@/services/invitationService'
-import { useAuth } from '@/contexts/AuthContextHybrid'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface InvitationNotificationProps {
   className?: string

@@ -3,9 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/contexts/AuthContextHybrid";
-import { BusinessProvider } from "@/contexts/BusinessContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { BusinessManagementProvider } from "@/contexts/BusinessManagementContext";
+import "@/utils/errorHandler";
 import Index from "./pages/Index";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
@@ -113,7 +113,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Public Route Component (redirect to dashboard if already logged in)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, profile } = useAuth();
   
   if (loading) {
     return (
@@ -123,7 +123,20 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  return user ? <Navigate to="/dashboard" /> : <>{children}</>;
+  if (user) {
+    // Check user type and redirect accordingly
+    if (profile) {
+      if (profile.user_type === 'individual') {
+        return <Navigate to="/individual-dashboard" />;
+      } else {
+        return <Navigate to="/dashboard" />;
+      }
+    }
+    // If no profile yet, redirect to dashboard (will be handled by AuthContext)
+    return <Navigate to="/dashboard" />;
+  }
+  
+  return <>{children}</>;
 };
 
 const App = () => {
@@ -144,9 +157,8 @@ const App = () => {
           }}
         >
           <AuthProvider>
-            <BusinessProvider>
-              <BusinessManagementProvider>
-                <NetworkStatusIndicator />
+            <BusinessManagementProvider>
+              <NetworkStatusIndicator />
                 <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/features" element={<Features />} />
@@ -201,8 +213,7 @@ const App = () => {
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-              </BusinessManagementProvider>
-            </BusinessProvider>
+            </BusinessManagementProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

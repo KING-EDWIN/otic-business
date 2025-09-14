@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitation System Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Invitation System Test</h1>
+    <div id="status"></div>
+    <div id="results"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://jvgiyscchxxekcbdicco.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8'
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+        async function testInvitationSystem() {
+            const statusDiv = document.getElementById('status')
+            const resultsDiv = document.getElementById('results')
+            
+            statusDiv.innerHTML = 'Testing invitation system...'
+            resultsDiv.innerHTML = ''
+
+            try {
+                // Test 1: Check business_invitations table access
+                console.log('Testing business_invitations table access...')
+                const { data: invitations, error: invitationsError } = await supabase
+                    .from('business_invitations')
+                    .select('id, invited_email, status')
+                    .limit(5)
+
+                if (invitationsError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ business_invitations error: ${invitationsError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ business_invitations access: OK (${invitations.length} records)</p>`
+                }
+
+                // Test 2: Check RPC functions
+                console.log('Testing RPC functions...')
+                const { data: rpcTest, error: rpcError } = await supabase
+                    .rpc('get_user_invitations', { p_user_email: 'test@example.com' })
+
+                if (rpcError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ get_user_invitations error: ${rpcError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ get_user_invitations: OK</p>`
+                }
+
+                // Test 3: Test invitation creation (simulate)
+                console.log('Testing invitation creation...')
+                const testInvitation = {
+                    business_id: '00000000-0000-0000-0000-000000000000',
+                    invited_email: 'test@example.com',
+                    role: 'manager',
+                    invited_by: '00000000-0000-0000-0000-000000000000',
+                    invitation_token: 'test-token-' + Date.now(),
+                    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                    status: 'pending'
+                }
+
+                const { data: insertResult, error: insertError } = await supabase
+                    .from('business_invitations')
+                    .insert(testInvitation)
+                    .select()
+
+                if (insertError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ Invitation creation error: ${insertError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ Invitation creation: OK</p>`
+                    
+                    // Clean up test data
+                    if (insertResult && insertResult.length > 0) {
+                        await supabase
+                            .from('business_invitations')
+                            .delete()
+                            .eq('id', insertResult[0].id)
+                    }
+                }
+
+                // Test 4: Check all critical tables
+                console.log('Testing all critical tables...')
+                const tables = ['user_profiles', 'businesses', 'business_memberships', 'business_invitations', 'system_error_logs']
+                
+                for (const table of tables) {
+                    const { data, error } = await supabase
+                        .from(table)
+                        .select('*')
+                        .limit(1)
+
+                    if (error) {
+                        resultsDiv.innerHTML += `<p style="color: red;">❌ ${table} error: ${error.message}</p>`
+                    } else {
+                        resultsDiv.innerHTML += `<p style="color: green;">✅ ${table} access: OK</p>`
+                    }
+                }
+
+                statusDiv.innerHTML = 'Invitation system test completed!'
+                
+            } catch (error) {
+                statusDiv.innerHTML = 'Invitation system test failed!'
+                resultsDiv.innerHTML += `<p style="color: red;">❌ General error: ${error.message}</p>`
+            }
+        }
+
+        // Run test when page loads
+        window.onload = testInvitationSystem
+    </script>
+</body>
+</html>

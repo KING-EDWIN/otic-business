@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { generateDemoProducts, generateDemoSales, generateDemoAnalytics } from './demoData'
 
 export const seedDemoData = async (tier: 'free_trial' | 'basic' | 'standard' | 'premium') => {

@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { getCurrentUserInfo } from '@/utils/userUtils'
 
 // Direct Sandbox QuickBooks Service (for testing without OAuth)

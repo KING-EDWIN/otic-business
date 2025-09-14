@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Access Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>User Access Test</h1>
+    <div id="status"></div>
+    <div id="results"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://jvgiyscchxxekcbdicco.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8'
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+        async function testUserAccess() {
+            const statusDiv = document.getElementById('status')
+            const resultsDiv = document.getElementById('results')
+            
+            statusDiv.innerHTML = 'Testing user access...'
+            resultsDiv.innerHTML = ''
+
+            const testUserId = '3488046f-56cf-4711-9045-7e6e158a1c91'
+
+            try {
+                // Test 1: Check if we can access user_profiles table
+                console.log('Testing user_profiles access...')
+                const { data: userProfile, error: profileError } = await supabase
+                    .from('user_profiles')
+                    .select('id, email, full_name, user_type')
+                    .eq('id', testUserId)
+                    .single()
+
+                if (profileError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ user_profiles error: ${profileError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ user_profiles access: OK</p>`
+                    resultsDiv.innerHTML += `<p>User: ${userProfile.email} (${userProfile.user_type})</p>`
+                }
+
+                // Test 2: Check if we can access businesses table
+                console.log('Testing businesses access...')
+                const { data: businesses, error: businessesError } = await supabase
+                    .from('businesses')
+                    .select('id, name, owner_id')
+                    .limit(5)
+
+                if (businessesError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ businesses error: ${businessesError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ businesses access: OK (${businesses.length} businesses)</p>`
+                }
+
+                // Test 3: Check if we can access business_memberships table
+                console.log('Testing business_memberships access...')
+                const { data: memberships, error: membershipsError } = await supabase
+                    .from('business_memberships')
+                    .select('id, user_id, business_id, role, status')
+                    .eq('user_id', testUserId)
+
+                if (membershipsError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ business_memberships error: ${membershipsError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ business_memberships access: OK (${memberships.length} memberships)</p>`
+                }
+
+                // Test 4: Check if we can access business_invitations table
+                console.log('Testing business_invitations access...')
+                const { data: invitations, error: invitationsError } = await supabase
+                    .from('business_invitations')
+                    .select('id, invited_email, role, status, created_at')
+                    .limit(10)
+
+                if (invitationsError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ business_invitations error: ${invitationsError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ business_invitations access: OK (${invitations.length} invitations)</p>`
+                }
+
+                // Test 5: Test RPC functions
+                console.log('Testing RPC functions...')
+                const { data: userBusinesses, error: rpcError } = await supabase
+                    .rpc('get_user_businesses', { p_user_id: testUserId })
+
+                if (rpcError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ get_user_businesses RPC error: ${rpcError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ get_user_businesses RPC: OK (${userBusinesses.length} businesses)</p>`
+                }
+
+                // Test 6: Test get_user_invitations if we have user email
+                if (userProfile && userProfile.email) {
+                    console.log('Testing get_user_invitations RPC...')
+                    const { data: userInvitations, error: invitationsRpcError } = await supabase
+                        .rpc('get_user_invitations', { p_user_email: userProfile.email })
+
+                    if (invitationsRpcError) {
+                        resultsDiv.innerHTML += `<p style="color: red;">❌ get_user_invitations RPC error: ${invitationsRpcError.message}</p>`
+                    } else {
+                        resultsDiv.innerHTML += `<p style="color: green;">✅ get_user_invitations RPC: OK (${userInvitations.length} invitations)</p>`
+                    }
+                }
+
+                statusDiv.innerHTML = 'User access test completed!'
+                
+            } catch (error) {
+                statusDiv.innerHTML = 'User access test failed!'
+                resultsDiv.innerHTML += `<p style="color: red;">❌ General error: ${error.message}</p>`
+            }
+        }
+
+        // Run test when page loads
+        window.onload = testUserAccess
+    </script>
+</body>
+</html>

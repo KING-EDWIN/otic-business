@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContextHybrid'
+import { useAuth } from '@/contexts/AuthContext'
 import { useBusinessManagement } from '@/contexts/BusinessManagementContext'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -83,8 +83,11 @@ const BusinessLoginStatus = () => {
       .slice(0, 2)
   }
 
-  const displayName = profile?.full_name || user.email?.split('@')[0] || 'User'
+  const displayName = user.email?.split('@')[0] || 'User'
   const userInitials = getInitials(displayName)
+  
+  console.log('BusinessLoginStatus - User:', user?.email, 'Profile:', profile?.full_name, 'Display Name:', displayName, 'Initials:', userInitials)
+  console.log('BusinessLoginStatus - Businesses:', businesses.length, businesses)
 
   return (
     <div className="flex items-center space-x-2">

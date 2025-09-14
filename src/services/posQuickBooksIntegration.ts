@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { quickbooksService } from './quickbooksService'
 import { getCurrentUserInfo } from '@/utils/userUtils'
 

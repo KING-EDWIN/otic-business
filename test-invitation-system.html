@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitation System Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Invitation System Test</h1>
+    <div id="status"></div>
+    <div id="results"></div>
+
+    <script>
+        const SUPABASE_URL = 'https://jvgiyscchxxekcbdicco.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8'
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+        async function testInvitationSystem() {
+            const statusDiv = document.getElementById('status')
+            const resultsDiv = document.getElementById('results')
+            
+            statusDiv.innerHTML = 'Testing invitation system...'
+            resultsDiv.innerHTML = ''
+
+            try {
+                // Test 1: Check if we can access business_invitations table
+                console.log('Testing business_invitations table access...')
+                const { data: invitations, error: invitationsError } = await supabase
+                    .from('business_invitations')
+                    .select('id, invited_email, status')
+                    .limit(1)
+
+                if (invitationsError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ business_invitations error: ${invitationsError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ business_invitations access: OK (${invitations.length} records)</p>`
+                }
+
+                // Test 2: Test get_user_invitations RPC function
+                console.log('Testing get_user_invitations RPC function...')
+                const { data: rpcResult, error: rpcError } = await supabase
+                    .rpc('get_user_invitations', { p_user_email: 'test@example.com' })
+
+                if (rpcError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ get_user_invitations RPC error: ${rpcError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ get_user_invitations RPC: OK (${rpcResult.length} invitations)</p>`
+                }
+
+                // Test 3: Test creating an invitation (if we have a business)
+                console.log('Testing invitation creation...')
+                const { data: businesses, error: businessError } = await supabase
+                    .from('businesses')
+                    .select('id, name')
+                    .limit(1)
+
+                if (businessError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ businesses access error: ${businessError.message}</p>`
+                } else if (businesses.length > 0) {
+                    // Try to create a test invitation
+                    const testInvitation = {
+                        business_id: businesses[0].id,
+                        invited_email: 'test-invitation@example.com',
+                        role: 'manager',
+                        invited_by: '00000000-0000-0000-0000-000000000000', // Dummy user ID
+                        invitation_token: 'test-token-' + Date.now(),
+                        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+                    }
+
+                    const { data: newInvitation, error: createError } = await supabase
+                        .from('business_invitations')
+                        .insert(testInvitation)
+                        .select()
+
+                    if (createError) {
+                        resultsDiv.innerHTML += `<p style="color: red;">❌ Create invitation error: ${createError.message}</p>`
+                    } else {
+                        resultsDiv.innerHTML += `<p style="color: green;">✅ Create invitation: OK (ID: ${newInvitation[0].id})</p>`
+                        
+                        // Clean up test invitation
+                        await supabase
+                            .from('business_invitations')
+                            .delete()
+                            .eq('id', newInvitation[0].id)
+                    }
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: orange;">⚠️ No businesses found - skipping invitation creation test</p>`
+                }
+
+                // Test 4: Test log_system_error RPC function
+                console.log('Testing log_system_error RPC function...')
+                const { data: logResult, error: logError } = await supabase
+                    .rpc('log_system_error', {
+                        p_error_type: 'INVITATION_TEST',
+                        p_error_message: 'Testing invitation system',
+                        p_error_details: { test: true, timestamp: new Date().toISOString() }
+                    })
+
+                if (logError) {
+                    resultsDiv.innerHTML += `<p style="color: red;">❌ log_system_error RPC error: ${logError.message}</p>`
+                } else {
+                    resultsDiv.innerHTML += `<p style="color: green;">✅ log_system_error RPC: OK</p>`
+                }
+
+                statusDiv.innerHTML = 'Invitation system test completed!'
+                
+            } catch (error) {
+                statusDiv.innerHTML = 'Invitation system test failed!'
+                resultsDiv.innerHTML += `<p style="color: red;">❌ General error: ${error.message}</p>`
+            }
+        }
+
+        // Run test when page loads
+        window.onload = testInvitationSystem
+    </script>
+</body>
+</html>

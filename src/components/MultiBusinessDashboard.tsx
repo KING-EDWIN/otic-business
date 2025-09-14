@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import BusinessSwitcher from './BusinessSwitcher';
 import BusinessRegistrationModal from './BusinessRegistrationModal';
-import { useBusiness } from '@/contexts/BusinessContext';
+import { useBusinessManagement } from '@/contexts/BusinessManagementContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { businessService } from '@/services/businessService';
 
@@ -33,7 +33,7 @@ interface DashboardStats {
 
 export default function MultiBusinessDashboard() {
   const { user } = useAuth();
-  const { currentBusiness, userBusinesses, loading, canCreateBusiness } = useBusiness();
+  const { currentBusiness, businesses: userBusinesses, loading, canCreateBusiness } = useBusinessManagement();
   const [stats, setStats] = useState<DashboardStats>({
     totalSales: 0,
     totalOrders: 0,

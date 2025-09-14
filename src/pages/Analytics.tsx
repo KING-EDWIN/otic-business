@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContextHybrid'
+import { useAuth } from '@/contexts/AuthContext'
 import { DataService } from '@/services/dataService'
 import { AnalyticsSkeleton } from '@/components/ui/skeletons'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'

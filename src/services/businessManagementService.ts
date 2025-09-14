@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 
 export interface Business {
   id: string
@@ -74,29 +74,152 @@ export interface CreateBusinessData {
 }
 
 export class BusinessManagementService {
-  // Get all businesses for the current user
-  async getUserBusinesses(): Promise<Business[]> {
+  // Get sub-businesses for the current user's main business
+  async getSubBusinesses(): Promise<Business[]> {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      console.log('getSubBusinesses: Starting...')
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError) {
+        console.error('getSubBusinesses: Auth error:', userError)
+        throw new Error('Authentication error: ' + userError.message)
+      }
+      
       if (!user) {
-        console.error('User not authenticated')
+        console.error('getSubBusinesses: User not authenticated')
         throw new Error('User not authenticated')
       }
 
-      console.log('Calling get_user_businesses RPC for user:', user.id)
-      const { data, error } = await supabase.rpc('get_user_businesses', {
+      console.log('getSubBusinesses: Getting main business for user:', user.id)
+      
+      // First get the main business
+      const { data: mainBusiness, error: mainError } = await supabase.rpc('get_main_business', {
         user_id_param: user.id
       })
 
-      if (error) {
-        console.error('Error fetching user businesses:', error)
+      if (mainError) {
+        console.error('getSubBusinesses: Main business error:', mainError)
+        throw new Error('Failed to get main business: ' + mainError.message)
+      }
+
+      if (!mainBusiness || mainBusiness.length === 0) {
+        console.log('getSubBusinesses: No main business found')
         return []
       }
 
-      console.log('RPC get_user_businesses returned:', data?.length || 0, 'businesses')
+      const mainBusinessId = mainBusiness[0].business_id
+      console.log('getSubBusinesses: Main business ID:', mainBusinessId)
+
+      // Then get sub-businesses
+      const { data, error } = await supabase.rpc('get_sub_businesses', {
+        parent_business_id_param: mainBusinessId
+      })
+
+      if (error) {
+        console.error('getSubBusinesses: Sub-businesses error:', error)
+        throw new Error('Failed to get sub-businesses: ' + error.message)
+      }
+
+      console.log('getSubBusinesses: Found sub-businesses:', data?.length || 0)
       return data || []
     } catch (error) {
-      console.error('Error in getUserBusinesses:', error)
+      console.error('getSubBusinesses: Error:', error)
+      return []
+    }
+  }
+
+  // Get all businesses for the current user (legacy method)
+  async getUserBusinesses(): Promise<Business[]> {
+    try {
+      console.log('getUserBusinesses: Starting...')
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError) {
+        console.error('getUserBusinesses: Auth error:', userError)
+        throw new Error('Authentication error: ' + userError.message)
+      }
+      
+      if (!user) {
+        console.error('getUserBusinesses: User not authenticated')
+        throw new Error('User not authenticated')
+      }
+
+      console.log('getUserBusinesses: Calling get_user_businesses RPC for user:', user.id)
+      
+      // Try RPC function first
+      const { data, error } = await supabase.rpc('get_user_businesses', {
+        p_user_id: user.id
+      })
+
+      if (error) {
+        console.warn('getUserBusinesses: RPC function failed, trying direct query:', error.message)
+        console.warn('getUserBusinesses: RPC error details:', error)
+        
+        // Fallback to direct query
+        const { data: directData, error: directError } = await supabase
+          .from('business_memberships')
+          .select(`
+            business_id,
+            role,
+            status,
+            joined_at,
+            businesses!inner (
+              id,
+              name
+            )
+          `)
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+
+        if (directError) {
+          console.error('getUserBusinesses: Direct query also failed:', directError)
+          console.error('getUserBusinesses: Direct query error details:', directError)
+          return []
+        }
+
+        // Transform direct query result to match Business interface
+        const transformedData: Business[] = directData?.map(item => ({
+          id: item.business_id,
+          name: (item.businesses as any)?.name || '',
+          business_type: 'retail', // Default value
+          currency: 'UGX', // Default value
+          timezone: 'Africa/Kampala', // Default value
+          status: 'active' as const,
+          settings: {},
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          created_by: '',
+          user_role: item.role as any,
+          joined_at: item.joined_at
+        })) || []
+
+        console.log('Direct query returned:', transformedData.length, 'businesses')
+        return transformedData
+      }
+
+      console.log('getUserBusinesses: RPC get_user_businesses returned:', data?.length || 0, 'businesses')
+      
+      // Transform RPC data to match Business interface
+      const transformedData: Business[] = data?.map((item: any) => ({
+        id: item.business_id,
+        name: item.business_name || '',
+        business_type: 'retail', // Default value
+        currency: 'UGX', // Default value
+        timezone: 'Africa/Kampala', // Default value
+        status: 'active' as const,
+        settings: {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: '',
+        user_role: item.role as any,
+        joined_at: item.joined_at
+      })) || []
+      
+      console.log('getUserBusinesses: Transformed data:', transformedData.length, 'businesses')
+      return transformedData
+    } catch (error) {
+      console.error('getUserBusinesses: Error in getUserBusinesses:', error)
+      console.error('getUserBusinesses: Error details:', error)
       return []
     }
   }
@@ -242,10 +365,10 @@ export class BusinessManagementService {
         .from('business_invitations')
         .insert({
           business_id: businessId,
-          email,
+          invited_email: email,
           role,
           invited_by: user.id,
-          token,
+          invitation_token: token,
           expires_at: expiresAt.toISOString()
         })
 
@@ -274,7 +397,7 @@ export class BusinessManagementService {
       const { data: invitation, error: fetchError } = await supabase
         .from('business_invitations')
         .select('*')
-        .eq('token', token)
+        .eq('invitation_token', token)
         .eq('status', 'pending')
         .single()
 
@@ -377,8 +500,20 @@ export class BusinessManagementService {
   // Switch business context
   async switchBusinessContext(businessId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('User not authenticated')
+      console.log('switchBusinessContext: Starting switch to business:', businessId)
+      
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError) {
+        console.error('switchBusinessContext: Auth error:', userError)
+        return { success: false, error: 'Authentication error' }
+      }
+      
+      if (!user) {
+        console.error('switchBusinessContext: User not authenticated')
+        return { success: false, error: 'User not authenticated' }
+      }
+
+      console.log('switchBusinessContext: Calling RPC with user:', user.id, 'business:', businessId)
 
       const { data, error } = await supabase.rpc('switch_business_context', {
         user_id_param: user.id,
@@ -386,9 +521,12 @@ export class BusinessManagementService {
       })
 
       if (error) {
-        console.error('Error switching business context:', error)
-        return { success: false, error: 'Failed to switch business context' }
+        console.error('switchBusinessContext: RPC error:', error)
+        console.error('switchBusinessContext: Error details:', error)
+        return { success: false, error: 'Failed to switch business context: ' + error.message }
       }
+
+      console.log('switchBusinessContext: RPC result:', data)
 
       if (!data) {
         return { success: false, error: 'You are not a member of this business' }
@@ -396,7 +534,7 @@ export class BusinessManagementService {
 
       return { success: true }
     } catch (error) {
-      console.error('Error in switchBusinessContext:', error)
+      console.error('switchBusinessContext: Unexpected error:', error)
       return { success: false, error: 'An unexpected error occurred' }
     }
   }
@@ -456,3 +594,5 @@ export class BusinessManagementService {
 }
 
 export const businessManagementService = new BusinessManagementService()
+
+

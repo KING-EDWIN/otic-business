@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContextHybrid'
+import { useAuth } from '@/contexts/AuthContext'
 import { useBusinessManagement } from '@/contexts/BusinessManagementContext'
 import { getOfflineProducts } from '@/services/offlineData'
 
@@ -39,7 +39,7 @@ interface SaleItem {
 import { OticAPI } from '@/services/api'
 import { BrowserMultiFormatReader } from '@zxing/library'
 import EnhancedBarcodeScanner from '@/components/EnhancedBarcodeScanner'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabaseClient'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'

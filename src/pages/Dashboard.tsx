@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { useAuth } from '@/contexts/AuthContextHybrid'
+import { useAuth } from '@/contexts/AuthContext'
 import { useBusinessManagement } from '@/contexts/BusinessManagementContext'
 import { OticAPI } from '@/services/api'
 import { AIAnalytics } from '@/services/aiService'

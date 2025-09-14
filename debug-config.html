@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration Debug</title>
+</head>
+<body>
+    <h1>Configuration Debug</h1>
+    <div id="results"></div>
+
+    <script type="module">
+        // Test environment variables
+        const resultsDiv = document.getElementById('results')
+        
+        resultsDiv.innerHTML = '<h2>Environment Variables Test</h2>'
+        
+        // Check if we can access import.meta.env
+        try {
+            resultsDiv.innerHTML += `<p>VITE_SUPABASE_URL: ${import.meta.env.VITE_SUPABASE_URL || 'NOT SET'}</p>`
+            resultsDiv.innerHTML += `<p>VITE_SUPABASE_ANON_KEY: ${import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET'}</p>`
+            resultsDiv.innerHTML += `<p>NODE_ENV: ${import.meta.env.NODE_ENV || 'NOT SET'}</p>`
+            resultsDiv.innerHTML += `<p>MODE: ${import.meta.env.MODE || 'NOT SET'}</p>`
+        } catch (error) {
+            resultsDiv.innerHTML += `<p style="color: red;">Error accessing import.meta.env: ${error.message}</p>`
+        }
+        
+        // Test Supabase connection
+        resultsDiv.innerHTML += '<h2>Supabase Connection Test</h2>'
+        
+        // Hardcoded values for testing
+        const SUPABASE_URL = 'https://jvgiyscchxxekcbdicco.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8'
+        
+        resultsDiv.innerHTML += `<p>Hardcoded URL: ${SUPABASE_URL}</p>`
+        resultsDiv.innerHTML += `<p>Hardcoded Key: ${SUPABASE_ANON_KEY ? 'Present' : 'Missing'}</p>`
+        
+        // Test fetch to Supabase
+        fetch(`${SUPABASE_URL}/rest/v1/`, {
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+        })
+        .then(response => {
+            resultsDiv.innerHTML += `<p style="color: green;">✅ Supabase connection: ${response.status} ${response.statusText}</p>`
+        })
+        .catch(error => {
+            resultsDiv.innerHTML += `<p style="color: red;">❌ Supabase connection error: ${error.message}</p>`
+        })
+    </script>
+</body>
+</html>

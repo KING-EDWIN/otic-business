@@ -16,10 +16,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 interface BusinessAccess {
   business_id: string;
   business_name: string;
-  business_description: string;
-  access_level: string;
-  granted_at: string;
-  is_active: boolean;
+  role: string;
+  status: string;
+  joined_at: string;
 }
 
 interface BusinessSwitcherProps {
@@ -51,8 +50,9 @@ const BusinessSwitcher: React.FC<BusinessSwitcherProps> = ({
         return;
       }
 
-      const { data, error: fetchError } = await supabase.rpc('get_individual_businesses', {
-        user_id_param: user.id
+      // Get sub-businesses directly using the existing get_user_businesses RPC
+      const { data, error: fetchError } = await supabase.rpc('get_user_businesses', {
+        p_user_id: user.id
       });
 
       if (fetchError) {
@@ -61,6 +61,7 @@ const BusinessSwitcher: React.FC<BusinessSwitcherProps> = ({
         return;
       }
 
+      console.log('BusinessSwitcher - Loaded businesses:', data?.length || 0, data);
       setBusinesses(data || []);
     } catch (error) {
       console.error('Error loading businesses:', error);
@@ -78,26 +79,34 @@ const BusinessSwitcher: React.FC<BusinessSwitcherProps> = ({
     navigate(`/business-dashboard/${businessId}`);
   };
 
-  const getAccessLevelColor = (level: string) => {
-    switch (level) {
-      case 'full':
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'owner':
         return 'text-green-600 bg-green-50';
-      case 'standard':
+      case 'admin':
         return 'text-blue-600 bg-blue-50';
-      case 'limited':
+      case 'manager':
+        return 'text-purple-600 bg-purple-50';
+      case 'employee':
         return 'text-orange-600 bg-orange-50';
+      case 'viewer':
+        return 'text-gray-600 bg-gray-50';
       default:
         return 'text-gray-600 bg-gray-50';
     }
   };
 
-  const getAccessLevelIcon = (level: string) => {
-    switch (level) {
-      case 'full':
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'owner':
         return <CheckCircle className="h-3 w-3" />;
-      case 'standard':
+      case 'admin':
         return <Users className="h-3 w-3" />;
-      case 'limited':
+      case 'manager':
+        return <Building2 className="h-3 w-3" />;
+      case 'employee':
+        return <Users className="h-3 w-3" />;
+      case 'viewer':
         return <Building2 className="h-3 w-3" />;
       default:
         return <Building2 className="h-3 w-3" />;
@@ -171,23 +180,17 @@ const BusinessSwitcher: React.FC<BusinessSwitcherProps> = ({
                   {business.business_name}
                 </span>
               </div>
-              <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${getAccessLevelColor(business.access_level)}`}>
-                {getAccessLevelIcon(business.access_level)}
-                <span className="capitalize">{business.access_level}</span>
+              <div className={`flex items-center space-x-1 px-2 py-1 rounded-full text-xs ${getRoleColor(business.role)}`}>
+                {getRoleIcon(business.role)}
+                <span className="capitalize">{business.role}</span>
               </div>
             </div>
             
-            {business.business_description && (
-              <p className="text-sm text-gray-600 line-clamp-2">
-                {business.business_description}
-              </p>
-            )}
-            
             <div className="flex items-center space-x-4 text-xs text-gray-500">
-              <span>Access Level: {business.access_level}</span>
+              <span>Role: {business.role}</span>
               <span>•</span>
               <span>
-                Joined: {new Date(business.granted_at).toLocaleDateString()}
+                Joined: {new Date(business.joined_at).toLocaleDateString()}
               </span>
             </div>
           </DropdownMenuItem>

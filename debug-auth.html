@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Debug</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Authentication Debug</h1>
+    <div id="status"></div>
+    <button onclick="signIn()">Sign In</button>
+    <button onclick="checkAuth()">Check Auth</button>
+    <button onclick="testRPC()">Test RPC</button>
+    <button onclick="signOut()">Sign Out</button>
+    
+    <script>
+        const SUPABASE_URL = 'https://jvgiyscchxxekcbdicco.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true,
+                flowType: 'pkce'
+            }
+        });
+        
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML += '<p>' + message + '</p>';
+        }
+        
+        async function signIn() {
+            updateStatus('Attempting to sign in...');
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email: 'dylankatambad@gmail.com',
+                password: '4321qwerty'
+            });
+            
+            if (error) {
+                updateStatus('Sign in error: ' + error.message);
+            } else {
+                updateStatus('Sign in successful! User ID: ' + data.user.id);
+                await checkAuth();
+            }
+        }
+        
+        async function checkAuth() {
+            updateStatus('Checking authentication...');
+            const { data: { user }, error } = await supabase.auth.getUser();
+            
+            if (error) {
+                updateStatus('Auth check error: ' + error.message);
+            } else if (user) {
+                updateStatus('User authenticated: ' + user.id);
+            } else {
+                updateStatus('No user authenticated');
+            }
+            
+            // Check session
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+            if (sessionError) {
+                updateStatus('Session error: ' + sessionError.message);
+            } else if (session) {
+                updateStatus('Session exists: ' + session.user.id);
+            } else {
+                updateStatus('No session');
+            }
+        }
+        
+        async function testRPC() {
+            updateStatus('Testing RPC function...');
+            const { data, error } = await supabase.rpc('get_user_businesses', {
+                p_user_id: '3488046f-56cf-4711-9045-7e6e158a1c91'
+            });
+            
+            if (error) {
+                updateStatus('RPC error: ' + error.message);
+            } else {
+                updateStatus('RPC success: ' + (data?.length || 0) + ' businesses');
+            }
+        }
+        
+        async function signOut() {
+            updateStatus('Signing out...');
+            await supabase.auth.signOut();
+            updateStatus('Signed out');
+        }
+        
+        // Check auth on page load
+        window.onload = function() {
+            updateStatus('Page loaded, checking initial auth state...');
+            checkAuth();
+        };
+    </script>
+</body>
+</html>

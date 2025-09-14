@@ -24,6 +24,7 @@ import {
   Eye
 } from 'lucide-react'
 import { toast } from 'sonner'
+import InvitationNotification from '@/components/InvitationNotification'
 
 const BusinessDashboard: React.FC = () => {
   const { businessId } = useParams<{ businessId: string }>()

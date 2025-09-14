@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { businessService, Business } from '@/services/businessService';
-import { useAuth } from './AuthContextHybrid';
+import { useAuth } from './AuthContext';
 
 interface BusinessContextType {
   currentBusiness: Business | null;

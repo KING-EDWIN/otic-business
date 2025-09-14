@@ -24,12 +24,12 @@ const IndividualSignIn = () => {
       if (session) {
         // Check if user is an individual
         const { data: profile } = await supabase
-          .from('individual_profiles')
+          .from('user_profiles')
           .select('*')
           .eq('id', session.user.id)
           .single()
         
-        if (profile) {
+        if (profile && profile.user_type === 'individual') {
           navigate('/individual-dashboard')
         } else {
           // User is not an individual, redirect to business dashboard
@@ -61,12 +61,30 @@ const IndividualSignIn = () => {
       console.log('IndividualSignIn: Auth successful, user:', data.user?.id)
 
       if (data.user) {
-        // Individual sign-in: go directly to individual dashboard
-        console.log('IndividualSignIn: Auth successful, redirecting to individual dashboard')
-        toast.success('Welcome back, professional!')
+        console.log('IndividualSignIn: Auth successful, checking user type...')
         
-        // Immediate redirect to individual dashboard
-        window.location.href = '/individual-dashboard'
+        // Check user profile to determine user type
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single()
+        
+        if (profileError) {
+          console.error('IndividualSignIn: Profile error:', profileError)
+          setError('Failed to load user profile')
+          return
+        }
+        
+        if (profile.user_type === 'individual') {
+          console.log('IndividualSignIn: User is individual, redirecting to individual dashboard')
+          toast.success('Welcome back, professional!')
+          navigate('/individual-dashboard')
+        } else {
+          console.log('IndividualSignIn: User is not individual, redirecting to business dashboard')
+          toast.error('This account is not set up as an individual account')
+          navigate('/business-signin')
+        }
       }
     } catch (error: any) {
       console.error('IndividualSignIn: Sign in error:', error)
@@ -115,7 +133,7 @@ const IndividualSignIn = () => {
                 <p className="text-gray-600">Access your professional account</p>
               </div>
             </div>
-            <Button variant="outline" onClick={() => navigate(-1)} className="flex items-center space-x-2">
+            <Button variant="outline" onClick={() => navigate('/')} className="flex items-center space-x-2">
               <ArrowLeft className="h-4 w-4" />
               <span>Back</span>
             </Button>
