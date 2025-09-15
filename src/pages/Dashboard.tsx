@@ -38,11 +38,15 @@ import {
   FileText,
   Crown,
   Clock,
-  Calculator
+  Calculator,
+  Calendar,
+  TrendingDown,
+  Activity,
+  Layers
 } from 'lucide-react'
 import { DataService } from '@/services/dataService'
 import { supabase } from '@/lib/supabaseClient'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts'
 import { DashboardSkeleton, CardSkeleton } from '@/components/ui/skeletons'
 import { useIsMobile, ResponsiveContainer as MobileResponsiveContainer, MobileCard } from '@/components/MobileOptimizations'
 
@@ -70,6 +74,11 @@ const Dashboard = () => {
     lowStockItems: 0
   })
   const [statsLoading, setStatsLoading] = useState(false)
+
+  // Chart controls state
+  const [chartPeriod, setChartPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week')
+  const [chartMetric, setChartMetric] = useState<'revenue' | 'profit' | 'sales' | 'stock'>('revenue')
+  const [chartType, setChartType] = useState<'line' | 'bar' | 'area'>('line')
 
   // Load stats using DataService
   useEffect(() => {
@@ -139,6 +148,84 @@ const Dashboard = () => {
       case 'premium': return 'bg-purple-100 text-purple-800'
       default: return 'bg-gray-100 text-gray-800'
     }
+  }
+
+  // Generate chart data based on period and metric
+  const generateChartData = () => {
+    const baseData = {
+      day: [
+        { name: '6AM', value: 1200, sales: 8, profit: 400, stock: 45 },
+        { name: '9AM', value: 2400, sales: 12, profit: 800, stock: 42 },
+        { name: '12PM', value: 1800, sales: 9, profit: 600, stock: 38 },
+        { name: '3PM', value: 3200, sales: 16, profit: 1000, stock: 35 },
+        { name: '6PM', value: 2800, sales: 14, profit: 900, stock: 32 },
+        { name: '9PM', value: 1600, sales: 8, profit: 500, stock: 30 }
+      ],
+      week: [
+        { name: 'Mon', value: 12000, sales: 60, profit: 4000, stock: 280 },
+        { name: 'Tue', value: 15000, sales: 75, profit: 5000, stock: 275 },
+        { name: 'Wed', value: 18000, sales: 90, profit: 6000, stock: 270 },
+        { name: 'Thu', value: 14000, sales: 70, profit: 4600, stock: 265 },
+        { name: 'Fri', value: 22000, sales: 110, profit: 7200, stock: 260 },
+        { name: 'Sat', value: 16000, sales: 80, profit: 5200, stock: 255 },
+        { name: 'Sun', value: 10000, sales: 50, profit: 3200, stock: 250 }
+      ],
+      month: [
+        { name: 'Week 1', value: 65000, sales: 325, profit: 21000, stock: 1200 },
+        { name: 'Week 2', value: 72000, sales: 360, profit: 23000, stock: 1150 },
+        { name: 'Week 3', value: 68000, sales: 340, profit: 22000, stock: 1100 },
+        { name: 'Week 4', value: 75000, sales: 375, profit: 24000, stock: 1050 }
+      ],
+      year: [
+        { name: 'Jan', value: 280000, sales: 1400, profit: 90000, stock: 4800 },
+        { name: 'Feb', value: 320000, sales: 1600, profit: 102000, stock: 4600 },
+        { name: 'Mar', value: 350000, sales: 1750, profit: 112000, stock: 4400 },
+        { name: 'Apr', value: 300000, sales: 1500, profit: 96000, stock: 4200 },
+        { name: 'May', value: 380000, sales: 1900, profit: 121000, stock: 4000 },
+        { name: 'Jun', value: 420000, sales: 2100, profit: 134000, stock: 3800 }
+      ]
+    }
+
+    return baseData[chartPeriod] || baseData.week
+  }
+
+  // Get chart configuration based on selected metric
+  const getChartConfig = () => {
+    const data = generateChartData()
+    const metricKey = chartMetric === 'revenue' ? 'value' : chartMetric === 'profit' ? 'profit' : chartMetric === 'sales' ? 'sales' : 'stock'
+    
+    const configs = {
+      revenue: {
+        dataKey: 'value',
+        color: '#040458',
+        label: 'Revenue (UGX)',
+        formatter: (value: number) => `UGX ${value.toLocaleString()}`,
+        yAxisLabel: 'Revenue (UGX)'
+      },
+      profit: {
+        dataKey: 'profit',
+        color: '#10b981',
+        label: 'Profit (UGX)',
+        formatter: (value: number) => `UGX ${value.toLocaleString()}`,
+        yAxisLabel: 'Profit (UGX)'
+      },
+      sales: {
+        dataKey: 'sales',
+        color: '#faa51a',
+        label: 'Sales Count',
+        formatter: (value: number) => `${value} sales`,
+        yAxisLabel: 'Number of Sales'
+      },
+      stock: {
+        dataKey: 'stock',
+        color: '#ef4444',
+        label: 'Stock Level',
+        formatter: (value: number) => `${value} units`,
+        yAxisLabel: 'Stock Units'
+      }
+    }
+
+    return { ...configs[chartMetric], data }
   }
 
   if (authLoading) {
@@ -570,62 +657,233 @@ const Dashboard = () => {
                   </div>
                     </div>
 
-          {/* Right Column - Sales Performance */}
+          {/* Right Column - Enhanced Sales Performance */}
           <div>
-            <div className="flex items-center mb-6">
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-2">
                 <BarChart3 className="h-5 w-5 text-[#040458]" />
-                <h2 className="text-xl font-semibold text-gray-800">Sales Performance</h2>
-                    </div>
-              <p className="text-sm text-gray-600 ml-4">Weekly sales and revenue trends.</p>
-                    </div>
+                <h2 className="text-xl font-semibold text-gray-800">Performance Analytics</h2>
+              </div>
+              <p className="text-sm text-gray-600">Interactive charts with multiple metrics</p>
+            </div>
+            
             <Card className="p-6 bg-white shadow-lg rounded-xl">
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={[
-                    { name: 'Mon', sales: 120, revenue: 2400 },
-                    { name: 'Tue', sales: 90, revenue: 1800 },
-                    { name: 'Wed', sales: 150, revenue: 3000 },
-                    { name: 'Thu', sales: 110, revenue: 2200 },
-                    { name: 'Fri', sales: 80, revenue: 1600 },
-                    { name: 'Sat', sales: 60, revenue: 1200 },
-                    { name: 'Sun', sales: 40, revenue: 800 }
-                  ]}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="name" 
-                      label={{ value: 'Day', position: 'insideBottom', offset: -10 }}
-                      fontSize={12}
-                    />
-                    <YAxis 
-                      label={{ value: 'Value', angle: -90, position: 'insideLeft' }}
-                      fontSize={12}
-                    />
-                    <Tooltip 
-                      formatter={(value, name) => [
-                        name === 'sales' ? `${value} sales` : `UGX ${value.toLocaleString()}`,
-                        name === 'sales' ? 'Sales' : 'Revenue'
-                      ]}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="sales" 
-                      stroke="#faa51a" 
-                      strokeWidth={3}
-                      name="Sales"
-                      dot={{ fill: '#faa51a', strokeWidth: 2, r: 4 }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke="#040458" 
-                      strokeWidth={3}
-                      name="Revenue"
-                      dot={{ fill: '#040458', strokeWidth: 2, r: 4 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+              {/* Chart Controls */}
+              <div className="flex flex-wrap gap-3 mb-6">
+                {/* Time Period Selector */}
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Period:</span>
+                  <div className="flex bg-gray-100 rounded-lg p-1">
+                    {(['day', 'week', 'month', 'year'] as const).map((period) => (
+                      <button
+                        key={period}
+                        onClick={() => setChartPeriod(period)}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                          chartPeriod === period
+                            ? 'bg-[#040458] text-white'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        {period.charAt(0).toUpperCase() + period.slice(1)}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Metric Selector */}
+                <div className="flex items-center space-x-2">
+                  <Activity className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Metric:</span>
+                  <div className="flex bg-gray-100 rounded-lg p-1">
+                    {(['revenue', 'profit', 'sales', 'stock'] as const).map((metric) => (
+                      <button
+                        key={metric}
+                        onClick={() => setChartMetric(metric)}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                          chartMetric === metric
+                            ? 'bg-[#faa51a] text-white'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        {metric.charAt(0).toUpperCase() + metric.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Chart Type Selector */}
+                <div className="flex items-center space-x-2">
+                  <Layers className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-medium text-gray-700">Type:</span>
+                  <div className="flex bg-gray-100 rounded-lg p-1">
+                    {(['line', 'bar', 'area'] as const).map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setChartType(type)}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                          chartType === type
+                            ? 'bg-green-500 text-white'
+                            : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Chart Display */}
+              <div className="h-72">
+                <ResponsiveContainer width="100%" height="100%">
+                  {(() => {
+                    const config = getChartConfig()
+                    
+                    if (chartType === 'line') {
+                      return (
+                        <LineChart data={config.data}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <XAxis 
+                            dataKey="name" 
+                            fontSize={11}
+                            tick={{ fill: '#6b7280' }}
+                            axisLine={{ stroke: '#d1d5db' }}
+                          />
+                          <YAxis 
+                            fontSize={11}
+                            tick={{ fill: '#6b7280' }}
+                            axisLine={{ stroke: '#d1d5db' }}
+                            tickFormatter={(value) => {
+                              if (chartMetric === 'revenue' || chartMetric === 'profit') {
+                                return `${(value / 1000).toFixed(0)}k`
+                              }
+                              return value.toString()
+                            }}
+                          />
+                          <Tooltip 
+                            formatter={(value: number) => [config.formatter(value), config.label]}
+                            labelStyle={{ color: '#374151' }}
+                            contentStyle={{ 
+                              backgroundColor: 'white', 
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '8px',
+                              fontSize: '12px'
+                            }}
+                          />
+                          <Line 
+                            type="monotone" 
+                            dataKey={config.dataKey} 
+                            stroke={config.color} 
+                            strokeWidth={3}
+                            dot={{ fill: config.color, strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, stroke: config.color, strokeWidth: 2 }}
+                          />
+                        </LineChart>
+                      )
+                    } else if (chartType === 'bar') {
+                      return (
+                        <BarChart data={config.data}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <XAxis 
+                            dataKey="name" 
+                            fontSize={11}
+                            tick={{ fill: '#6b7280' }}
+                            axisLine={{ stroke: '#d1d5db' }}
+                          />
+                          <YAxis 
+                            fontSize={11}
+                            tick={{ fill: '#6b7280' }}
+                            axisLine={{ stroke: '#d1d5db' }}
+                            tickFormatter={(value) => {
+                              if (chartMetric === 'revenue' || chartMetric === 'profit') {
+                                return `${(value / 1000).toFixed(0)}k`
+                              }
+                              return value.toString()
+                            }}
+                          />
+                          <Tooltip 
+                            formatter={(value: number) => [config.formatter(value), config.label]}
+                            labelStyle={{ color: '#374151' }}
+                            contentStyle={{ 
+                              backgroundColor: 'white', 
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '8px',
+                              fontSize: '12px'
+                            }}
+                          />
+                          <Bar 
+                            dataKey={config.dataKey} 
+                            fill={config.color}
+                            radius={[4, 4, 0, 0]}
+                          />
+                        </BarChart>
+                      )
+                    } else {
+                      return (
+                        <AreaChart data={config.data}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                          <XAxis 
+                            dataKey="name" 
+                            fontSize={11}
+                            tick={{ fill: '#6b7280' }}
+                            axisLine={{ stroke: '#d1d5db' }}
+                          />
+                          <YAxis 
+                            fontSize={11}
+                            tick={{ fill: '#6b7280' }}
+                            axisLine={{ stroke: '#d1d5db' }}
+                            tickFormatter={(value) => {
+                              if (chartMetric === 'revenue' || chartMetric === 'profit') {
+                                return `${(value / 1000).toFixed(0)}k`
+                              }
+                              return value.toString()
+                            }}
+                          />
+                          <Tooltip 
+                            formatter={(value: number) => [config.formatter(value), config.label]}
+                            labelStyle={{ color: '#374151' }}
+                            contentStyle={{ 
+                              backgroundColor: 'white', 
+                              border: '1px solid #e5e7eb',
+                              borderRadius: '8px',
+                              fontSize: '12px'
+                            }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey={config.dataKey} 
+                            stroke={config.color} 
+                            fill={`${config.color}20`}
+                            strokeWidth={2}
+                          />
+                        </AreaChart>
+                      )
+                    }
+                  })()}
+                </ResponsiveContainer>
+              </div>
+
+              {/* Chart Summary */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: getChartConfig().color }}
+                      ></div>
+                      <span className="text-gray-600">{getChartConfig().label}</span>
+                    </div>
+                    <span className="text-gray-500">
+                      {chartPeriod.charAt(0).toUpperCase() + chartPeriod.slice(1)} view
+                    </span>
+                  </div>
+                  <div className="text-gray-500">
+                    {chartType.charAt(0).toUpperCase() + chartType.slice(1)} chart
+                  </div>
+                </div>
+              </div>
             </Card>
           </div>
         </div>

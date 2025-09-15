@@ -365,6 +365,175 @@ const Inventory = () => {
     }
   }, [])
 
+  const downloadBarcode = async (product: Product) => {
+    try {
+      const barcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${product.barcode}`
+      const link = document.createElement('a')
+      link.href = barcodeUrl
+      link.download = `${product.name}_barcode.png`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      toast.success(`Barcode for ${product.name} downloaded successfully`)
+    } catch (error) {
+      console.error('Error downloading barcode:', error)
+      toast.error('Failed to download barcode')
+    }
+  }
+
+  const renderProductsGrid = (productsToRender: Product[]) => {
+    if (productsToRender.length === 0) {
+      return (
+        <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
+          <CardContent className="p-12 text-center">
+            <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
+            <p className="text-gray-500 mb-4">
+              {searchTerm ? 'Try adjusting your search terms' : 'Get started by adding your first product'}
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Button
+                onClick={() => navigate('/commodity-registration')}
+                className="bg-[#040458] hover:bg-[#040458]/90 text-white"
+              >
+                <Barcode className="h-4 w-4 mr-2" />
+                Register Commodity
+              </Button>
+              <Button
+                onClick={() => setIsDialogOpen(true)}
+                className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Quick Add
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {productsToRender.map((product) => {
+          const stockStatus = getStockStatus(product.stock, product.min_stock)
+          const StatusIcon = stockStatus.icon
+          
+          return (
+            <Card key={product.id} className="bg-white/80 backdrop-blur-sm shadow-lg border-0 hover:shadow-xl transition-all duration-300 group">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {/* Product Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 text-lg line-clamp-2 group-hover:text-[#040458] transition-colors">
+                        {product.name}
+                      </h3>
+                      {product.description && (
+                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{product.description}</p>
+                      )}
+                      {product.category && (
+                        <Badge variant="outline" className="text-xs mt-2">
+                          {product.category}
+                        </Badge>
+                      )}
+                    </div>
+                    <Badge className={`${stockStatus.color} text-xs`}>
+                      <StatusIcon className="h-3 w-3 mr-1" />
+                      {stockStatus.status}
+                    </Badge>
+                  </div>
+
+                  {/* Barcodes */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Barcode className="h-4 w-4 text-gray-400" />
+                        <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                          {product.barcode}
+                        </span>
+                      </div>
+                      {/* Download button for generated barcodes */}
+                      {product.barcode && product.barcode.startsWith('OTIC') && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => downloadBarcode(product)}
+                          className="h-6 px-2 text-xs"
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Pricing */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Price:</span>
+                      <span className="font-semibold text-[#040458]">UGX {product.price.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Cost:</span>
+                      <span className="font-semibold text-gray-700">UGX {product.cost.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  {/* Stock Info */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Stock:</span>
+                      <span className="font-semibold text-gray-900">{product.stock} {product.unit_type || 'units'}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Min Stock:</span>
+                      <span className="font-semibold text-gray-700">{product.min_stock}</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(product)}
+                      className="flex-1 text-xs"
+                    >
+                      <Edit className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDelete(product.id)}
+                      className="flex-1 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // Products with existing barcodes
+  const productsWithBarcode = useMemo(() => {
+    return filteredProducts.filter(product => product.barcode && product.barcode.trim() !== '')
+  }, [filteredProducts])
+
+  // Products with generated barcodes (for download)
+  const productsWithGeneratedBarcode = useMemo(() => {
+    return filteredProducts.filter(product => 
+      product.barcode && 
+      product.barcode.trim() !== '' && 
+      product.barcode.startsWith('OTIC') // Generated barcodes start with 'OTIC'
+    )
+  }, [filteredProducts])
+
   // Memoized total calculations
   const { totalValue, totalUnits } = useMemo(() => {
     const value = products.reduce((sum, product) => sum + (product.price * product.stock), 0)
@@ -393,7 +562,7 @@ const Inventory = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-lg sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
@@ -419,11 +588,18 @@ const Inventory = () => {
             </div>
             <div className="flex items-center space-x-3">
               <Button
+                onClick={() => navigate('/commodity-registration')}
+                className="bg-[#040458] hover:bg-[#040458]/90 text-white"
+              >
+                <Barcode className="h-4 w-4 mr-2" />
+                Register Commodity
+              </Button>
+              <Button
                 onClick={() => setIsDialogOpen(true)}
                 className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Product
+                Quick Add
               </Button>
               <BusinessLoginStatus />
             </div>
@@ -574,7 +750,7 @@ const Inventory = () => {
           </Card>
         )}
 
-        {/* Products Grid */}
+        {/* Products with Tabs */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
@@ -588,189 +764,51 @@ const Inventory = () => {
               <Badge variant="outline" className="text-sm">
                 {paginationInfo.startItem}-{paginationInfo.endItem} of {filteredProducts.length} products
               </Badge>
+              <Button
+                onClick={() => navigate('/commodity-registration')}
+                className="bg-[#040458] hover:bg-[#040458]/90 text-white"
+              >
+                <Barcode className="h-4 w-4 mr-2" />
+                Register Commodity
+              </Button>
+              <Button
+                onClick={() => setIsDialogOpen(true)}
+                className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Quick Add
+              </Button>
             </div>
           </div>
 
-          {filteredProducts.length === 0 ? (
-            <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-              <CardContent className="p-12 text-center">
-                <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
-                <p className="text-gray-500 mb-4">
-                  {searchTerm ? 'Try adjusting your search terms' : 'Get started by adding your first product'}
-                </p>
-                <Button
-                  onClick={() => setIsDialogOpen(true)}
-                  className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Product
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {paginatedProducts.map((product) => {
-                const stockStatus = getStockStatus(product.stock, product.min_stock)
-                const StatusIcon = stockStatus.icon
-                
-                return (
-                  <Card key={product.id} className="bg-white/80 backdrop-blur-sm shadow-lg border-0 hover:shadow-xl transition-all duration-300 group">
-                    <CardContent className="p-6">
-                      <div className="space-y-4">
-                        {/* Product Header */}
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 text-lg line-clamp-2 group-hover:text-[#040458] transition-colors">
-                              {product.name}
-                            </h3>
-                            {product.description && (
-                              <p className="text-sm text-gray-500 mt-1 line-clamp-2">{product.description}</p>
-                            )}
-                            {product.category && (
-                              <Badge variant="outline" className="text-xs mt-2">
-                                {product.category}
-                              </Badge>
-                            )}
-                          </div>
-                          <Badge className={`${stockStatus.color} text-xs`}>
-                            <StatusIcon className="h-3 w-3 mr-1" />
-                            {stockStatus.status}
-                          </Badge>
-                        </div>
+          {/* Tabs for different product views */}
+          <Tabs defaultValue="all" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 bg-white/80 backdrop-blur-sm shadow-lg border-0">
+              <TabsTrigger value="all" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white">
+                All Products ({products.length})
+              </TabsTrigger>
+              <TabsTrigger value="with-barcode" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white">
+                With Barcode ({productsWithBarcode.length})
+              </TabsTrigger>
+              <TabsTrigger value="generated-barcode" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white">
+                Generated Barcode ({productsWithGeneratedBarcode.length})
+              </TabsTrigger>
+            </TabsList>
 
-                        {/* Barcodes */}
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Barcode className="h-4 w-4 text-gray-400" />
-                            <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                              {product.barcode}
-                            </span>
-                          </div>
-                          {product.wholesale_barcode && (
-                            <div className="flex items-center space-x-2">
-                              <QrCode className="h-4 w-4 text-gray-400" />
-                              <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                                {product.wholesale_barcode}
-                              </span>
-                            </div>
-                          )}
-                        </div>
+            <TabsContent value="all" className="mt-6">
+              {renderProductsGrid(filteredProducts)}
+            </TabsContent>
 
-                        {/* Pricing */}
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <p className="text-xs text-gray-500">Selling Price</p>
-                            <p className="font-semibold text-[#040458]">UGX {product.price.toLocaleString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Cost Price</p>
-                            <p className="font-semibold text-gray-600">UGX {product.cost.toLocaleString()}</p>
-                          </div>
-                        </div>
+            <TabsContent value="with-barcode" className="mt-6">
+              {renderProductsGrid(productsWithBarcode)}
+            </TabsContent>
 
-                        {/* Stock Information */}
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">Stock Level</span>
-                            <span className="text-sm font-bold text-[#040458]">
-                              {product.stock} {product.unit_type}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between text-xs text-gray-500">
-                            <span>Min: {product.min_stock}</span>
-                            <span className="capitalize">{product.selling_type}</span>
-                          </div>
-                          {/* Stock Progress Bar */}
-                          <div className="mt-2">
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full ${
-                                  product.stock === 0 ? 'bg-red-500' :
-                                  product.stock <= product.min_stock ? 'bg-yellow-500' :
-                                  product.stock <= product.min_stock * 2 ? 'bg-blue-500' : 'bg-green-500'
-                                }`}
-                                style={{ 
-                                  width: `${Math.min(100, (product.stock / (product.min_stock * 3)) * 100)}%` 
-                                }}
-                              ></div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEdit(product)}
-                            className="flex-1 hover:bg-[#040458] hover:text-white hover:border-[#040458] transition-colors"
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDelete(product.id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 hover:border-red-300 transition-colors"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-              </div>
-
-              {/* Pagination Controls */}
-              {paginationInfo.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-8">
-                  <div className="text-sm text-gray-600">
-                    Showing {paginationInfo.startItem} to {paginationInfo.endItem} of {filteredProducts.length} products
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={!paginationInfo.hasPrevPage}
-                    >
-                      Previous
-                    </Button>
-                    <div className="flex items-center space-x-1">
-                      {Array.from({ length: Math.min(5, paginationInfo.totalPages) }, (_, i) => {
-                        const pageNum = i + 1
-                        return (
-                          <Button
-                            key={pageNum}
-                            variant={currentPage === pageNum ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(pageNum)}
-                            className={currentPage === pageNum ? "bg-[#040458] text-white" : ""}
-                          >
-                            {pageNum}
-                          </Button>
-                        )
-                      })}
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(prev => Math.min(paginationInfo.totalPages, prev + 1))}
-                      disabled={!paginationInfo.hasNextPage}
-                    >
-                      Next
-                    </Button>
-                  </div>
-            </div>
-              )}
-            </>
-          )}
+            <TabsContent value="generated-barcode" className="mt-6">
+              {renderProductsGrid(productsWithGeneratedBarcode)}
+            </TabsContent>
+          </Tabs>
         </div>
+
       </div>
 
       {/* Add/Edit Product Dialog */}

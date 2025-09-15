@@ -138,15 +138,15 @@ const EnhancedBarcodeScanner: React.FC<EnhancedBarcodeScannerProps> = ({
 
       // Enhanced configuration for better barcode detection
       const hints = new Map()
-      hints.set(BrowserMultiFormatReader.DECODE_HINT_SKIP_ZERO_LENGTH, false)
-      hints.set(BrowserMultiFormatReader.DECODE_HINT_TRY_HARDER, true)
+      hints.set('SKIP_ZERO_LENGTH', false)
+      hints.set('TRY_HARDER', true)
 
       await readerRef.current.decodeFromVideoDevice(
         deviceId,
         videoRef.current,
         (result: Result | null, error: any) => {
           if (result && !isProcessing) {
-            const barcode = result.getText()
+            const rawBarcode = result.getText()
             const format = result.getBarcodeFormat().toString()
             const currentTime = Date.now()
 
@@ -155,8 +155,19 @@ const EnhancedBarcodeScanner: React.FC<EnhancedBarcodeScannerProps> = ({
               return
             }
 
-            console.log('Barcode scanned:', barcode)
+            // Clean and validate barcode
+            const cleanBarcode = rawBarcode.trim().replace(/[^0-9A-Za-z]/g, '')
+            
+            // Validate barcode length (most barcodes are 8-13 digits)
+            if (cleanBarcode.length < 4 || cleanBarcode.length > 20) {
+              console.warn('Invalid barcode length:', cleanBarcode.length)
+              return
+            }
+
+            console.log('Raw barcode:', rawBarcode)
+            console.log('Cleaned barcode:', cleanBarcode)
             console.log('Barcode format:', format)
+            console.log('Barcode length:', cleanBarcode.length)
             console.log('Scan count:', scanCount + 1)
 
             setLastScanTime(currentTime)
@@ -167,8 +178,8 @@ const EnhancedBarcodeScanner: React.FC<EnhancedBarcodeScannerProps> = ({
             playBeepSound()
             vibrateDevice()
 
-            // Call the onScan callback
-            onScan(barcode, format)
+            // Call the onScan callback with cleaned barcode
+            onScan(cleanBarcode, format)
 
             // Stop scanning after successful scan
             stopScanning()
@@ -179,8 +190,7 @@ const EnhancedBarcodeScanner: React.FC<EnhancedBarcodeScannerProps> = ({
             // Don't show error for NotFoundException as it's normal during scanning
           }
           // Don't log NotFoundException errors as they're normal during scanning
-        },
-        hints
+        }
       )
 
       setIsProcessing(false)
@@ -218,7 +228,7 @@ const EnhancedBarcodeScanner: React.FC<EnhancedBarcodeScannerProps> = ({
       const stream = videoRef.current.srcObject as MediaStream
       if (stream) {
         const track = stream.getVideoTracks()[0]
-        if (track && track.getCapabilities().torch) {
+        if (track && (track.getCapabilities() as any).torch) {
           await track.applyConstraints({
             advanced: [{ torch: !flashlightOn } as any]
           })
@@ -293,11 +303,11 @@ const EnhancedBarcodeScanner: React.FC<EnhancedBarcodeScannerProps> = ({
             {/* Scanning Overlay */}
             {isScanning && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-48 h-32 border-2 border-blue-500 rounded-lg animate-pulse">
-                  <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-blue-500 rounded-tl-lg"></div>
-                  <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-blue-500 rounded-tr-lg"></div>
-                  <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-blue-500 rounded-bl-lg"></div>
-                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-blue-500 rounded-br-lg"></div>
+                <div className="w-48 h-32 border-2 border-[#040458] rounded-lg animate-pulse">
+                  <div className="absolute top-0 left-0 w-6 h-6 border-t-2 border-l-2 border-[#040458] rounded-tl-lg"></div>
+                  <div className="absolute top-0 right-0 w-6 h-6 border-t-2 border-r-2 border-[#040458] rounded-tr-lg"></div>
+                  <div className="absolute bottom-0 left-0 w-6 h-6 border-b-2 border-l-2 border-[#040458] rounded-bl-lg"></div>
+                  <div className="absolute bottom-0 right-0 w-6 h-6 border-b-2 border-r-2 border-[#040458] rounded-br-lg"></div>
                 </div>
               </div>
             )}
