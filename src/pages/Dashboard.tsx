@@ -28,6 +28,7 @@ import {
   Settings,
   Plus,
   MessageSquareText,
+  Camera,
   TrendingUp,
   DollarSign,
   ShoppingBag,
@@ -500,14 +501,34 @@ const Dashboard = () => {
           </div>
         )}
         
-
+        
         {/* Welcome Banner */}
         <div className="mb-8 bg-gradient-to-r from-[#040458] via-purple-600 to-[#faa51a] rounded-2xl p-8 text-white relative overflow-hidden">
           <div className="relative z-10">
-            <h1 className="text-4xl font-bold mb-2">
-              Welcome back to {currentBusiness?.name || profile?.business_name || 'your business'}!
-            </h1>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-4xl font-bold mb-2">
+                  Welcome back to {currentBusiness?.name || profile?.business_name || 'your business'}!
+                </h1>
             <p className="text-xl opacity-90">Here's what's happening with your business today.</p>
+              </div>
+              <div className="flex flex-col items-end space-y-3">
+                <Button
+                  onClick={() => navigate('/otic-vision')}
+                  className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-105 shadow-lg"
+                >
+                  <Camera className="h-5 w-5 mr-2" />
+                  OTIC Vision
+                  <Badge className="ml-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-2 py-0.5 rounded-full">
+                    NEW
+                  </Badge>
+                </Button>
+                <p className="text-sm opacity-75 text-right max-w-xs">
+                  AI-powered product recognition<br />
+                  <span className="text-xs">Premium feature</span>
+                </p>
+              </div>
+            </div>
           </div>
           <div className="absolute right-6 top-6 opacity-30">
             <svg className="h-20 w-20 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -663,9 +684,9 @@ const Dashboard = () => {
               <div className="flex items-center space-x-2">
                 <BarChart3 className="h-5 w-5 text-[#040458]" />
                 <h2 className="text-xl font-semibold text-gray-800">Performance Analytics</h2>
-              </div>
+                    </div>
               <p className="text-sm text-gray-600">Interactive charts with multiple metrics</p>
-            </div>
+                    </div>
             
             <Card className="p-6 bg-white shadow-lg rounded-xl">
               {/* Chart Controls */}
@@ -744,13 +765,13 @@ const Dashboard = () => {
                       return (
                         <LineChart data={config.data}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                          <XAxis 
-                            dataKey="name" 
+                    <XAxis 
+                      dataKey="name" 
                             fontSize={11}
                             tick={{ fill: '#6b7280' }}
                             axisLine={{ stroke: '#d1d5db' }}
-                          />
-                          <YAxis 
+                    />
+                    <YAxis 
                             fontSize={11}
                             tick={{ fill: '#6b7280' }}
                             axisLine={{ stroke: '#d1d5db' }}
@@ -760,8 +781,8 @@ const Dashboard = () => {
                               }
                               return value.toString()
                             }}
-                          />
-                          <Tooltip 
+                    />
+                    <Tooltip 
                             formatter={(value: number) => [config.formatter(value), config.label]}
                             labelStyle={{ color: '#374151' }}
                             contentStyle={{ 
@@ -770,16 +791,16 @@ const Dashboard = () => {
                               borderRadius: '8px',
                               fontSize: '12px'
                             }}
-                          />
-                          <Line 
-                            type="monotone" 
+                    />
+                    <Line 
+                      type="monotone" 
                             dataKey={config.dataKey} 
                             stroke={config.color} 
-                            strokeWidth={3}
+                      strokeWidth={3}
                             dot={{ fill: config.color, strokeWidth: 2, r: 4 }}
                             activeDot={{ r: 6, stroke: config.color, strokeWidth: 2 }}
-                          />
-                        </LineChart>
+                    />
+                  </LineChart>
                       )
                     } else if (chartType === 'bar') {
                       return (
@@ -862,7 +883,7 @@ const Dashboard = () => {
                     }
                   })()}
                 </ResponsiveContainer>
-              </div>
+                </div>
 
               {/* Chart Summary */}
               <div className="mt-4 pt-4 border-t border-gray-200">
@@ -883,7 +904,7 @@ const Dashboard = () => {
                     {chartType.charAt(0).toUpperCase() + chartType.slice(1)} chart
                   </div>
                 </div>
-              </div>
+                </div>
             </Card>
           </div>
         </div>

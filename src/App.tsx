@@ -61,6 +61,8 @@ import BusinessInvitationManager from "./components/BusinessInvitationManager";
 import NetworkStatusIndicator from "./components/NetworkStatusIndicator";
 import NotFound from "./pages/NotFound";
 import OAuthCallback from "./components/OAuthCallback";
+import OTICVision from "./pages/OTICVision";
+import OTICVisionTest from "./pages/OTICVisionTest";
 
 const queryClient = new QueryClient();
 
@@ -224,6 +226,8 @@ const App = () => {
                 <Route path="/business-management/:businessId/members" element={<ProtectedRoute><BusinessMembers /></ProtectedRoute>} />
                 <Route path="/business-management/:businessId/edit" element={<ProtectedRoute><CreateBusiness /></ProtectedRoute>} />
                 <Route path="/business-management/:businessId/invitations" element={<ProtectedRoute><BusinessInvitationManager /></ProtectedRoute>} />
+                <Route path="/otic-vision" element={<ProtectedRoute><OTICVision /></ProtectedRoute>} />
+                <Route path="/otic-vision-test" element={<ProtectedRoute><OTICVisionTest /></ProtectedRoute>} />
                 <Route path="/test-auth" element={<TestAuth />} />
                 <Route path="/simple-test" element={<SimpleTest />} />
                 <Route path="/auth-test" element={<AuthTest />} />
