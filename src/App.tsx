@@ -18,21 +18,23 @@ import AIChat from "./pages/AIChat";
 import Dashboard from "./pages/Dashboard";
 import MainDashboard from "./pages/MainDashboard";
 import POS from "./pages/POS";
-import Inventory from "./pages/ComprehensiveInventory";
+import Inventory from "./pages/Inventory";
 import CommodityRegistration from "./pages/CommodityRegistration";
 import Restock from "./pages/Restock";
 import Analytics from "./pages/Analytics";
 import Accounting from "./pages/AccountingNew";
+import Reports from "./pages/Reports";
+import Notifications from "./pages/Notifications";
 import QuickBooksCallback from "./pages/QuickBooksCallback";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
 import Customers from "./pages/Customers";
-import Reports from "./pages/Reports";
 import TestAuth from "./pages/TestAuth";
 import SimpleTest from "./pages/SimpleTest";
 import AuthTest from "./pages/AuthTest";
 import ProfileTest from "./pages/ProfileTest";
 import AdminApp from "./AdminApp";
+import EmployeeRouteGuard from '@/components/EmployeeRouteGuard';
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
@@ -189,22 +191,24 @@ const App = () => {
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/my-extras" element={<ProtectedRoute><MyExtras /></ProtectedRoute>} />
                 <Route path="/simple-dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
-                <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+                <Route path="/pos" element={<ProtectedRoute><EmployeeRouteGuard allowedPages={['pos', 'inventory', 'accounting', 'customers']}><POS /></EmployeeRouteGuard></ProtectedRoute>} />
+                <Route path="/inventory" element={<ProtectedRoute><EmployeeRouteGuard allowedPages={['pos', 'inventory', 'accounting', 'customers']}><Inventory /></EmployeeRouteGuard></ProtectedRoute>} />
                 <Route path="/commodity-registration" element={<ProtectedRoute><CommodityRegistration /></ProtectedRoute>} />
                 <Route path="/restock" element={<ProtectedRoute><Restock /></ProtectedRoute>} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-                <Route path="/accounting" element={<ProtectedRoute><Accounting /></ProtectedRoute>} />
+                <Route path="/accounting" element={<ProtectedRoute><EmployeeRouteGuard allowedPages={['pos', 'inventory', 'accounting', 'customers']}><Accounting /></EmployeeRouteGuard></ProtectedRoute>} />
                 <Route path="/quickbooks/callback" element={<QuickBooksCallback />} />
                 <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-                <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
+                <Route path="/customers" element={<ProtectedRoute><EmployeeRouteGuard allowedPages={['pos', 'inventory', 'accounting', 'customers']}><Customers /></EmployeeRouteGuard></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+                <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="/business-management" element={<ProtectedRoute><BusinessManagement /></ProtectedRoute>} />
                 <Route path="/business-management/create" element={<ProtectedRoute><CreateBusiness /></ProtectedRoute>} />
                 <Route path="/business-management/:businessId" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
                 <Route path="/business-management/:businessId/dashboard" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
                 <Route path="/business-management/:businessId/members" element={<ProtectedRoute><BusinessMembers /></ProtectedRoute>} />
+                <Route path="/business-management/:businessId/edit" element={<ProtectedRoute><CreateBusiness /></ProtectedRoute>} />
                 <Route path="/business-management/:businessId/invitations" element={<ProtectedRoute><BusinessInvitationManager /></ProtectedRoute>} />
                 <Route path="/test-auth" element={<TestAuth />} />
                 <Route path="/simple-test" element={<SimpleTest />} />

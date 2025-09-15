@@ -88,3 +88,4 @@ console.log('User businesses:', businesses);
 
 Once you run these scripts, the multi-business management system will be fully functional!
 
+

@@ -39,3 +39,4 @@ FROM information_schema.table_privileges
 WHERE grantee = 'authenticated' 
 AND table_name IN ('user_profiles', 'businesses', 'business_memberships')
 LIMIT 5;
+

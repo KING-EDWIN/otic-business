@@ -13,3 +13,4 @@ SELECT EXISTS (
     SELECT 1 FROM information_schema.tables 
     WHERE table_name = 'products'
 ) as products_table_exists;
+

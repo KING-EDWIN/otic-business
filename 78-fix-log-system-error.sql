@@ -161,3 +161,4 @@ WHERE routine_name = 'log_system_error'
   AND routine_schema = 'public';
 
 SELECT 'log_system_error function created and tested successfully!' as status;
+

@@ -100,10 +100,10 @@ const BusinessDashboard: React.FC = () => {
 
   const businessFeatures = [
     {
-      title: 'AI Insights',
-      description: 'Get AI-powered business insights and recommendations',
+      title: 'Dashboard',
+      description: 'View business overview and analytics',
       icon: BarChart3,
-      path: '/ai-insights',
+      path: '/dashboard',
       color: 'bg-blue-500'
     },
     {
@@ -199,7 +199,6 @@ const BusinessDashboard: React.FC = () => {
                 className="flex items-center space-x-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Back</span>
               </Button>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
@@ -296,11 +295,17 @@ const BusinessDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {businessFeatures.map((feature, index) => (
+                  {businessFeatures.map((feature) => (
                     <Button
-                      key={index}
+                      key={feature.path}
                       variant="outline"
-                      onClick={() => navigate(feature.path)}
+                      onClick={() => {
+                        if (feature.path === '/dashboard' && currentBusiness) {
+                          // Set the business context before navigating to dashboard
+                          localStorage.setItem('current_business_id', currentBusiness.id)
+                        }
+                        navigate(feature.path)
+                      }}
                       className="h-auto p-4 flex flex-col items-start space-y-2 hover:bg-gray-50"
                     >
                       <div className="flex items-center space-x-3 w-full">
@@ -349,16 +354,9 @@ const BusinessDashboard: React.FC = () => {
                       <Mail className="h-4 w-4" />
                     </Button>
                   </div>
-                  <select
-                    value={inviteRole}
-                    onChange={(e) => setInviteRole(e.target.value as any)}
-                    className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                  >
-                    <option value="employee">Employee</option>
-                    <option value="manager">Manager</option>
-                    <option value="admin">Admin</option>
-                    <option value="viewer">Viewer</option>
-                  </select>
+                  <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded-md">
+                    All invited users will be employees with access to POS, Inventory, Accounting, and Customers pages.
+                  </div>
                 </div>
 
                 {/* Team Members List */}

@@ -40,6 +40,7 @@ import { OticAPI } from '@/services/api'
 import { BrowserMultiFormatReader } from '@zxing/library'
 import EnhancedBarcodeScanner from '@/components/EnhancedBarcodeScanner'
 import { supabase } from '@/lib/supabaseClient'
+import { ReceiptService } from '@/services/receiptService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -69,9 +70,11 @@ import {
   AlertCircle,
   Zap,
   TrendingUp,
-  DollarSign
+  DollarSign,
+  Printer
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { NotificationService } from '@/services/notificationService'
 import BusinessLoginStatus from '@/components/BusinessLoginStatus'
 
 interface CartItem {
@@ -98,6 +101,10 @@ const POS = () => {
   // Customer information
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
+  
+  // Receipt state
+  const [showReceipt, setShowReceipt] = useState(false)
+  const [currentReceipt, setCurrentReceipt] = useState<any>(null)
   
   // Discount and tax
   const [discount, setDiscount] = useState(0)
@@ -289,6 +296,46 @@ const POS = () => {
     try {
       setProcessing(true)
       
+      // Get current business ID
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('business_id')
+        .eq('id', user?.id)
+        .single()
+
+      if (!profile?.business_id) {
+        throw new Error('Business ID not found')
+      }
+
+      // Prepare receipt items
+      const receiptItems = cart.map(item => ({
+        product_id: item.product.id,
+        product_name: item.product.name,
+        quantity: item.quantity,
+        unit_price: item.product.price,
+        total_price: item.subtotal
+      }))
+
+      // Create receipt
+      const receiptResult = await ReceiptService.createReceipt(
+        profile.business_id,
+        user?.id || '',
+        user?.id || '', // Employee ID (same as user for now)
+        receiptItems,
+        paymentMethod as 'cash' | 'credit' | 'mobile_money' | 'card',
+        customerName || customerPhone ? {
+          name: customerName || undefined,
+          phone: customerPhone || undefined
+        } : undefined,
+        calculateTax(),
+        calculateDiscount()
+      )
+
+      if (!receiptResult.success) {
+        throw new Error(receiptResult.error || 'Failed to create receipt')
+      }
+
+      // Also create sale record for analytics
       const saleData = {
         user_id: user?.id,
         customer_name: customerName || null,
@@ -309,8 +356,20 @@ const POS = () => {
       const result = await OticAPI.createSale(saleData)
       
       if (result.success) {
+        // Create sale notification
+        if (profile?.business_id && user?.id) {
+          await NotificationService.createSaleNotification(
+            profile.business_id,
+            user.id,
+            calculateTotal(),
+            paymentMethod
+          )
+        }
+        
+        // Show receipt
+        setCurrentReceipt(receiptResult.receipt)
+        setShowReceipt(true)
         toast.success('Sale processed successfully!')
-        clearCart()
       } else {
         throw new Error(result.error || 'Failed to process sale')
       }
@@ -352,7 +411,6 @@ const POS = () => {
                 className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Back to Dashboard</span>
               </Button>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-lg flex items-center justify-center">
@@ -697,6 +755,128 @@ const POS = () => {
         onClose={() => setShowBarcodeScanner(false)}
         onScan={handleBarcodeScanFromCamera}
       />
+
+      {/* Digital Receipt Modal */}
+      {showReceipt && currentReceipt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              {/* Receipt Header */}
+              <div className="text-center mb-6">
+                <img 
+                  src="/Otic icon@2x.png" 
+                  alt="Otic Business Logo" 
+                  className="h-12 w-12 mx-auto mb-2"
+                />
+                <h2 className="text-xl font-bold text-[#040458]">Otic Business</h2>
+                <p className="text-sm text-gray-600">Digital Receipt</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Receipt #: {currentReceipt.receipt_number}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {new Date(currentReceipt.created_at).toLocaleString()}
+                </p>
+              </div>
+
+              {/* Receipt Items */}
+              <div className="space-y-2 mb-4">
+                {currentReceipt.items.map((item: any, index: number) => (
+                  <div key={index} className="flex justify-between items-center py-2 border-b">
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{item.product_name}</p>
+                      <p className="text-xs text-gray-500">
+                        {item.quantity} x UGX {item.unit_price.toLocaleString()}
+                      </p>
+                    </div>
+                    <p className="font-semibold text-sm">
+                      UGX {item.total_price.toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Receipt Totals */}
+              <div className="space-y-2 mb-6">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal:</span>
+                  <span>UGX {currentReceipt.total_amount.toLocaleString()}</span>
+                </div>
+                {currentReceipt.tax_amount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span>VAT (18%):</span>
+                    <span>UGX {currentReceipt.tax_amount.toLocaleString()}</span>
+                  </div>
+                )}
+                {currentReceipt.discount_amount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Discount:</span>
+                    <span>-UGX {currentReceipt.discount_amount.toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-lg font-bold border-t pt-2">
+                  <span>Total:</span>
+                  <span>UGX {currentReceipt.total_amount.toLocaleString()}</span>
+                </div>
+              </div>
+
+              {/* Payment Info */}
+              <div className="bg-gray-50 p-3 rounded-lg mb-6">
+                <div className="flex justify-between text-sm">
+                  <span>Payment Method:</span>
+                  <span className="capitalize font-medium">
+                    {currentReceipt.payment_method.replace('_', ' ')}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm mt-1">
+                  <span>Status:</span>
+                  <span className="text-green-600 font-medium">
+                    {currentReceipt.payment_status}
+                  </span>
+                </div>
+              </div>
+
+              {/* Customer Info */}
+              {currentReceipt.customer_info && (
+                <div className="bg-blue-50 p-3 rounded-lg mb-6">
+                  <h4 className="font-medium text-sm mb-2">Customer Details:</h4>
+                  {currentReceipt.customer_info.name && (
+                    <p className="text-sm">Name: {currentReceipt.customer_info.name}</p>
+                  )}
+                  {currentReceipt.customer_info.phone && (
+                    <p className="text-sm">Phone: {currentReceipt.customer_info.phone}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex space-x-2">
+                <Button
+                  onClick={() => {
+                    setShowReceipt(false)
+                    clearCart()
+                  }}
+                  className="flex-1 bg-[#040458] hover:bg-[#040458]/90"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  New Sale
+                </Button>
+                <Button
+                  onClick={() => window.print()}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
+              </div>
+
+              <p className="text-xs text-center text-gray-500 mt-4">
+                Thank you for your business!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

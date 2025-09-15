@@ -87,3 +87,4 @@ SELECT COUNT(*) as business_invitations_count FROM business_invitations;
 SELECT COUNT(*) as system_error_logs_count FROM system_error_logs;
 
 SELECT 'Invitation system test completed successfully!' as status;
+

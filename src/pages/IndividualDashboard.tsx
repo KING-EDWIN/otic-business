@@ -217,6 +217,29 @@ const IndividualDashboard = () => {
         <div className="mb-8">
           <InvitationNotification />
         </div>
+
+        {/* Business Access for Employees */}
+        <div className="mb-8">
+          <Card className="bg-gradient-to-r from-[#040458] to-[#faa51a] text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">Business Access</h2>
+                  <p className="text-white/90">
+                    Access your business dashboard to manage POS, Inventory, Accounting, and Customers
+                  </p>
+                </div>
+                <Button
+                  onClick={() => navigate('/dashboard')}
+                  className="bg-white text-[#040458] hover:bg-gray-100 font-semibold px-6 py-3"
+                >
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  Go to Business Dashboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
         
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

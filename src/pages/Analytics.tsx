@@ -199,7 +199,6 @@ const Analytics = () => {
                 className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10 transition-all duration-200 rounded-lg px-4 py-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Back to Dashboard</span>
               </Button>
               <div className="flex items-center space-x-3">
                 <div className="p-3 bg-gradient-to-r from-[#040458] to-[#1e1e6b] rounded-xl shadow-lg">

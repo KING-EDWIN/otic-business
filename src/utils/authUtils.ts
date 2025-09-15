@@ -64,3 +64,4 @@ export const clearAuth = async () => {
     return { success: false, error }
   }
 }
+

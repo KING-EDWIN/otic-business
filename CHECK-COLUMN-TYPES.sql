@@ -50,3 +50,4 @@ FROM business_invitations bi
 JOIN businesses b ON bi.business_id = b.id
 JOIN user_profiles up ON bi.invited_by = up.id
 LIMIT 1;
+

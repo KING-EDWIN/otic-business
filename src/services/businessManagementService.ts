@@ -146,76 +146,52 @@ export class BusinessManagementService {
 
       console.log('getUserBusinesses: Calling get_user_businesses RPC for user:', user.id)
       
-      // Try RPC function first
-      const { data, error } = await supabase.rpc('get_user_businesses', {
-        p_user_id: user.id
-      })
+      // Use direct query with proper RLS to ensure user only sees their own businesses
+      const { data: directData, error: directError } = await supabase
+        .from('business_memberships')
+        .select(`
+          business_id,
+          role,
+          status,
+          joined_at,
+          businesses!inner (
+            id,
+            name,
+            business_type,
+            currency,
+            timezone,
+            created_at,
+            updated_at,
+            created_by
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('joined_at', { ascending: false })
 
-      if (error) {
-        console.warn('getUserBusinesses: RPC function failed, trying direct query:', error.message)
-        console.warn('getUserBusinesses: RPC error details:', error)
-        
-        // Fallback to direct query
-        const { data: directData, error: directError } = await supabase
-          .from('business_memberships')
-          .select(`
-            business_id,
-            role,
-            status,
-            joined_at,
-            businesses!inner (
-              id,
-              name
-            )
-          `)
-          .eq('user_id', user.id)
-          .eq('status', 'active')
-
-        if (directError) {
-          console.error('getUserBusinesses: Direct query also failed:', directError)
-          console.error('getUserBusinesses: Direct query error details:', directError)
-          return []
-        }
-
-        // Transform direct query result to match Business interface
-        const transformedData: Business[] = directData?.map(item => ({
-          id: item.business_id,
-          name: (item.businesses as any)?.name || '',
-          business_type: 'retail', // Default value
-          currency: 'UGX', // Default value
-          timezone: 'Africa/Kampala', // Default value
-          status: 'active' as const,
-          settings: {},
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          created_by: '',
-          user_role: item.role as any,
-          joined_at: item.joined_at
-        })) || []
-
-        console.log('Direct query returned:', transformedData.length, 'businesses')
-        return transformedData
+      if (directError) {
+        console.error('getUserBusinesses: Direct query failed:', directError)
+        return []
       }
 
-      console.log('getUserBusinesses: RPC get_user_businesses returned:', data?.length || 0, 'businesses')
-      
-      // Transform RPC data to match Business interface
-      const transformedData: Business[] = data?.map((item: any) => ({
+      // Transform direct query result to match Business interface
+      const transformedData: Business[] = directData?.map(item => ({
         id: item.business_id,
-        name: item.business_name || '',
-        business_type: 'retail', // Default value
-        currency: 'UGX', // Default value
-        timezone: 'Africa/Kampala', // Default value
+        name: (item.businesses as any)?.name || '',
+        business_type: (item.businesses as any)?.business_type || 'retail',
+        currency: (item.businesses as any)?.currency || 'UGX',
+        timezone: (item.businesses as any)?.timezone || 'Africa/Kampala',
         status: 'active' as const,
         settings: {},
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        created_by: '',
+        created_at: (item.businesses as any)?.created_at || new Date().toISOString(),
+        updated_at: (item.businesses as any)?.updated_at || new Date().toISOString(),
+        created_by: (item.businesses as any)?.created_by || '',
         user_role: item.role as any,
         joined_at: item.joined_at
       })) || []
-      
-      console.log('getUserBusinesses: Transformed data:', transformedData.length, 'businesses')
+
+      console.log('getUserBusinesses: Direct query returned:', transformedData.length, 'businesses')
+      console.log('getUserBusinesses: Business names:', transformedData.map(b => b.name))
       return transformedData
     } catch (error) {
       console.error('getUserBusinesses: Error in getUserBusinesses:', error)
@@ -311,6 +287,28 @@ export class BusinessManagementService {
   // Delete a business
   async deleteBusiness(businessId: string): Promise<{ success: boolean; error?: string }> {
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        return { success: false, error: 'User not authenticated' }
+      }
+
+      // First check if user is the owner of this business
+      const { data: membership, error: membershipError } = await supabase
+        .from('business_memberships')
+        .select('role')
+        .eq('business_id', businessId)
+        .eq('user_id', user.id)
+        .single()
+
+      if (membershipError || !membership) {
+        return { success: false, error: 'You are not a member of this business' }
+      }
+
+      if (membership.role !== 'owner') {
+        return { success: false, error: 'Only the business owner can delete the business' }
+      }
+
+      // Delete the business (this will cascade delete memberships due to foreign key constraints)
       const { error } = await supabase
         .from('businesses')
         .delete()
@@ -318,7 +316,7 @@ export class BusinessManagementService {
 
       if (error) {
         console.error('Error deleting business:', error)
-        return { success: false, error: 'Failed to delete business' }
+        return { success: false, error: 'Failed to delete business: ' + error.message }
       }
 
       return { success: true }
@@ -331,27 +329,83 @@ export class BusinessManagementService {
   // Get business members
   async getBusinessMembers(businessId: string): Promise<BusinessMember[]> {
     try {
-      const { data, error } = await supabase.rpc('get_business_members', {
-        business_id_param: businessId
-      })
+      // Use separate queries to avoid foreign key relationship issues
+      const { data: memberships, error: membershipsError } = await supabase
+        .from('business_memberships')
+        .select(`
+          id,
+          user_id,
+          role,
+          status,
+          joined_at,
+          invited_by
+        `)
+        .eq('business_id', businessId)
+        .order('joined_at', { ascending: false })
 
-      if (error) {
-        console.error('Error fetching business members:', error)
+      if (membershipsError) {
+        console.error('Error fetching business memberships:', membershipsError)
         return []
       }
 
-      return data || []
+      if (!memberships || memberships.length === 0) {
+        return []
+      }
+
+      // Get user profiles for all members
+      const userIds = memberships.map(m => m.user_id)
+      const { data: profiles, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('id, email, full_name, business_name')
+        .in('id', userIds)
+
+      if (profilesError) {
+        console.error('Error fetching user profiles:', profilesError)
+        // Return memberships without profile data
+        return memberships.map(item => ({
+          id: item.id,
+          user_id: item.user_id,
+          email: '',
+          full_name: '',
+          business_name: '',
+          role: item.role as any,
+          status: item.status as any,
+          joined_at: item.joined_at,
+          invited_by: item.invited_by
+        }))
+      }
+
+      // Create a map of user profiles for quick lookup
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || [])
+
+      // Transform the data to match BusinessMember interface
+      const members: BusinessMember[] = memberships.map(item => {
+        const profile = profileMap.get(item.user_id)
+        return {
+          id: item.id,
+          user_id: item.user_id,
+          email: profile?.email || '',
+          full_name: profile?.full_name || '',
+          business_name: profile?.business_name || '',
+          role: item.role as any,
+          status: item.status as any,
+          joined_at: item.joined_at,
+          invited_by: item.invited_by
+        }
+      })
+
+      return members
     } catch (error) {
       console.error('Error in getBusinessMembers:', error)
       return []
     }
   }
 
-  // Invite a user to a business
+  // Invite a user to a business as employee
   async inviteUserToBusiness(
     businessId: string, 
     email: string, 
-    role: 'admin' | 'manager' | 'employee' | 'viewer'
+    role: 'employee' = 'employee'
   ): Promise<{ success: boolean; error?: string }> {
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -361,12 +415,17 @@ export class BusinessManagementService {
       const token = crypto.randomUUID()
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
 
+      // Define employee permissions
+      const permissions = ['pos', 'inventory', 'accounting', 'customers']
+
       const { error } = await supabase
         .from('business_invitations')
         .insert({
           business_id: businessId,
           invited_email: email,
-          role,
+          role: 'employee',
+          invitation_type: 'employee',
+          permissions,
           invited_by: user.id,
           invitation_token: token,
           expires_at: expiresAt.toISOString()
@@ -377,8 +436,11 @@ export class BusinessManagementService {
         return { success: false, error: 'Failed to send invitation' }
       }
 
+      // Create invitation notification
+      await this.createInvitationNotification(businessId, email, role)
+
       // TODO: Send email invitation
-      console.log(`Invitation sent to ${email} for business ${businessId}`)
+      console.log(`Employee invitation sent to ${email} for business ${businessId}`)
 
       return { success: true }
     } catch (error) {
@@ -410,13 +472,34 @@ export class BusinessManagementService {
         return { success: false, error: 'Invitation has expired' }
       }
 
+      // Create employee profile
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .upsert({
+          id: user.id,
+          email: user.email,
+          user_type: 'employee',
+          business_id: invitation.business_id,
+          role: 'employee',
+          permissions: invitation.permissions || ['pos', 'inventory', 'accounting', 'customers'],
+          is_active: true,
+          hired_date: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+      if (profileError) {
+        console.error('Error creating employee profile:', profileError)
+        return { success: false, error: 'Failed to create employee profile' }
+      }
+
       // Create business membership
       const { error: membershipError } = await supabase
         .from('business_memberships')
         .insert({
           user_id: user.id,
           business_id: invitation.business_id,
-          role: invitation.role,
+          role: 'employee',
           status: 'active',
           invited_by: invitation.invited_by,
           joined_at: new Date().toISOString()
@@ -588,6 +671,35 @@ export class BusinessManagementService {
       return { success: true }
     } catch (error) {
       console.error('Error in updateBusinessSettings:', error)
+      return { success: false, error: 'An unexpected error occurred' }
+    }
+  }
+
+  // Create invitation notification
+  async createInvitationNotification(
+    businessId: string, 
+    email: string, 
+    role: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+
+      const { error } = await supabase.rpc('create_invitation_notification', {
+        business_id_param: businessId,
+        user_id_param: user.id,
+        invited_email_param: email,
+        role_param: role
+      })
+
+      if (error) {
+        console.error('Error creating invitation notification:', error)
+        return { success: false, error: 'Failed to create notification' }
+      }
+
+      return { success: true }
+    } catch (error) {
+      console.error('Error in createInvitationNotification:', error)
       return { success: false, error: 'An unexpected error occurred' }
     }
   }

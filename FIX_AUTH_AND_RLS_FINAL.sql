@@ -181,3 +181,4 @@ GRANT USAGE ON SCHEMA public TO authenticated;
 
 -- 12. Test the function
 SELECT 'RLS and Auth fixes applied successfully' as status;
+

@@ -298,3 +298,4 @@ WHERE routine_name IN ('log_system_error', 'get_user_invitations', 'get_user_bus
 ORDER BY routine_name;
 
 SELECT '🎉 Complete diagnostic and fix applied! All access control issues should be resolved.' as status;
+

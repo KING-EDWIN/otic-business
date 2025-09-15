@@ -21,3 +21,4 @@ find . -name "*.md" -not -name "README.md" -delete
 echo "✅ Removed unnecessary markdown files"
 
 echo "🎉 Cleanup completed! Only essential files remain."
+

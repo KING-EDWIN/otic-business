@@ -86,3 +86,4 @@ SELECT 'Function Test' as info,
        'get_user_businesses' as function_name,
        COUNT(*) as result_count
 FROM get_user_businesses(auth.uid());
+

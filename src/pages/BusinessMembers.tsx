@@ -244,7 +244,6 @@ const BusinessMembers: React.FC = () => {
                 className="flex items-center space-x-2"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Back</span>
               </Button>
               <Button
                 variant="ghost"
@@ -291,21 +290,9 @@ const BusinessMembers: React.FC = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="role">Role</Label>
-                    <Select
-                      value={inviteData.role}
-                      onValueChange={(value: any) => setInviteData(prev => ({ ...prev, role: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="employee">Employee</SelectItem>
-                        <SelectItem value="viewer">Viewer</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
+                      <strong>Note:</strong> All invited users will be employees with access to POS, Inventory, Accounting, and Customers pages.
+                    </div>
                   </div>
                 </div>
                 <DialogFooter>
@@ -442,7 +429,7 @@ const BusinessMembers: React.FC = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredMembers.map((member) => (
-                    <TableRow key={member.id}>
+                    <TableRow key={`${member.id}-${member.user_id}`}>
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">

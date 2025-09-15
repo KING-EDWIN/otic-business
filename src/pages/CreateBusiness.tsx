@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import { useBusinessManagement } from '@/contexts/BusinessManagementContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -11,9 +12,11 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 const CreateBusiness: React.FC = () => {
-  const { createBusiness, canCreateBusiness } = useBusinessManagement()
+  const { businessId } = useParams<{ businessId: string }>()
+  const { createBusiness, canCreateBusiness, businesses, updateBusiness } = useBusinessManagement()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const isEditing = !!businessId
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -32,6 +35,33 @@ const CreateBusiness: React.FC = () => {
     currency: 'UGX',
     timezone: 'Africa/Kampala'
   })
+
+  // Load business data when editing
+  useEffect(() => {
+    if (isEditing && businessId && businesses.length > 0) {
+      const business = businesses.find(b => b.id === businessId)
+      if (business) {
+        setFormData({
+          name: business.name || '',
+          description: business.description || '',
+          business_type: business.business_type || '',
+          industry: business.industry || '',
+          website: business.website || '',
+          phone: business.phone || '',
+          email: business.email || '',
+          address: business.address || '',
+          city: business.city || '',
+          state: business.state || '',
+          country: business.country || 'Uganda',
+          postal_code: business.postal_code || '',
+          tax_id: business.tax_id || '',
+          registration_number: business.registration_number || '',
+          currency: business.currency || 'UGX',
+          timezone: business.timezone || 'Africa/Kampala'
+        })
+      }
+    }
+  }, [isEditing, businessId, businesses])
 
   const businessTypes = [
     { value: 'retail', label: 'Retail Store' },
@@ -98,16 +128,30 @@ const CreateBusiness: React.FC = () => {
 
     try {
       setLoading(true)
-      const result = await createBusiness(formData)
       
-      if (result.success) {
-        toast.success('Business created successfully!')
-        navigate('/business-management')
+      if (isEditing && businessId) {
+        // Update existing business
+        const result = await updateBusiness(businessId, formData)
+        
+        if (result.success) {
+          toast.success('Business updated successfully!')
+          navigate('/business-management')
+        } else {
+          toast.error(result.error || 'Failed to update business')
+        }
       } else {
-        toast.error(result.error || 'Failed to create business')
+        // Create new business
+        const result = await createBusiness(formData)
+        
+        if (result.success) {
+          toast.success('Business created successfully!')
+          navigate('/business-management')
+        } else {
+          toast.error(result.error || 'Failed to create business')
+        }
       }
     } catch (error) {
-      console.error('Error creating business:', error)
+      console.error(`Error ${isEditing ? 'updating' : 'creating'} business:`, error)
       toast.error('An unexpected error occurred')
     } finally {
       setLoading(false)
@@ -158,12 +202,13 @@ const CreateBusiness: React.FC = () => {
               className="flex items-center space-x-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Back</span>
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Create New Business</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {isEditing ? 'Edit Business' : 'Create New Business'}
+              </h1>
               <p className="text-gray-600 mt-1">
-                Set up your new business profile
+                {isEditing ? 'Update your business profile' : 'Set up your new business profile'}
               </p>
             </div>
           </div>
@@ -427,7 +472,7 @@ const CreateBusiness: React.FC = () => {
               className="flex items-center space-x-2"
             >
               <Save className="h-4 w-4" />
-              <span>{loading ? 'Creating...' : 'Create Business'}</span>
+              <span>{loading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Business' : 'Create Business')}</span>
             </Button>
           </div>
         </form>
@@ -437,4 +482,5 @@ const CreateBusiness: React.FC = () => {
 }
 
 export default CreateBusiness
+
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { DataService } from '@/services/dataService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -32,31 +33,55 @@ const AIAnalyticsPage = () => {
   const [aiResponse, setAiResponse] = useState('')
   const [userQuestion, setUserQuestion] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [businessData, setBusinessData] = useState({
-    totalSales: 27048000,
-    totalRevenue: 27048000,
-    totalProducts: 32,
-    lowStockItems: 5,
-    salesGrowth: 20.1,
-    revenueGrowth: 15.3
+    totalSales: 0,
+    totalRevenue: 0,
+    totalProducts: 0,
+    lowStockItems: 0,
+    salesGrowth: 0,
+    revenueGrowth: 0
   })
+  const [salesData, setSalesData] = useState([])
+  const [productData, setProductData] = useState([])
 
-  // Chart data
-  const salesData = [
-    { name: 'Jan', sales: 4000, revenue: 2400 },
-    { name: 'Feb', sales: 3000, revenue: 1398 },
-    { name: 'Mar', sales: 2000, revenue: 9800 },
-    { name: 'Apr', sales: 2780, revenue: 3908 },
-    { name: 'May', sales: 1890, revenue: 4800 },
-    { name: 'Jun', sales: 2390, revenue: 3800 }
-  ]
+  // Fetch real business data
+  useEffect(() => {
+    fetchBusinessData()
+  }, [])
 
-  const productData = [
-    { name: 'Electronics', value: 35, color: '#040458' },
-    { name: 'Clothing', value: 25, color: '#faa51a' },
-    { name: 'Accessories', value: 20, color: '#10b981' },
-    { name: 'Other', value: 20, color: '#8b5cf6' }
-  ]
+  const fetchBusinessData = async () => {
+    if (!user?.id) return
+    
+    try {
+      setLoading(true)
+      
+      // Fetch analytics data using DataService
+      const analyticsData = await DataService.getAnalyticsData(user.id, '30d')
+      
+      setBusinessData({
+        totalSales: analyticsData.totalSales,
+        totalRevenue: analyticsData.totalRevenue,
+        totalProducts: analyticsData.totalProducts,
+        lowStockItems: analyticsData.lowStockItems,
+        salesGrowth: analyticsData.salesGrowth,
+        revenueGrowth: analyticsData.revenueGrowth
+      })
+      
+      // Set real chart data
+      setSalesData(analyticsData.salesByMonth || [])
+      setProductData(analyticsData.topProducts?.map((product, index) => ({
+        name: product.name,
+        value: product.revenue,
+        color: ['#040458', '#faa51a', '#10b981', '#8b5cf6'][index % 4]
+      })) || [])
+      
+    } catch (error) {
+      console.error('Error fetching business data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const askAI = async (question: string) => {
     if (!question.trim()) return
@@ -75,14 +100,14 @@ const AIAnalyticsPage = () => {
         Question: ${question}
       `
       
-      const response = await AIAnalytics.generateGeneralInsights({
-        totalSales: businessData.totalSales,
-        totalRevenue: businessData.totalRevenue,
-        totalProducts: businessData.totalProducts,
-        lowStockItems: businessData.lowStockItems
+      const response = await AIAnalytics.generateBusinessSummary({
+        sales: businessData.totalSales,
+        revenue: businessData.totalRevenue,
+        products: businessData.totalProducts,
+        growth: businessData.salesGrowth
       })
       
-      setAiResponse(response[0]?.description || 'AI is analyzing your business data...')
+      setAiResponse(response || 'AI is analyzing your business data...')
     } catch (error) {
       console.error('AI Error:', error)
       setAiResponse('I apologize, but I encountered an error while analyzing your business data. Please try again.')
@@ -105,6 +130,17 @@ const AIAnalyticsPage = () => {
     "What are the growth opportunities?",
     "How can I reduce costs?"
   ]
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#040458] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your business analytics...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">

@@ -272,3 +272,4 @@ SELECT * FROM get_business_members('business-id');
 ---
 
 **This document should be updated whenever major changes are made to the project structure or functionality.**
+

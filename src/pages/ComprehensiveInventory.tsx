@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContextOptimized';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,8 +65,11 @@ interface Category {
 }
 
 const ComprehensiveInventory: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  
+  // Debug logging
+  console.log('ComprehensiveInventory render: user =', user?.id ? 'User loaded' : 'No user', 'authLoading =', authLoading);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,11 +79,7 @@ const ComprehensiveInventory: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (loading) return; // Prevent multiple simultaneous calls
     try {
       setLoading(true);
@@ -118,9 +117,16 @@ const ComprehensiveInventory: React.FC = () => {
 
       // Load products with comprehensive data and fallback
       try {
+        if (!user?.id) {
+          console.log('No user ID available, skipping products load');
+          setProducts([]);
+          return;
+        }
+
         const { data: productsData, error: productsError } = await supabase
           .from('products')
           .select('*')
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
         if (productsError) {
@@ -129,6 +135,7 @@ const ComprehensiveInventory: React.FC = () => {
           const { data: fallbackData, error: fallbackError } = await supabase
             .from('products')
             .select('*')
+            .eq('user_id', user.id)
             .order('created_at', { ascending: false });
           
           if (fallbackError) {
@@ -181,7 +188,13 @@ const ComprehensiveInventory: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadData();
+    }
+  }, [user?.id, loadData]);
 
 
 
@@ -244,6 +257,18 @@ const ComprehensiveInventory: React.FC = () => {
   const lowStockProducts = products.filter(p => (p.current_stock || 0) <= (p.min_stock || 0));
   const outOfStockProducts = products.filter(p => (p.current_stock || 0) <= 0);
   const expiringProducts = products.filter(p => false); // No expiry date in current Product interface
+
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#040458] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading user data...</p>
+          <p className="text-sm text-gray-500 mt-2">If this takes too long, please refresh the page</p>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (

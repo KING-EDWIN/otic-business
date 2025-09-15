@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { LogOut, User, Settings, Building2, ArrowRight, Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import NotificationIcon from './NotificationIcon'
 
 const BusinessLoginStatus = () => {
   const { user, profile, signOut } = useAuth()
@@ -91,6 +92,7 @@ const BusinessLoginStatus = () => {
 
   return (
     <div className="flex items-center space-x-2">
+      <NotificationIcon />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="relative h-8 w-8 rounded-full">

@@ -66,3 +66,4 @@ ORDER BY policyname;
 -- Test query to see if it works
 SELECT 'Test Query' as info, count(*) as user_count
 FROM public.user_profiles;
+

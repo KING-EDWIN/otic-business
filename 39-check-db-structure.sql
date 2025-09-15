@@ -35,3 +35,4 @@ FROM information_schema.table_privileges
 WHERE table_schema = 'public'
 AND grantee IN ('authenticated', 'anon')
 ORDER BY table_name, grantee;
+

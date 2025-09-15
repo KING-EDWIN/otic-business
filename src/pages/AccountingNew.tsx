@@ -35,16 +35,18 @@ import {
   Activity,
   Zap,
   Shield,
-  Send
+  Send,
+  Receipt
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
+import { toast } from 'sonner'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart as RechartsPieChart, Cell } from 'recharts'
 import BusinessLoginStatus from '@/components/BusinessLoginStatus'
 
 const AccountingNew: React.FC = () => {
   const navigate = useNavigate()
-  const { user, profile } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const [activeTab, setActiveTab] = useState('overview')
   const [loading, setLoading] = useState(true)
   const [financialData, setFinancialData] = useState({
@@ -57,7 +59,12 @@ const AccountingNew: React.FC = () => {
     unpaidInvoices: 0,
     overdueInvoices: 0,
     paidInvoices: 0,
-    totalSales: 0
+    totalSales: 0,
+    // Tax calculations
+    withholdingTax: 0, // 6% of payments to suppliers
+    vat: 0, // 18% VAT
+    incomeTax: 0, // 30% on profits
+    totalTaxes: 0
   })
 
   const [expenseBreakdown, setExpenseBreakdown] = useState([])
@@ -171,6 +178,13 @@ const AccountingNew: React.FC = () => {
         })
       }
       
+      // Calculate taxes
+      const totalSales = salesData?.reduce((sum, sale) => sum + sale.total, 0) || 0
+      const withholdingTax = totalExpenses * 0.06 // 6% of payments to suppliers
+      const vat = totalSales * 0.18 // 18% VAT on sales
+      const incomeTax = Math.max(0, netIncome) * 0.30 // 30% on profits (only if positive)
+      const totalTaxes = withholdingTax + vat + incomeTax
+
       setFinancialData({
         netIncome,
         totalRevenue,
@@ -181,7 +195,11 @@ const AccountingNew: React.FC = () => {
         unpaidInvoices,
         overdueInvoices,
         paidInvoices,
-        totalSales: salesData?.reduce((sum, sale) => sum + sale.total, 0) || 0
+        totalSales,
+        withholdingTax,
+        vat,
+        incomeTax,
+        totalTaxes
       })
       
       setExpenseBreakdown(expenseBreakdownData)
@@ -204,6 +222,7 @@ const AccountingNew: React.FC = () => {
     { id: 'payroll', label: 'Payroll', icon: Users },
     { id: 'time', label: 'Time', icon: Clock },
     { id: 'reports', label: 'Reports', icon: FileText },
+    { id: 'receipts', label: 'Receipts', icon: Receipt },
     { id: 'taxes', label: 'Taxes', icon: Calculator },
     { id: 'mileage', label: 'Mileage', icon: Activity },
     { id: 'accounting', label: 'Accounting', icon: Calculator },
@@ -243,6 +262,19 @@ const AccountingNew: React.FC = () => {
     </Card>
   )
 
+  // Show loading state while auth is initializing
+  if (authLoading || !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#040458] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading accounting data...</p>
+          <p className="text-sm text-gray-500 mt-2">If this takes too long, please refresh the page</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -257,7 +289,6 @@ const AccountingNew: React.FC = () => {
                 className="flex items-center space-x-2 text-gray-600 hover:text-[#040458]"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Back to Dashboard</span>
               </Button>
               <div className="h-8 w-px bg-gray-300" />
               <div className="flex items-center space-x-3">
@@ -314,6 +345,70 @@ const AccountingNew: React.FC = () => {
               {sidebarItems.map((item) => (
                   <button
                     key={item.id}
+                    onClick={() => {
+                      // Handle navigation based on item id
+                      switch (item.id) {
+                        case 'overview':
+                          // Already on overview
+                          break
+                        case 'banking':
+                          toast.info('Banking feature coming soon!')
+                          break
+                        case 'invoicing':
+                          navigate('/invoices')
+                          break
+                        case 'customers':
+                          navigate('/customers')
+                          break
+                        case 'cashflow':
+                          toast.info('Cash flow feature coming soon!')
+                          break
+                        case 'expenses':
+                          toast.info('Expenses feature coming soon!')
+                          break
+                        case 'payroll':
+                          toast.info('Payroll feature coming soon!')
+                          break
+                        case 'time':
+                          toast.info('Time tracking feature coming soon!')
+                          break
+                        case 'reports':
+                          navigate('/reports')
+                          break
+                        case 'receipts':
+                          // Scroll to receipts section
+                          document.getElementById('receipts-section')?.scrollIntoView({ behavior: 'smooth' })
+                          break
+                        case 'taxes':
+                          // Scroll to tax section
+                          document.getElementById('tax-section')?.scrollIntoView({ behavior: 'smooth' })
+                          break
+                        case 'mileage':
+                          toast.info('Mileage tracking feature coming soon!')
+                          break
+                        case 'accounting':
+                          // Already on accounting
+                          break
+                        case 'myaccountant':
+                          toast.info('Accountant management feature coming soon!')
+                          break
+                        case 'capital':
+                          // Scroll to capital section
+                          document.getElementById('capital-section')?.scrollIntoView({ behavior: 'smooth' })
+                          break
+                        case 'company':
+                          toast.info('Company settings feature coming soon!')
+                          break
+                        case 'apps':
+                          toast.info('Apps integration feature coming soon!')
+                          break
+                        case 'insurance':
+                          toast.info('Insurance feature coming soon!')
+                          break
+                        default:
+                          toast.info(`${item.label} feature coming soon!`)
+                      }
+                    }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
                     item.active 
                       ? 'bg-[#faa51a] text-white' 
@@ -336,8 +431,24 @@ const AccountingNew: React.FC = () => {
           {/* Action Buttons */}
           <div className="mb-6">
             <div className="flex justify-end space-x-2">
-                <Button variant="outline" size="sm">Get things done</Button>
-                <Button variant="default" size="sm" className="bg-[#040458] hover:bg-[#030345]">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    toast.info('Quick actions feature coming soon!')
+                    console.log('Get things done clicked')
+                  }}
+                >
+                  Get things done
+                </Button>
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="bg-[#040458] hover:bg-[#030345]"
+                  onClick={() => {
+                    navigate('/dashboard')
+                  }}
+                >
                   Business overview
                 </Button>
             </div>
@@ -402,7 +513,7 @@ const AccountingNew: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <div className="text-3xl font-bold text-red-600">-${Math.abs(financialData.netIncome).toLocaleString()}</div>
+                    <div className="text-3xl font-bold text-red-600">-UGX {Math.abs(financialData.netIncome).toLocaleString()}</div>
                     <div className="flex items-center space-x-2 mt-2">
                       <CheckCircle className="h-4 w-4 text-green-500" />
                       <span className="text-sm text-gray-600">100% categorized</span>
@@ -412,7 +523,7 @@ const AccountingNew: React.FC = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Income</span>
-                      <span className="text-sm font-semibold text-green-600">${financialData.totalRevenue.toLocaleString()}</span>
+                      <span className="text-sm font-semibold text-green-600">UGX {financialData.totalRevenue.toLocaleString()}</span>
                       </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div className="bg-green-500 h-2 rounded-full" style={{ width: '20%' }}></div>
@@ -420,7 +531,7 @@ const AccountingNew: React.FC = () => {
 
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Expenses</span>
-                      <span className="text-sm font-semibold text-red-600">${financialData.totalExpenses.toLocaleString()}</span>
+                      <span className="text-sm font-semibold text-red-600">UGX {financialData.totalExpenses.toLocaleString()}</span>
                       </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div className="bg-teal-500 h-2 rounded-full" style={{ width: '80%' }}></div>
@@ -450,13 +561,13 @@ const AccountingNew: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="text-2xl font-bold text-gray-900">
-                    ${financialData.totalExpenses.toLocaleString()}
+                    UGX {financialData.totalExpenses.toLocaleString()}
                   </div>
                   
                   <div className="space-y-2">
                     {expenseBreakdown.map((expense, index) => (
                       <div key={index} className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">${expense.amount.toLocaleString()}</span>
+                        <span className="text-gray-600">UGX {expense.amount.toLocaleString()}</span>
                         <span className="text-gray-500">({expense.percentage}%)</span>
                       </div>
                     ))}
@@ -580,7 +691,10 @@ const AccountingNew: React.FC = () => {
                     <Button 
                       size="sm" 
                       className="mt-2 bg-[#040458] hover:bg-[#030345] text-white"
-                      onClick={() => {/* Add bank account functionality */}}
+                      onClick={() => {
+                        toast.info('Bank account addition feature coming soon!')
+                        console.log('Add bank account clicked')
+                      }}
                     >
                       Add Bank Account
                     </Button>
@@ -589,10 +703,23 @@ const AccountingNew: React.FC = () => {
               </div>
                   
                   <div className="space-y-2">
-                    <Button className="w-full bg-[#040458] hover:bg-[#030345] text-white">
+                    <Button 
+                      className="w-full bg-[#040458] hover:bg-[#030345] text-white"
+                      onClick={() => {
+                        toast.info('Bank account connection feature coming soon!')
+                        console.log('Connect accounts clicked')
+                      }}
+                    >
                       Connect accounts
                     </Button>
-                    <Button variant="outline" className="w-full">
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => {
+                        toast.info('Bank registers feature coming soon!')
+                        console.log('Go to registers clicked')
+                      }}
+                    >
                       Go to registers
                       <ChevronRight className="h-4 w-4 ml-2" />
                     </Button>
@@ -612,7 +739,7 @@ const AccountingNew: React.FC = () => {
                   <div className="space-y-4">
                           <div>
                     <div className="text-2xl font-bold text-gray-900">
-                      ${financialData.unpaidInvoices.toLocaleString()}
+                      UGX {financialData.unpaidInvoices.toLocaleString()}
                           </div>
                     <div className="text-sm text-gray-600">Last 365 days</div>
                   </div>
@@ -620,7 +747,7 @@ const AccountingNew: React.FC = () => {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Overdue</span>
-                      <span className="text-sm font-semibold text-orange-600">${financialData.overdueInvoices.toLocaleString()}</span>
+                      <span className="text-sm font-semibold text-orange-600">UGX {financialData.overdueInvoices.toLocaleString()}</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div className="bg-orange-500 h-2 rounded-full" style={{ width: '100%' }}></div>
@@ -628,7 +755,7 @@ const AccountingNew: React.FC = () => {
                     
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Not due yet</span>
-                      <span className="text-sm font-semibold text-gray-600">$0</span>
+                      <span className="text-sm font-semibold text-gray-600">UGX 0</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div className="bg-gray-400 h-2 rounded-full" style={{ width: '0%' }}></div>
@@ -662,7 +789,7 @@ const AccountingNew: React.FC = () => {
                 <CardContent>
                 <div className="space-y-4">
                   <div className="text-2xl font-bold text-gray-900">
-                    ${financialData.totalSales.toLocaleString()}
+                    UGX {financialData.totalSales.toLocaleString()}
                   </div>
                   
                   <div className="h-32">
@@ -689,7 +816,155 @@ const AccountingNew: React.FC = () => {
             )}
             </div>
 
+          {/* Tax Section */}
+          <div id="tax-section" className="mb-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-lg flex items-center justify-center">
+                      <Calculator className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold text-[#040458]">Tax Calculations</CardTitle>
+                      <CardDescription>Uganda Revenue Authority (URA) tax obligations</CardDescription>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-sm">
+                    Current Period
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Withholding Tax */}
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-blue-900">Withholding Tax</h4>
+                      <Badge className="bg-blue-100 text-blue-800">6%</Badge>
+                    </div>
+                    <div className="text-2xl font-bold text-blue-900">
+                      UGX {financialData.withholdingTax.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-blue-700 mt-1">
+                      On supplier payments
+                    </div>
+                  </div>
+
+                  {/* VAT */}
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-green-900">VAT</h4>
+                      <Badge className="bg-green-100 text-green-800">18%</Badge>
+                    </div>
+                    <div className="text-2xl font-bold text-green-900">
+                      UGX {financialData.vat.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-green-700 mt-1">
+                      On total sales
+                    </div>
+                  </div>
+
+                  {/* Income Tax */}
+                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-orange-900">Income Tax</h4>
+                      <Badge className="bg-orange-100 text-orange-800">30%</Badge>
+                    </div>
+                    <div className="text-2xl font-bold text-orange-900">
+                      UGX {financialData.incomeTax.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-orange-700 mt-1">
+                      On profits
+                    </div>
+                  </div>
+
+                  {/* Total Taxes */}
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-red-900">Total Taxes</h4>
+                      <Badge className="bg-red-100 text-red-800">Due</Badge>
+                    </div>
+                    <div className="text-2xl font-bold text-red-900">
+                      UGX {financialData.totalTaxes.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-red-700 mt-1">
+                      URA obligation
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    <p>• Withholding Tax: 6% of all payments to suppliers</p>
+                    <p>• VAT: 18% on all taxable sales</p>
+                    <p>• Income Tax: 30% on business profits</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      Export Tax Report
+                    </Button>
+                    <Button size="sm" className="bg-[#040458] hover:bg-[#040458]/90">
+                      <FileText className="h-4 w-4 mr-2" />
+                      Generate URA Report
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Receipts Section */}
+          <div id="receipts-section" className="mb-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-lg flex items-center justify-center">
+                      <Receipt className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold text-[#040458]">Digital Receipts</CardTitle>
+                      <CardDescription>View and manage all sales receipts</CardDescription>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-sm">
+                    All Receipts
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Receipt className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Receipt Management</h3>
+                  <p className="text-gray-600 mb-4">
+                    All receipts from POS sales are automatically stored here. 
+                    You can view, print, and export receipts for accounting purposes.
+                  </p>
+                  <div className="flex items-center justify-center space-x-4">
+                    <Button
+                      onClick={() => navigate('/pos')}
+                      className="bg-[#040458] hover:bg-[#040458]/90"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create New Sale
+                    </Button>
+                    <Button
+                      onClick={() => navigate('/reports')}
+                      variant="outline"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      View Reports
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Capital Section */}
+          <div id="capital-section">
           {loading ? (
             <Card className="animate-pulse">
               <CardHeader>
@@ -735,12 +1010,20 @@ const AccountingNew: React.FC = () => {
             <CardContent>
               <div className="text-center py-8">
                 <div className="text-lg text-gray-900 mb-4">
-                  You may be eligible for a loan up to <span className="font-bold text-[#040458]">$150K</span>, 
-                  depending on your business health and needs. Conditions apply
+                  You may be eligible for a loan up to <span className="font-bold text-[#040458]">
+                    UGX {Math.min(financialData.totalRevenue * 0.1, 150000).toLocaleString()}
+                  </span>, 
+                  based on your current revenue of UGX {financialData.totalRevenue.toLocaleString()}. Conditions apply
       </div>
 
                 <div className="flex items-center justify-center space-x-8 mt-6">
-                  <div className="flex flex-col items-center space-y-2">
+                  <div 
+                    className="flex flex-col items-center space-y-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => {
+                      toast.info('Loan application feature coming soon!')
+                      console.log('Start loan application clicked')
+                    }}
+                  >
                     <div className="w-12 h-12 bg-[#faa51a] rounded-full flex items-center justify-center">
                       <FileText className="h-6 w-6 text-white" />
                     </div>
@@ -749,7 +1032,13 @@ const AccountingNew: React.FC = () => {
                   
                   <ChevronRight className="h-4 w-4 text-gray-400" />
                   
-                  <div className="flex flex-col items-center space-y-2">
+                  <div 
+                    className="flex flex-col items-center space-y-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => {
+                      toast.info('Application submission feature coming soon!')
+                      console.log('Submit application clicked')
+                    }}
+                  >
                     <div className="w-12 h-12 bg-[#040458] rounded-full flex items-center justify-center">
                       <Send className="h-6 w-6 text-white" />
                     </div>
@@ -758,7 +1047,13 @@ const AccountingNew: React.FC = () => {
                   
                   <ChevronRight className="h-4 w-4 text-gray-400" />
                   
-                  <div className="flex flex-col items-center space-y-2">
+                  <div 
+                    className="flex flex-col items-center space-y-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => {
+                      toast.info('Decision tracking feature coming soon!')
+                      console.log('Get decision clicked')
+                    }}
+                  >
                     <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
                       <CheckCircle className="h-6 w-6 text-white" />
                   </div>
@@ -769,6 +1064,7 @@ const AccountingNew: React.FC = () => {
             </CardContent>
           </Card>
           )}
+          </div>
         </main>
             </div>
     </div>

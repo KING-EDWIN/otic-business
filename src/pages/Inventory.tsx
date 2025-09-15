@@ -90,6 +90,10 @@ interface LowStockItem {
 const Inventory = () => {
   const { user } = useAuth()
   const navigate = useNavigate()
+  
+  // Debug logging
+  console.log('Inventory component render: user =', user?.id ? 'User loaded' : 'No user')
+  console.log('Inventory component render: user details =', user)
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -139,7 +143,9 @@ const Inventory = () => {
 
   // Fetch products using DataService - memoized to prevent unnecessary re-renders
   const fetchProducts = useCallback(async () => {
-    if (!user?.id) return
+    if (!user?.id) {
+      return
+    }
     
     try {
       setLoading(true)
@@ -158,9 +164,10 @@ const Inventory = () => {
   useEffect(() => {
     // Only fetch products when user is available
     if (user?.id) {
-    fetchProducts()
+      fetchProducts()
     }
-  }, [user?.id, fetchProducts])
+  }, [user?.id, fetchProducts]) // Include fetchProducts in dependencies
+
 
   const generateBarcode = (prefix: string = 'OTIC') => {
     const timestamp = Date.now().toString().slice(-6)
@@ -373,6 +380,18 @@ const Inventory = () => {
     )
   }
 
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#040458] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading user data...</p>
+          <p className="text-sm text-gray-500 mt-2">If this takes too long, please refresh the page</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
@@ -387,7 +406,6 @@ const Inventory = () => {
                 className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Back to Dashboard</span>
               </Button>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-lg flex items-center justify-center">

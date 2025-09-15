@@ -143,3 +143,4 @@ BEGIN
 END $$;
 
 SELECT 'Fixed return types applied successfully' as status;
+

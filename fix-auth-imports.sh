@@ -32,3 +32,4 @@ else
 fi
 
 echo "🎉 AuthContext consolidation complete!"
+

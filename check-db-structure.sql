@@ -36,3 +36,4 @@ SELECT
     'user_profiles' as table_name,
     COUNT(*) as row_count
 FROM user_profiles;
+

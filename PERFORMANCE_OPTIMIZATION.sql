@@ -188,3 +188,4 @@ VACUUM ANALYZE stock_movements;
 -- 13. Show optimization results
 SELECT 'Performance optimization complete' as status,
        'Indexes created, functions optimized, statistics updated' as details;
+

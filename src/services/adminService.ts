@@ -309,8 +309,18 @@ export class AdminService {
   async getUserVerificationStatus(): Promise<UserVerification[]> {
     try {
       const { data, error } = await supabase
-        .from('user_verification_status')
-        .select('*')
+        .from('user_profiles')
+        .select(`
+          id,
+          email,
+          full_name,
+          user_type,
+          tier,
+          email_verified,
+          verification_timestamp,
+          verified_by,
+          created_at
+        `)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -318,7 +328,23 @@ export class AdminService {
         return []
       }
 
-      return data || []
+      // Transform the data to match UserVerification interface
+      const transformedData = (data || []).map(user => ({
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        user_type: user.user_type,
+        tier: user.tier,
+        email_verified: user.email_verified,
+        verification_timestamp: user.verification_timestamp,
+        verified_by: user.verified_by,
+        created_at: user.created_at,
+        verification_status: user.email_verified ? 'verified' : 'pending',
+        business_name: user.user_type === 'business' ? user.full_name : null,
+        phone: null // Add phone if available
+      }))
+
+      return transformedData
     } catch (error) {
       console.error('Error fetching user verification status:', error)
       return []
@@ -327,7 +353,7 @@ export class AdminService {
 
   async verifyUserEmail(userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // Update our database
+      // Update our database directly
       const { error: dbError } = await supabase
         .from('user_profiles')
         .update({
@@ -342,17 +368,6 @@ export class AdminService {
         return { success: false, error: dbError.message }
       }
 
-      // Also try to confirm the user in Supabase auth (this might fail if they haven't clicked email link)
-      try {
-        const { data: userData } = await supabase.auth.admin.updateUserById(userId, {
-          email_confirm: true
-        })
-        console.log('User confirmed in Supabase auth:', userData)
-      } catch (authError) {
-        console.log('Could not confirm in Supabase auth (user needs to click email link):', authError)
-        // This is not a critical error - our database verification is enough
-      }
-
       return { success: true }
     } catch (error) {
       console.error('Error verifying user email:', error)
@@ -362,7 +377,8 @@ export class AdminService {
 
   async unverifyUserEmail(userId: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const { error } = await supabase
+      // Update our database directly
+      const { error: dbError } = await supabase
         .from('user_profiles')
         .update({
           email_verified: false,
@@ -371,15 +387,15 @@ export class AdminService {
         })
         .eq('id', userId)
 
-      if (error) {
-        console.error('Error unverifying user email:', error)
-        return { success: false, error: 'Failed to remove verification' }
+      if (dbError) {
+        console.error('Error unverifying user email in database:', dbError)
+        return { success: false, error: dbError.message }
       }
 
       return { success: true }
     } catch (error) {
       console.error('Error unverifying user email:', error)
-      return { success: false, error: 'Failed to remove verification' }
+      return { success: false, error: 'Failed to unverify email' }
     }
   }
 

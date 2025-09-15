@@ -21,6 +21,8 @@ import {
   BarChart3
 } from 'lucide-react'
 import { AIAnalytics } from '@/services/aiService'
+import { DataService } from '@/services/dataService'
+import { supabase } from '@/lib/supabaseClient'
 
 interface Message {
   id: string
@@ -51,45 +53,94 @@ const AIChat: React.FC = () => {
   ]
 
   // Get business context
-  const getBusinessContext = () => {
-    const demoMode = sessionStorage.getItem('demo_mode') === 'true'
-    
-    if (demoMode) {
-      return {
-        businessName: 'Demo Business Store',
-        totalSales: 15,
-        totalRevenue: 12748000,
-        totalProducts: 25,
-        growthRate: 15.3,
-        lowStockCount: 4,
-        recentSales: [
-          { date: '2024-01-15', amount: 450000, method: 'cash' },
-          { date: '2024-01-14', amount: 320000, method: 'mobile_money' },
-          { date: '2024-01-13', amount: 280000, method: 'cash' }
-        ],
-        topProducts: [
-          { name: 'Rice 5kg', sales: 8, revenue: 1200000 },
-          { name: 'Cooking Oil 1L', sales: 12, revenue: 960000 },
-          { name: 'Sugar 2kg', sales: 6, revenue: 480000 }
-        ]
+  const getBusinessContext = async () => {
+    try {
+      if (!user?.id) {
+        return {
+          businessName: profile?.business_name || 'Your Business',
+          totalSales: 0,
+          totalRevenue: 0,
+          totalProducts: 0,
+          growthRate: 0,
+          lowStockCount: 0,
+          recentSales: [],
+          topProducts: []
+        }
       }
-    }
-    
-    return {
-      businessName: profile?.business_name || 'Your Business',
-      totalSales: 0,
-      totalRevenue: 0,
-      totalProducts: 0,
-      growthRate: 0,
-      lowStockCount: 0,
-      recentSales: [],
-      topProducts: []
+
+      // Fetch real data from database
+      const [products, analyticsData] = await Promise.all([
+        DataService.getProducts(user.id),
+        DataService.getAnalyticsData(user.id, '30d')
+      ])
+
+      // Fetch recent sales
+      const { data: salesData } = await supabase
+        .from('sales')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      // Calculate low stock items
+      const lowStockCount = products.filter(p => (p.stock || 0) <= (p.min_stock || 5)).length
+
+      // Get top products by revenue
+      const productRevenue = {}
+      salesData?.forEach(sale => {
+        if (sale.product_id) {
+          const product = products.find(p => p.id === sale.product_id)
+          if (product) {
+            if (productRevenue[product.id]) {
+              productRevenue[product.id].revenue += sale.total
+              productRevenue[product.id].sales += 1
+            } else {
+              productRevenue[product.id] = {
+                name: product.name,
+                revenue: sale.total,
+                sales: 1
+              }
+            }
+          }
+        }
+      })
+
+      const topProducts = Object.values(productRevenue)
+        .sort((a: any, b: any) => b.revenue - a.revenue)
+        .slice(0, 5)
+
+      return {
+        businessName: profile?.business_name || 'Your Business',
+        totalSales: analyticsData.totalSales,
+        totalRevenue: analyticsData.totalRevenue,
+        totalProducts: analyticsData.totalProducts,
+        growthRate: analyticsData.salesGrowth,
+        lowStockCount,
+        recentSales: salesData?.map(sale => ({
+          date: new Date(sale.created_at).toISOString().split('T')[0],
+          amount: sale.total,
+          method: sale.payment_method || 'cash'
+        })) || [],
+        topProducts
+      }
+    } catch (error) {
+      console.error('Error fetching business context:', error)
+      return {
+        businessName: profile?.business_name || 'Your Business',
+        totalSales: 0,
+        totalRevenue: 0,
+        totalProducts: 0,
+        growthRate: 0,
+        lowStockCount: 0,
+        recentSales: [],
+        topProducts: []
+      }
     }
   }
 
   // Generate AI response
   const generateAIResponse = async (userMessage: string): Promise<string> => {
-    const context = getBusinessContext()
+    const context = await getBusinessContext()
     
     try {
       const prompt = `You are an AI business assistant for "${context.businessName}", an African SME. 
@@ -179,11 +230,12 @@ const AIChat: React.FC = () => {
   // Initialize with welcome message
   useEffect(() => {
     if (messages.length === 0) {
-      const context = getBusinessContext()
-      const welcomeMessage: Message = {
-        id: 'welcome',
-        type: 'ai',
-        content: `Hello! I'm your AI business assistant for ${context.businessName}. I have access to all your business data and can help you with insights, predictions, and recommendations. 
+      const initializeWelcome = async () => {
+        const context = await getBusinessContext()
+        const welcomeMessage: Message = {
+          id: 'welcome',
+          type: 'ai',
+          content: `Hello! I'm your AI business assistant for ${context.businessName}. I have access to all your business data and can help you with insights, predictions, and recommendations. 
 
 I can see you have:
 - ${context.totalSales} total sales
@@ -192,9 +244,11 @@ I can see you have:
 - ${context.growthRate}% growth rate
 
 What would you like to know about your business?`,
-        timestamp: new Date()
+          timestamp: new Date()
+        }
+        setMessages([welcomeMessage])
       }
-      setMessages([welcomeMessage])
+      initializeWelcome()
     }
   }, [])
 

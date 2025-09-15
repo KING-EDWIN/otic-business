@@ -55,3 +55,4 @@ INSERT INTO system_error_logs (error_type, error_message, error_details, user_id
 ('DB_ERROR', 'Connection timeout', '{"table": "user_profiles", "duration": "30s"}', NULL, 'active');
 
 SELECT 'Missing tables created successfully' as status;
+

@@ -45,7 +45,8 @@ export class AIAnalytics {
         temperature: 0.7
       })
 
-      return response.choices[0]?.message?.content || 'Unable to generate insight'
+      const content = response.choices[0]?.message?.content
+      return typeof content === 'string' ? content : 'Unable to generate insight'
     } catch (error) {
       console.error('Mistral AI error:', error)
       return 'AI service temporarily unavailable'
@@ -61,7 +62,7 @@ export class AIAnalytics {
   static async generateInventoryInsights(products: any[], lowStockItems: any[]): Promise<AIInsight[]> {
     // Use demo data for performance - avoid API calls on every load
     if (shouldUseDemoAI()) {
-      return getDemoAIInsights('inventory', { products, lowStockItems })
+      return getDemoAIInsights('inventory')
     }
     
     // Only use live AI if specifically requested
@@ -128,7 +129,7 @@ export class AIAnalytics {
   static async generateSalesInsights(sales: any[], revenue: number, growth: number): Promise<AIInsight[]> {
     // Use demo data for performance - avoid API calls on every load
     if (shouldUseDemoAI()) {
-      return getDemoAIInsights('sales', { sales, revenue, growth })
+      return getDemoAIInsights('sales')
     }
     
     // Only use live AI if specifically requested
@@ -204,7 +205,7 @@ export class AIAnalytics {
   static async generateFinancialInsights(revenue: number, expenses: number, profit: number): Promise<AIInsight[]> {
     // Use demo data for performance - avoid API calls on every load
     if (shouldUseDemoAI()) {
-      return getDemoAIInsights('financial', { revenue, expenses, profit })
+      return getDemoAIInsights('financial')
     }
     
     // Only use live AI if specifically requested

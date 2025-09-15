@@ -46,7 +46,11 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
     if (user && profile) {
       // Only load businesses when both user and profile are available
       console.log('User and profile available, loading businesses...')
-      loadBusinesses()
+      // Add a small delay to prevent race conditions
+      const timeoutId = setTimeout(() => {
+        loadBusinesses()
+      }, 100)
+      return () => clearTimeout(timeoutId)
     } else {
       console.log('User or profile not available, clearing businesses...')
       setBusinesses([])
@@ -54,7 +58,7 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
       setBusinessMembers([])
       setLoading(false)
     }
-  }, [user, profile])
+  }, [user?.id, profile?.id]) // Only depend on IDs to prevent unnecessary re-renders
 
   // Set current business from localStorage on mount
   useEffect(() => {
@@ -79,7 +83,7 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
       // If no businesses found but user is authenticated, try to create a default one
       console.log('No businesses found for authenticated user, will create default business')
     }
-  }, [businesses.length, user, profile]) // Depend on user and profile too
+  }, [businesses.length]) // Remove user and profile dependencies to prevent double loading
 
   const loadBusinesses = async () => {
     // Prevent multiple simultaneous loads

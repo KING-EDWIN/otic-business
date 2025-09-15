@@ -72,3 +72,4 @@ END $$;
 NOTIFY pgrst, 'reload schema';
 
 SELECT 'Return types fixed successfully' as status;
+

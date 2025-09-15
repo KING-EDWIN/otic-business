@@ -52,6 +52,9 @@ const BusinessManagement: React.FC = () => {
       business.industry?.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
+  // Identify the main business (first business or the one with is_main flag)
+  const mainBusinessId = businesses.length > 0 ? businesses[0].id : null
+
   const getRoleIcon = (role?: string) => {
     switch (role) {
       case 'owner': return <Crown className="h-4 w-4 text-yellow-600" />
@@ -91,11 +94,16 @@ const BusinessManagement: React.FC = () => {
 
     try {
       setDeletingBusiness(businessId)
+      console.log('Deleting business:', businessId, businessName)
       const result = await deleteBusiness(businessId)
       
       if (result.success) {
+        console.log('Business deleted successfully, refreshing list...')
         toast.success('Business deleted successfully')
+        // Force a page refresh to ensure the list is updated
+        window.location.reload()
       } else {
+        console.error('Failed to delete business:', result.error)
         toast.error(result.error || 'Failed to delete business')
       }
     } catch (error) {
@@ -372,14 +380,16 @@ const BusinessManagement: React.FC = () => {
                       >
                         <Users className="h-3 w-3" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditBusiness(business.id)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      {business.user_role === 'owner' && (
+                      {business.id !== mainBusinessId && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditBusiness(business.id)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                      )}
+                      {business.user_role === 'owner' && business.id !== mainBusinessId && (
                         <Button
                           size="sm"
                           variant="outline"

@@ -95,3 +95,4 @@ INSERT INTO sales (
     NOW() - INTERVAL '3 days'
 ) ON CONFLICT DO NOTHING;
 
+

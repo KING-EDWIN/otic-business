@@ -59,3 +59,4 @@ UPDATE user_profiles
 SET business_name = COALESCE(business_name, 'My Business')
 WHERE id = '3488046f-56cf-4711-9045-7e6e158a1c91';
 
+
