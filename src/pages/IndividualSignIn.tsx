@@ -55,6 +55,11 @@ const IndividualSignIn = () => {
 
       if (error) {
         console.error('IndividualSignIn: Auth error:', error)
+        if (error.message.includes('Invalid login credentials') || error.message.includes('Email not confirmed')) {
+          setError('Wrong account type or account doesn\'t exist. Please check your credentials or use the business sign-in form.')
+          toast.error('Wrong account type or account doesn\'t exist!')
+          return
+        }
         throw error
       }
 
@@ -81,9 +86,10 @@ const IndividualSignIn = () => {
           toast.success('Welcome back, professional!')
           navigate('/individual-dashboard')
         } else {
-          console.log('IndividualSignIn: User is not individual, redirecting to business dashboard')
-          toast.error('This account is not set up as an individual account')
-          navigate('/business-signin')
+          console.log('IndividualSignIn: User is not individual, showing error')
+          setError('Wrong account type or account doesn\'t exist. This email is registered as a business account. Please use the business sign-in form.')
+          toast.error('Wrong account type! Please use the business sign-in form.')
+          return
         }
       }
     } catch (error: any) {
@@ -158,7 +164,16 @@ const IndividualSignIn = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {error && (
                 <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription>
+                    {error}
+                    {error.includes('business account') && (
+                      <div className="mt-2">
+                        <Link to="/business-signin" className="text-blue-600 hover:underline font-medium">
+                          → Go to Business Sign In
+                        </Link>
+                      </div>
+                    )}
+                  </AlertDescription>
                 </Alert>
               )}
 

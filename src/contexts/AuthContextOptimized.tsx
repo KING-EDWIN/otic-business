@@ -149,6 +149,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Non-blocking profile loading
   const loadUserProfileAsync = async (userId: string) => {
     try {
+      console.log('loadUserProfileAsync: Starting profile load for user:', userId)
+      
+      // Get the current user from session to access metadata
+      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = session?.user
+      console.log('loadUserProfileAsync: Current user metadata:', currentUser?.user_metadata)
+
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -161,15 +168,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Create a basic profile if access fails
         const basicProfile = {
           id: userId,
-          email: user?.email || '',
-          full_name: user?.user_metadata?.full_name || '',
+          email: currentUser?.email || '',
+          full_name: currentUser?.user_metadata?.full_name || '',
           tier: 'free_trial' as const,
-          user_type: 'business' as const,
+          user_type: (currentUser?.user_metadata?.user_type as 'business' | 'individual') || 'business',
           email_verified: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
         
+        console.log('loadUserProfileAsync: Setting fallback profile with user_type:', basicProfile.user_type)
         setProfile(basicProfile)
         localStorage.setItem('otic_profile', JSON.stringify(basicProfile))
         return
@@ -180,9 +188,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...data
       }
       
-      console.log('Profile loading - User email:', user?.email)
-      console.log('Profile loading - Database profile full_name:', data.full_name)
-      console.log('Profile loading - Enhanced profile full_name:', enhancedProfile.full_name)
+      console.log('Profile loading - User email:', currentUser?.email)
+      console.log('Profile loading - Database profile user_type:', data.user_type)
+      console.log('Profile loading - Enhanced profile user_type:', enhancedProfile.user_type)
       
       setProfile(enhancedProfile)
       localStorage.setItem('otic_profile', JSON.stringify(enhancedProfile))
@@ -190,18 +198,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.warn('Profile loading error, using fallback:', error)
       
+      // Get the current user from session to access metadata
+      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = session?.user
+      
       // Create a basic profile on error
       const basicProfile = {
         id: userId,
-        email: user?.email || '',
-        full_name: user?.user_metadata?.full_name || '',
+        email: currentUser?.email || '',
+        full_name: currentUser?.user_metadata?.full_name || '',
         tier: 'free_trial' as const,
-        user_type: 'business' as const,
+        user_type: (currentUser?.user_metadata?.user_type as 'business' | 'individual') || 'business',
         email_verified: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
       
+      console.log('loadUserProfileAsync: Setting error fallback profile with user_type:', basicProfile.user_type)
       setProfile(basicProfile)
       localStorage.setItem('otic_profile', JSON.stringify(basicProfile))
     }

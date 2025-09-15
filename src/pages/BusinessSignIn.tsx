@@ -27,8 +27,13 @@ const BusinessSignIn = () => {
       });
       
       if (signInError) {
-        setError(signInError.message || 'Failed to sign in. Please check your credentials.');
-        toast.error(signInError.message || 'Failed to sign in.');
+        if (signInError.message.includes('Invalid login credentials') || signInError.message.includes('Email not confirmed')) {
+          setError('Wrong account type or account doesn\'t exist. Please check your credentials or use the individual sign-in form.');
+          toast.error('Wrong account type or account doesn\'t exist!');
+        } else {
+          setError(signInError.message || 'Failed to sign in. Please check your credentials.');
+          toast.error(signInError.message || 'Failed to sign in.');
+        }
         return;
       }
 
@@ -53,9 +58,10 @@ const BusinessSignIn = () => {
           toast.success('Welcome back to your business dashboard!')
           navigate('/dashboard')
         } else {
-          console.log('BusinessSignIn: User is not business, redirecting to individual dashboard')
-          toast.error('This account is not set up as a business account')
-          navigate('/individual-signin')
+          console.log('BusinessSignIn: User is not business, showing error')
+          setError('Wrong account type or account doesn\'t exist. This email is registered as an individual account. Please use the individual sign-in form.')
+          toast.error('Wrong account type! Please use the individual sign-in form.')
+          return
         }
       }
       
@@ -107,7 +113,18 @@ const BusinessSignIn = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+              {error && (
+                <div className="text-red-500 text-sm text-center">
+                  <p>{error}</p>
+                  {error.includes('individual account') && (
+                    <div className="mt-2">
+                      <Link to="/individual-signin" className="text-blue-600 hover:underline font-medium">
+                        → Go to Individual Sign In
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Email */}
               <div className="space-y-2">

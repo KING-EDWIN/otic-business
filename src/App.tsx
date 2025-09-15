@@ -117,6 +117,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, profile } = useAuth();
   
+  console.log('PublicRoute: user:', user?.id, 'loading:', loading, 'profile:', profile?.user_type);
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -128,16 +130,28 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   if (user) {
     // Check user type and redirect accordingly
     if (profile) {
+      console.log('PublicRoute: Profile exists, user_type:', profile.user_type);
       if (profile.user_type === 'individual') {
+        console.log('PublicRoute: Redirecting to individual-dashboard');
         return <Navigate to="/individual-dashboard" />;
       } else {
+        console.log('PublicRoute: Redirecting to dashboard');
         return <Navigate to="/dashboard" />;
       }
     }
-    // If no profile yet, redirect to dashboard (will be handled by AuthContext)
-    return <Navigate to="/dashboard" />;
+    // If no profile yet, check auth metadata for user_type
+    const userType = user.user_metadata?.user_type;
+    console.log('PublicRoute: No profile yet, checking auth metadata user_type:', userType);
+    if (userType === 'individual') {
+      console.log('PublicRoute: Auth metadata says individual, redirecting to individual-dashboard');
+      return <Navigate to="/individual-dashboard" />;
+    } else {
+      console.log('PublicRoute: Auth metadata says business, redirecting to dashboard');
+      return <Navigate to="/dashboard" />;
+    }
   }
   
+  console.log('PublicRoute: No user, rendering children');
   return <>{children}</>;
 };
 
