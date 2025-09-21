@@ -109,6 +109,26 @@ const FAQ = () => {
     }
   };
 
+  const filterQuestions = () => {
+    let filtered = questions;
+
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(question => question.category_id === selectedCategory);
+    }
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(question => 
+        question.question.toLowerCase().includes(query) ||
+        question.answer.toLowerCase().includes(query) ||
+        question.keywords.some(keyword => keyword.toLowerCase().includes(query))
+      );
+    }
+
+    setFilteredQuestions(filtered);
+  };
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
