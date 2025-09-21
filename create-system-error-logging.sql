@@ -193,3 +193,5 @@ CREATE INDEX IF NOT EXISTS idx_system_troubleshoot_logs_timestamp ON public.syst
 CREATE INDEX IF NOT EXISTS idx_system_troubleshoot_logs_status ON public.system_troubleshoot_logs(status);
 CREATE INDEX IF NOT EXISTS idx_system_troubleshoot_logs_error_type ON public.system_troubleshoot_logs(error_type);
 
+
+

@@ -15,3 +15,5 @@ WHERE table_schema = 'public'
   AND (table_name LIKE '%product%' OR table_name LIKE '%inventory%' OR table_name LIKE '%stock%')
 ORDER BY table_name;
 
+
+

@@ -81,8 +81,7 @@ const FAQ = () => {
 
       if (categoriesError) {
         console.error('Error loading categories:', categoriesError);
-        // Use fallback categories
-        setCategories(getFallbackCategories());
+        setCategories([]);
       } else {
         setCategories(categoriesData || []);
       }
@@ -96,140 +95,20 @@ const FAQ = () => {
 
       if (questionsError) {
         console.error('Error loading questions:', questionsError);
-        // Use fallback questions
-        setQuestions(getFallbackQuestions());
+        setQuestions([]);
       } else {
         setQuestions(questionsData || []);
       }
     } catch (error) {
       console.error('Error loading FAQ data:', error);
-      // Use fallback data instead of showing error
-      setCategories(getFallbackCategories());
-      setQuestions(getFallbackQuestions());
+      toast.error('Failed to load FAQ data. Please check your connection and try again.');
+      setCategories([]);
+      setQuestions([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fallback data in case database is not accessible
-  const getFallbackCategories = (): FAQCategory[] => [
-    { id: '1', name: 'Getting Started', description: 'Basic setup questions', sort_order: 1 },
-    { id: '2', name: 'POS System', description: 'Point of Sale questions', sort_order: 2 },
-    { id: '3', name: 'Inventory Management', description: 'Inventory questions', sort_order: 3 },
-    { id: '4', name: 'Analytics & Reports', description: 'Analytics questions', sort_order: 4 },
-    { id: '5', name: 'User Management', description: 'User account questions', sort_order: 5 },
-    { id: '6', name: 'Billing & Subscriptions', description: 'Billing questions', sort_order: 6 }
-  ];
-
-  const getFallbackQuestions = (): FAQQuestion[] => [
-    {
-      id: '1',
-      category_id: '1',
-      question: 'How do I create my account?',
-      answer: 'To create your account, click "Get Started" on the homepage, select "Business Account", fill in your details, and verify your email. You can start with a 14-day free trial.',
-      tier_required: 'free_trial',
-      feature_name: 'Account Creation',
-      page_location: '/user-type',
-      usage_instructions: '1. Go to homepage 2. Click "Get Started" 3. Select "Business Account" 4. Fill in details 5. Verify email',
-      keywords: ['account', 'signup', 'register', 'create', 'getting started'],
-      is_active: true,
-      view_count: 0,
-      helpful_count: 0,
-      not_helpful_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '2',
-      category_id: '1',
-      question: 'What is included in the free trial?',
-      answer: 'The free trial includes full access to all features: POS system, inventory management, AI analytics, multi-user access (up to 3 users), all payment methods, and priority support.',
-      tier_required: 'free_trial',
-      feature_name: 'Free Trial',
-      page_location: '/pricing',
-      usage_instructions: 'All features are available during the 14-day free trial period with no credit card required.',
-      keywords: ['trial', 'free', 'features', 'included', '14 days'],
-      is_active: true,
-      view_count: 0,
-      helpful_count: 0,
-      not_helpful_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '3',
-      category_id: '2',
-      question: 'How do I process a sale?',
-      answer: 'To process a sale: 1. Go to the POS page 2. Scan or search for products 3. Add quantities 4. Select payment method 5. Complete the transaction. Receipts are automatically generated.',
-      tier_required: 'free_trial',
-      feature_name: 'POS System',
-      page_location: '/pos',
-      usage_instructions: 'Navigate to POS → Scan/Search products → Add to cart → Select payment → Complete sale',
-      keywords: ['pos', 'sale', 'transaction', 'payment', 'receipt'],
-      is_active: true,
-      view_count: 0,
-      helpful_count: 0,
-      not_helpful_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '4',
-      category_id: '3',
-      question: 'How do I add new products?',
-      answer: 'To add products: 1. Go to Inventory page 2. Click "Add Product" 3. Fill in product details (name, price, SKU, etc.) 4. Upload product image 5. Save. Products are immediately available in POS.',
-      tier_required: 'free_trial',
-      feature_name: 'Add Products',
-      page_location: '/inventory',
-      usage_instructions: 'Inventory → Add Product → Fill details → Upload image → Save',
-      keywords: ['inventory', 'products', 'add', 'new', 'stock'],
-      is_active: true,
-      view_count: 0,
-      helpful_count: 0,
-      not_helpful_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '5',
-      category_id: '4',
-      question: 'Where can I view my sales reports?',
-      answer: 'Sales reports are available in the Reports page. You can view daily, weekly, monthly, and custom period reports. Export options include PDF and Excel formats.',
-      tier_required: 'start_smart',
-      feature_name: 'Sales Reports',
-      page_location: '/reports',
-      usage_instructions: 'Reports → Sales Reports → Select period → View/Export',
-      keywords: ['reports', 'sales', 'analytics', 'export', 'pdf'],
-      is_active: true,
-      view_count: 0,
-      helpful_count: 0,
-      not_helpful_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-  ];
-
-  const filterQuestions = () => {
-    let filtered = questions;
-
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(q => q.category_id === selectedCategory);
-    }
-
-    // Filter by search query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(q => 
-        q.question.toLowerCase().includes(query) ||
-        q.answer.toLowerCase().includes(query) ||
-        q.keywords.some(keyword => keyword.toLowerCase().includes(query)) ||
-        (q.feature_name && q.feature_name.toLowerCase().includes(query))
-      );
-    }
-
-    setFilteredQuestions(filtered);
-  };
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);

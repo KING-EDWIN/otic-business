@@ -4,17 +4,27 @@ import { getSupabaseConfig, isOfflineMode } from '@/config/storageConfig'
 // Get Supabase configuration
 const { url, anonKey } = getSupabaseConfig()
 
-// Create Supabase client
+// Create Supabase client with enhanced error handling
 export const supabase = createClient(url, anonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    flowType: 'pkce'
+    flowType: 'pkce',
+    debug: process.env.NODE_ENV === 'development'
   },
   global: {
     headers: {
-      'apikey': anonKey
+      'apikey': anonKey,
+      'Content-Type': 'application/json'
+    }
+  },
+  db: {
+    schema: 'public'
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10
     }
   }
 })

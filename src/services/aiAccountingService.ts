@@ -210,18 +210,21 @@ export class AIAccountingService {
         Focus on actionable insights for a small business.
       `
 
-      const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.mistralApiKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'mistral-small-latest',
-          messages: [{ role: 'user', content: prompt }],
-          max_tokens: 1000
-        })
-      })
+      const response = await Promise.race([
+        fetch('https://api.mistral.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.mistralApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: 'mistral-small-latest',
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 1000
+          })
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Mistral API timeout')), 15000))
+      ]) as Response
 
       if (!response.ok) return []
 

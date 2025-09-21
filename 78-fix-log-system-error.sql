@@ -162,3 +162,5 @@ WHERE routine_name = 'log_system_error'
 
 SELECT 'log_system_error function created and tested successfully!' as status;
 
+
+

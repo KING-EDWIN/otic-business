@@ -176,6 +176,17 @@ const MyExtras = () => {
 
     // Integration Features
     {
+      id: 'multi_branch_management',
+      name: 'Multi-Branch Management',
+      description: 'Manage multiple business locations and branches',
+      icon: <Building2 className="h-6 w-6" />,
+      category: 'system',
+      availableIn: ['grow_intelligence', 'enterprise_advantage'],
+      isPremium: true,
+      action: () => navigate('/multi-branch-management'),
+      showCondition: () => (profile as any)?.features_enabled?.multi_branch === true
+    },
+    {
       id: 'multi_branch_sync',
       name: 'Multi-Branch Sync',
       description: 'Multi-branch synchronization',
@@ -366,7 +377,7 @@ const MyExtras = () => {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => navigate(-1)}
+                  onClick={() => navigate('/dashboard')}
                   className="flex items-center space-x-2 text-gray-600 hover:text-[#040458] hover:border-[#040458]"
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -428,7 +439,7 @@ const MyExtras = () => {
               <Button 
                 variant="outline" 
                 size="sm"
-                onClick={() => navigate(-1)}
+                onClick={() => navigate('/dashboard')}
                 className="flex items-center space-x-2 text-gray-600 hover:text-[#040458] hover:border-[#040458] flex-1"
               >
                 <ArrowLeft className="h-4 w-4" />

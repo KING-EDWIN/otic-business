@@ -1,6 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { isOfflineMode, getCurrentConfig } from '@/config/storageConfig'
+import { GoogleAuthService } from '@/services/googleAuthService'
+import { InputSanitizationService } from '@/services/inputSanitizationService'
+import { NetworkErrorHandler } from '@/services/networkErrorHandler'
+import { toast } from 'sonner'
 // import { SignupService } from '@/services/signupService'
 
 interface UserProfile {
@@ -24,7 +28,7 @@ interface AuthContextType {
   loading: boolean
   signUp: (email: string, password: string, businessName: string, userType?: 'business' | 'individual') => Promise<{ error: any }>
   signIn: (email: string, password: string, userType?: 'business' | 'individual') => Promise<{ error: any }>
-  signInWithGoogle: () => Promise<{ error: any }>
+  signInWithGoogle: (userType?: 'business' | 'individual') => Promise<{ error: any }>
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: any }>
   getDashboardRoute: () => string
@@ -45,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(false)
   const [pendingUserType, setPendingUserType] = useState<'business' | 'individual' | null>(null)
 
   // Check if we're in offline mode
@@ -101,8 +106,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(null)
         setSession(null)
         console.log('No active session - user needs to sign in')
-      }
-    } catch (error) {
+        }
+      } catch (error) {
       console.error('Error initializing Supabase:', error)
       
       // On error, clear everything and require fresh login
@@ -112,7 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.removeItem('otic_user')
       localStorage.removeItem('otic_profile')
     } finally {
-      setLoading(false)
+          setLoading(false)
     }
 
     // Set up auth state change listener
@@ -121,7 +126,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Auth state change:', event, session ? 'Session exists' : 'No session')
         
         if (session) {
-          setSession(session)
+        setSession(session)
           setUser(session.user)
           
           // Save user to localStorage for persistence
@@ -148,7 +153,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Non-blocking profile loading
   const loadUserProfileAsync = async (userId: string) => {
+    if (profileLoading) return // Prevent multiple simultaneous profile loads
     try {
+      setProfileLoading(true)
       console.log('loadUserProfileAsync: Starting profile load for user:', userId)
       
       // Get the current user from session to access metadata
@@ -163,24 +170,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single()
 
       if (error) {
-        console.warn('Profile access error, using fallback:', error.message)
-        
-        // Create a basic profile if access fails
-        const basicProfile = {
-          id: userId,
-          email: currentUser?.email || '',
-          full_name: currentUser?.user_metadata?.full_name || '',
-          tier: 'free_trial' as const,
-          user_type: (currentUser?.user_metadata?.user_type as 'business' | 'individual') || 'business',
-          email_verified: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-        
-        console.log('loadUserProfileAsync: Setting fallback profile with user_type:', basicProfile.user_type)
-        setProfile(basicProfile)
-        localStorage.setItem('otic_profile', JSON.stringify(basicProfile))
-        return
+        console.error('❌ Profile access error - must use live backend:', error.message)
+        throw new Error(`Failed to load user profile: ${error.message}`)
       }
 
       // Keep original profile data, don't override display name
@@ -217,18 +208,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('loadUserProfileAsync: Setting error fallback profile with user_type:', basicProfile.user_type)
       setProfile(basicProfile)
       localStorage.setItem('otic_profile', JSON.stringify(basicProfile))
+    } finally {
+      setProfileLoading(false)
     }
   }
 
   const signUp = async (email: string, password: string, businessName: string, userType: 'business' | 'individual' = 'business') => {
     try {
+      // Sanitize inputs
+      const emailResult = InputSanitizationService.sanitizeEmail(email)
+      const passwordResult = InputSanitizationService.sanitizePassword(password)
+      const businessNameResult = InputSanitizationService.sanitizeBusinessName(businessName)
+
+      // Check for validation errors
+      if (!emailResult.isValid) {
+        toast.error(`Email error: ${emailResult.errors.join(', ')}`)
+        return { error: { message: emailResult.errors.join(', ') } }
+      }
+
+      if (!passwordResult.isValid) {
+        toast.error(`Password error: ${passwordResult.errors.join(', ')}`)
+        return { error: { message: passwordResult.errors.join(', ') } }
+      }
+
+      if (!businessNameResult.isValid) {
+        toast.error(`Business name error: ${businessNameResult.errors.join(', ')}`)
+        return { error: { message: businessNameResult.errors.join(', ') } }
+      }
+
+      // Show warnings if any
+      if (emailResult.warnings.length > 0) {
+        toast.warning(`Email warning: ${emailResult.warnings.join(', ')}`)
+      }
+      if (passwordResult.warnings.length > 0) {
+        toast.warning(`Password warning: ${passwordResult.warnings.join(', ')}`)
+      }
+      if (businessNameResult.warnings.length > 0) {
+        toast.warning(`Business name warning: ${businessNameResult.warnings.join(', ')}`)
+      }
+
       setPendingUserType(userType)
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: emailResult.sanitizedValue,
+        password: passwordResult.sanitizedValue,
         options: {
           data: {
-            business_name: businessName,
+            business_name: businessNameResult.sanitizedValue,
             user_type: userType
           }
         }
@@ -247,34 +272,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string, userType: 'business' | 'individual' = 'business') => {
     try {
+      // Sanitize inputs
+      const emailResult = InputSanitizationService.sanitizeEmail(email)
+      const passwordResult = InputSanitizationService.sanitizePassword(password)
+
+      // Check for validation errors
+      if (!emailResult.isValid) {
+        toast.error(`Email error: ${emailResult.errors.join(', ')}`)
+        return { error: { message: emailResult.errors.join(', ') } }
+      }
+
+      if (!passwordResult.isValid) {
+        toast.error(`Password error: ${passwordResult.errors.join(', ')}`)
+        return { error: { message: passwordResult.errors.join(', ') } }
+      }
+
+      // Show warnings if any
+      if (emailResult.warnings.length > 0) {
+        toast.warning(`Email warning: ${emailResult.warnings.join(', ')}`)
+      }
+      if (passwordResult.warnings.length > 0) {
+        toast.warning(`Password warning: ${passwordResult.warnings.join(', ')}`)
+      }
+
       setPendingUserType(userType)
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      
+      const { data, error } = await NetworkErrorHandler.withRetry(async () => {
+        const result = await supabase.auth.signInWithPassword({
+          email: emailResult.sanitizedValue,
+          password: passwordResult.sanitizedValue,
+        })
+
+        if (result.error) {
+          throw result.error
+        }
+
+        return result
       })
 
       if (error) {
-        return { error }
+        const errorInfo = NetworkErrorHandler.handleAuthError(error)
+        toast.error(errorInfo.userMessage)
+        return { error: { message: errorInfo.userMessage } }
       }
 
       return { error: null }
     } catch (error) {
-      console.error('Sign in error:', error)
-      return { error }
+      NetworkErrorHandler.logError(error, 'AuthContext.signIn')
+      const errorInfo = NetworkErrorHandler.handleAuthError(error)
+      toast.error(errorInfo.userMessage)
+      return { error: { message: errorInfo.userMessage } }
     }
   }
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (userType: 'business' | 'individual' = 'business') => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
+      const result = await GoogleAuthService.initiateGoogleAuth({
+        userType,
+        showToast: true
       })
 
-      if (error) {
-        return { error }
+      if (!result.success) {
+        return { error: { message: result.error } }
       }
 
       return { error: null }
@@ -283,6 +342,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { error }
     }
   }
+
 
   const signOut = async () => {
     try {

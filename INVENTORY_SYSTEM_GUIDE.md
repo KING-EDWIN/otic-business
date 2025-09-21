@@ -252,3 +252,5 @@ INVENTORY_BARCODE_SYSTEM.sql
 
 **This system provides a complete inventory management solution with professional barcode support, suitable for businesses of all sizes!** 🚀
 
+
+

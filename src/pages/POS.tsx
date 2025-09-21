@@ -39,6 +39,7 @@ interface SaleItem {
 import { OticAPI } from '@/services/api'
 import { BrowserMultiFormatReader } from '@zxing/library'
 import EnhancedBarcodeScanner from '@/components/EnhancedBarcodeScanner'
+import OTICVisionScanner from '@/components/OTICVisionScanner'
 import { supabase } from '@/lib/supabaseClient'
 import { ReceiptService } from '@/services/receiptService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -71,7 +72,8 @@ import {
   Zap,
   TrendingUp,
   DollarSign,
-  Printer
+  Printer,
+  X
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { NotificationService } from '@/services/notificationService'
@@ -95,8 +97,18 @@ const POS = () => {
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false)
+  const [showOTICVision, setShowOTICVision] = useState(false)
   const [barcodeReader, setBarcodeReader] = useState<BrowserMultiFormatReader | null>(null)
   const [isScanning, setIsScanning] = useState(false)
+  const [showFallbackProductForm, setShowFallbackProductForm] = useState(false)
+  const [fallbackDetectedObject, setFallbackDetectedObject] = useState('')
+  const [fallbackProductName, setFallbackProductName] = useState('')
+  const [fallbackProductPrice, setFallbackProductPrice] = useState('')
+  
+  // Product selection modal state
+  const [showProductSelection, setShowProductSelection] = useState(false)
+  const [detectedVFTName, setDetectedVFTName] = useState('')
+  const [availableProducts, setAvailableProducts] = useState<any[]>([])
   
   // Customer information
   const [customerName, setCustomerName] = useState('')
@@ -131,8 +143,8 @@ const POS = () => {
       
       if (!currentBusiness?.id) {
         console.log('No business selected, using offline products')
-        const offlineProducts = getOfflineProducts()
-        setProducts(offlineProducts)
+      const offlineProducts = getOfflineProducts()
+      setProducts(offlineProducts)
         return
       }
       
@@ -255,6 +267,89 @@ const POS = () => {
     // Don't call handleBarcodeScan immediately, let user see the barcode first
     setShowBarcodeScanner(false)
   }
+
+  const handleOTICVisionProductDetected = (vftName: string, products: any[]) => {
+    console.log('🎯 OTIC Vision detected products:', vftName, products)
+    console.log('📊 Products length:', products.length)
+    console.log('📋 Products array:', JSON.stringify(products, null, 2))
+    
+    if (products.length === 0) {
+      console.log('❌ No products found for VFT:', vftName)
+      toast.info(`No products found for "${vftName}". You may need to register this product first.`)
+      return
+    }
+    
+    // Show product selection modal for all cases (single or multiple products)
+    setDetectedVFTName(vftName)
+    setAvailableProducts(products)
+    setShowProductSelection(true)
+    setShowOTICVision(false) // Close the camera modal
+  }
+
+  const handleProductSelection = (selectedProduct: any) => {
+    console.log('✅ Adding selected product to cart:', selectedProduct)
+    addToCart({
+      id: selectedProduct.id || selectedProduct.product_id || `temp_${Date.now()}`,
+      name: `${selectedProduct.brand_name || 'Unknown'} ${selectedProduct.product_name || 'Product'}`,
+      barcode: selectedProduct.barcode || '',
+      price: selectedProduct.price || 0,
+      cost: selectedProduct.cost || 0,
+      stock: selectedProduct.stock_quantity || 0,
+      min_stock: 0,
+      category_id: null,
+      supplier_id: null,
+      user_id: user?.id || '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    
+    setShowProductSelection(false)
+    toast.success(`Added ${selectedProduct.brand_name || 'Unknown'} ${selectedProduct.product_name || 'Product'} to cart`)
+  }
+
+  const handleOTICVisionError = (detectedObject: string) => {
+    console.log('OTIC Vision error, showing fallback form for:', detectedObject)
+    setFallbackDetectedObject(detectedObject)
+    setFallbackProductName(detectedObject)
+    setShowFallbackProductForm(true)
+    setShowOTICVision(false)
+  }
+
+  const handleFallbackProductSubmit = () => {
+    if (!fallbackProductName.trim() || !fallbackProductPrice.trim()) {
+      toast.error('Please fill in all fields')
+      return
+    }
+
+    const price = parseFloat(fallbackProductPrice)
+    if (isNaN(price) || price <= 0) {
+      toast.error('Please enter a valid price')
+      return
+    }
+
+    // Add the fallback product to cart
+    addToCart({
+      id: `fallback_${Date.now()}`,
+      name: fallbackProductName,
+      barcode: '',
+      price: price,
+      cost: 0,
+      stock: 1,
+      min_stock: 0,
+      category_id: null,
+      supplier_id: null,
+      user_id: user?.id || '',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+
+    setShowFallbackProductForm(false)
+    setFallbackDetectedObject('')
+    setFallbackProductName('')
+    setFallbackProductPrice('')
+    toast.success(`Added ${fallbackProductName} to cart`)
+  }
+
 
   const calculateSubtotal = () => {
     return cart.reduce((sum, item) => sum + item.subtotal, 0)
@@ -449,64 +544,36 @@ const POS = () => {
                 <div className="space-y-6">
                   {/* Search and Barcode Input */}
                   <div className="space-y-4">
-                    <div className="flex space-x-3">
-                      <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          placeholder="Search products by name or barcode..."
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          className="pl-10 h-12 border-gray-200 focus:border-[#faa51a] focus:ring-[#faa51a]/20"
-                        />
+                    <div className="space-y-4">
+                      {/* Prominent Camera Button */}
+                      <div className="flex justify-center">
+                        <Button 
+                          onClick={() => setShowOTICVision(true)} 
+                          className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white h-16 px-12 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+                        >
+                          <Camera className="h-6 w-6 mr-3" />
+                          Use Camera
+                        </Button>
                       </div>
-                      <Button 
-                        onClick={() => setShowBarcodeScanner(true)} 
-                        className="bg-[#040458] hover:bg-[#040458]/90 text-white h-12 px-6"
-                      >
-                        <Camera className="h-5 w-5 mr-2" />
-                        Scan Barcode
-                      </Button>
-                    </div>
-                    
-                    <div className="flex space-x-3">
-                      <div className="flex-1 relative">
-                        <QrCode className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input
-                          placeholder="Enter barcode manually (e.g., 6000622620003)..."
-                          value={barcodeInput}
-                          onChange={(e) => handleBarcodeChange(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && handleBarcodeScan()}
-                          className="pl-10 h-12 border-gray-200 focus:border-[#faa51a] focus:ring-[#faa51a]/20"
-                        />
-                      </div>
-                      <Button 
-                        onClick={handleBarcodeScan} 
-                        className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white h-12 px-6"
-                        disabled={!barcodeInput.trim()}
-                      >
-                        <Plus className="h-5 w-5 mr-2" />
-                        Add Product
-                      </Button>
-                    </div>
-                    
-                    {/* Quick Test Barcodes */}
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <p className="text-xs text-blue-700 font-medium mb-2">Quick Test Barcodes:</p>
-                      <div className="flex flex-wrap gap-2">
-                        {products.slice(0, 3).map((product) => (
-                          <Button
-                            key={product.id}
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setBarcodeInput(product.barcode || '')
-                              handleBarcodeScan()
-                            }}
-                            className="text-xs h-8"
-                          >
-                            {product.barcode}
-                          </Button>
-                        ))}
+                      
+                      {/* Search Bar and Secondary Options */}
+                      <div className="flex space-x-3">
+                        <div className="flex-1 relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            placeholder="Search products by name..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 h-12 border-gray-200 focus:border-[#faa51a] focus:ring-[#faa51a]/20"
+                          />
+                        </div>
+                        <Button 
+                          onClick={() => setShowBarcodeScanner(true)} 
+                          className="bg-[#040458] hover:bg-[#040458]/90 text-white h-10 px-4 text-sm"
+                        >
+                          <QrCode className="h-4 w-4 mr-2" />
+                          Scan Barcode
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -756,6 +823,100 @@ const POS = () => {
         onScan={handleBarcodeScanFromCamera}
       />
 
+      {/* OTIC Vision Scanner Modal */}
+      {showOTICVision && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <OTICVisionScanner
+                onProductDetected={handleOTICVisionProductDetected}
+                onClose={() => setShowOTICVision(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Product Selection Modal */}
+      {showProductSelection && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Select Product
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Found {availableProducts.length} products for "{detectedVFTName}"
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setShowProductSelection(false)}
+                  variant="outline"
+                  size="sm"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                {availableProducts.map((product, index) => (
+                  <div 
+                    key={product.id || product.product_id || index}
+                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => handleProductSelection(product)}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-[#faa51a] bg-opacity-10 rounded-lg flex items-center justify-center">
+                        <Package className="h-6 w-6 text-[#faa51a]" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">
+                          {product.brand_name || 'Unknown Brand'}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {product.product_name || 'Product'}
+                        </p>
+                        {product.description && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {product.description}
+                          </p>
+                        )}
+                        <div className="flex items-center space-x-2 mt-2">
+                          <Badge variant="outline" className="text-xs">
+                            Stock: {product.stock_quantity || 0}
+                          </Badge>
+                          {product.barcode && (
+                            <Badge variant="outline" className="text-xs">
+                              {product.barcode}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-bold text-[#040458]">
+                        UGX {(product.price || 0).toLocaleString()}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Cost: UGX {(product.cost || 0).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-6 pt-4 border-t border-gray-200">
+                <p className="text-sm text-gray-500 text-center">
+                  Click on any product to add it to your cart
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Digital Receipt Modal */}
       {showReceipt && currentReceipt && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -877,6 +1038,7 @@ const POS = () => {
           </div>
         </div>
       )}
+
     </div>
   )
 }

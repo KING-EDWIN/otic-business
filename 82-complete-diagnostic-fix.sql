@@ -299,3 +299,5 @@ ORDER BY routine_name;
 
 SELECT '🎉 Complete diagnostic and fix applied! All access control issues should be resolved.' as status;
 
+
+

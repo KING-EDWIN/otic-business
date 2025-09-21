@@ -106,3 +106,5 @@ ORDER BY n_dead_tup DESC;
 SELECT 'Performance Check Complete' as status,
        'Check the results above for optimization opportunities' as recommendation;
 
+
+

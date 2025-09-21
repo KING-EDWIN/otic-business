@@ -56,6 +56,7 @@ const SignInClean = () => {
     // Note: User will be redirected to dashboard on success
   }
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#040458] via-[#040458] to-[#faa51a] flex items-center justify-center p-4">
       {/* Return Button */}
@@ -174,6 +175,7 @@ const SignInClean = () => {
             </svg>
             Continue with Google
           </Button>
+
           
           <div className="mt-6 text-center text-sm">
             <span className="text-gray-600">Don't have an account? </span>

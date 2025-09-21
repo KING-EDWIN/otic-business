@@ -60,24 +60,24 @@ const IndividualSettings = () => {
         // Simulate loading delay for skeleton effect
         await new Promise(resolve => setTimeout(resolve, 1000))
         
-        // Load profile data (using mock data for now)
+        // Load profile data from user profile
         setFormData({
-          fullName: profile?.full_name || 'John Doe',
+          fullName: profile?.full_name || '',
           email: user.email || '',
-          phone: '+256 700 123 456',
-          location: 'Kampala, Uganda',
-          profession: 'Financial Consultant',
-          bio: 'Experienced financial consultant specializing in SME growth and business optimization.',
-          availability: 'available',
+          phone: profile?.phone || '',
+          location: profile?.location || '',
+          profession: profile?.profession || '',
+          bio: profile?.bio || '',
+          availability: profile?.availability || 'available',
           notifications: {
-            email: true,
-            push: true,
-            sms: false
+            email: profile?.email_notifications ?? true,
+            push: profile?.push_notifications ?? true,
+            sms: profile?.sms_notifications ?? false
           },
           privacy: {
-            profileVisible: true,
-            showEmail: false,
-            showPhone: false
+            profileVisible: profile?.profile_visible ?? true,
+            showEmail: profile?.show_email ?? false,
+            showPhone: profile?.show_phone ?? false
           }
         })
       } catch (error) {
@@ -508,6 +508,9 @@ const IndividualSettings = () => {
 }
 
 export default IndividualSettings
+
+
+
 
 
 

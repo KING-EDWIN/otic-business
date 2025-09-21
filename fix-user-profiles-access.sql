@@ -67,3 +67,5 @@ ORDER BY policyname;
 SELECT 'Test Query' as info, count(*) as user_count
 FROM public.user_profiles;
 
+
+

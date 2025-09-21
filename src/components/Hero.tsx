@@ -47,13 +47,12 @@ const Hero = () => {
           
           {/* Main Headline */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight mb-4 sm:mb-6 max-w-4xl px-4">
-            The Complete AI-Powered Business Platform
+            The First Intelligent Eye for Your Business
           </h1>
           
           {/* Sub-headline */}
           <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/90 leading-relaxed max-w-4xl mb-8 sm:mb-12 px-4">
-            Transform your African SME with our comprehensive business management solution. 
-            From mobile POS to intelligent analytics, everything you need in one platform.
+            The AI-Powered Business Platform That Sees, Understands, and Automates.
           </p>
 
           {/* Call-to-Action Buttons */}

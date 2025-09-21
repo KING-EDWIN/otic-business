@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { useDateRange } from '@/hooks/useDateRange'
+import DateRangePicker from '@/components/DateRangePicker'
 import { 
   BarChart3, 
   TrendingUp, 
@@ -49,6 +51,9 @@ const Analytics = () => {
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState('7d')
   const [aiInsights, setAiInsights] = useState<Array<{ type: string; message: string; confidence: number }>>([])
+  
+  // Date range management
+  const { dateRange, updateDateRange, minDate, maxDate, dateRangeString } = useDateRange()
 
   useEffect(() => {
     // Always fetch analytics data and generate insights
@@ -215,6 +220,19 @@ const Analytics = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Date Range Picker */}
+              <div className="bg-white/60 backdrop-blur-sm rounded-lg p-1 shadow-md">
+                <DateRangePicker
+                  onDateRangeChange={updateDateRange}
+                  initialRange={dateRange}
+                  minDate={minDate}
+                  maxDate={maxDate}
+                  placeholder="Select date range"
+                  className="w-48 border-0 bg-transparent focus:ring-2 focus:ring-[#faa51a]/20"
+                />
+              </div>
+              
+              {/* Time Range Selector */}
               <div className="bg-white/60 backdrop-blur-sm rounded-lg p-1 shadow-md">
                 <Select value={timeRange} onValueChange={setTimeRange}>
                   <SelectTrigger className="w-40 border-0 bg-transparent focus:ring-2 focus:ring-[#faa51a]/20">

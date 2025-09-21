@@ -61,11 +61,35 @@ const IndividualDashboard = () => {
       try {
         setLoading(true)
         
-        // For now, use empty arrays since the individual tables might not exist yet
-        // This will show the dashboard structure without data
-        console.log('IndividualDashboard: Using empty data for now')
-        setExpenses([])
-        setBudgets([])
+        // Load real data from backend - no fallback data
+        console.log('IndividualDashboard: Loading live data from backend')
+        
+        // Load expenses from backend
+        const { data: expensesData, error: expensesError } = await supabase
+          .from('expenses')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+        
+        if (expensesError) {
+          console.error('Error loading expenses:', expensesError)
+          throw new Error(`Failed to load expenses: ${expensesError.message}`)
+        }
+        
+        // Load budgets from backend
+        const { data: budgetsData, error: budgetsError } = await supabase
+          .from('budgets')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+        
+        if (budgetsError) {
+          console.error('Error loading budgets:', budgetsError)
+          throw new Error(`Failed to load budgets: ${budgetsError.message}`)
+        }
+        
+        setExpenses(expensesData || [])
+        setBudgets(budgetsData || [])
     } catch (error) {
         console.error('Error fetching individual dashboard data:', error)
         // Don't set fallback data - let error state handle this

@@ -378,3 +378,5 @@ const BusinessDashboardForIndividual: React.FC = () => {
 
 export default BusinessDashboardForIndividual;
 
+
+

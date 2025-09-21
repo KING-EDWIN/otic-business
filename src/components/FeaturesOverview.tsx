@@ -15,24 +15,25 @@ import {
   Zap,
   ChevronRight
 } from "lucide-react";
+import inventoryImage from "@/assets/photo-1481325545291-94394fe1cf95.avif";
 
 const FeaturesOverview = () => {
   const features = [
     {
-      title: "Smart POS System",
-      description: "Complete point-of-sale solution with barcode scanning, receipt printing, and multi-payment support. Process transactions instantly with our intuitive interface designed for African businesses.",
+      title: "AI-Powered Sales",
+      description: "AI-Powered Visual POS Stop typing codes and start scanning. Our intelligent camera instantly recognizes any product, automatically adds it to the cart, and processes the sale in one seamless motion. Turn any device into a powerful, efficient, and error-free point of sale.",
       icon: ShoppingCart,
       image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
       color: "from-blue-500 to-blue-600",
-      features: ["Barcode Scanning", "Receipt Printing", "Multi-Currency Support", "Offline Mode"]
+      features: ["Instant Product Recognition", "One-Scan Checkout", "Zero Manual Entry Errors", "AI-Powered Scanning"]
     },
     {
-      title: "Inventory Management", 
-      description: "Advanced inventory tracking with real-time stock monitoring, automated low-stock alerts, and intelligent reordering. Never run out of stock again with our predictive analytics.",
+      title: "AI-Driven Inventory", 
+      description: "Effortless Visual Inventory Count Unpacking a shipment? Just point the camera. Our AI scans the entire scene, identifies every item, and logs them directly into your inventory system—automatically. What used to take hours now takes seconds.",
       icon: Package,
-      image: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+      image: inventoryImage,
       color: "from-green-500 to-green-600",
-      features: ["Real-time Tracking", "Low Stock Alerts", "Automated Reordering", "Bulk Import/Export"]
+      features: ["Bulk Scan to Add Stock", "Real-Time Inventory Sync", "Eliminate Manual Counting", "AI-Powered Recognition"]
     },
     {
       title: "AI Analytics",
@@ -40,7 +41,7 @@ const FeaturesOverview = () => {
       icon: BarChart3,
       image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80", 
       color: "from-purple-500 to-purple-600",
-      features: ["Sales Forecasting", "Customer Insights", "Performance Metrics", "Custom Reports"]
+      features: ["AI Sales Forecasting", "AI Customer Insights", "AI Performance Metrics", "AI Custom Reports"]
     },
     {
       title: "Mobile App",
@@ -67,28 +68,28 @@ const FeaturesOverview = () => {
       features: ["Role-based Access", "Team Management", "Activity Tracking", "Permission Controls"]
     },
     {
-      title: "Financial Reports",
+      title: "AI Financial Reports",
       description: "Comprehensive financial reporting with tax preparation tools, profit & loss statements, and cash flow analysis. Stay compliant with local tax regulations.",
       icon: FileText,
       image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
       color: "from-teal-500 to-teal-600",
-      features: ["P&L Statements", "Tax Reports", "Cash Flow Analysis", "Export to Excel"]
+      features: ["AI P&L Statements", "AI Tax Reports", "AI Cash Flow Analysis", "AI Export to Excel"]
     },
     {
-      title: "Accounting & Bookkeeping",
+      title: "AI Accounting & Bookkeeping",
       description: "Automated accounting with QuickBooks integration, expense tracking, and invoice management. Keep your books organized and tax-ready year-round.",
       icon: Calculator,
       image: "https://images.unsplash.com/photo-1554224155-1696413565d3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
       color: "from-blue-500 to-blue-600",
-      features: ["QuickBooks Sync", "Expense Tracking", "Invoice Management", "Tax Preparation"]
+      features: ["AI QuickBooks Sync", "AI Expense Tracking", "AI Invoice Management", "AI Tax Preparation"]
     },
     {
-      title: "Budget & Forecasting",
+      title: "AI Budget & Forecasting",
       description: "Smart budgeting tools with AI-powered forecasting and financial planning. Plan for growth and make informed business decisions.",
       icon: TrendingUp,
       image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
       color: "from-purple-500 to-purple-600",
-      features: ["Budget Planning", "AI Forecasting", "Financial Goals", "Growth Projections"]
+      features: ["AI Budget Planning", "AI Forecasting", "AI Financial Goals", "AI Growth Projections"]
     }
   ];
 
@@ -103,8 +104,7 @@ const FeaturesOverview = () => {
             Everything You Need to Grow Your Business
           </h2>
           <p className="text-base sm:text-lg md:text-xl text-gray-600 max-w-3xl mx-auto px-4">
-            From sales to analytics, inventory to accounting - one platform that grows with your business. 
-            Join 2000+ African businesses already transforming their operations.
+            Welcome to a new era of operational simplicity. Our platform's advanced AI vision transforms your device's camera into your most powerful business tool. Simply scan to sell, instantly count inventory, and eliminate manual data entry forever. Unify your entire operation with the one platform smart enough to do the work for you.
           </p>
         </div>
 

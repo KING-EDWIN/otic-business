@@ -56,6 +56,7 @@ const SignUpClean = () => {
     // Note: User will be redirected to dashboard on success
   }
 
+
   const handleTermsAccept = () => {
     setTermsAccepted(true)
     setShowTermsModal(false)
@@ -154,7 +155,7 @@ const SignUpClean = () => {
           <Button 
             type="button" 
             variant="outline" 
-            className="w-full mb-6 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 bg-white shadow-sm" 
+            className="w-full mb-3 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 bg-white shadow-sm" 
             onClick={handleGoogleSignUp}
             disabled={loading || !termsAccepted}
           >
@@ -166,6 +167,7 @@ const SignUpClean = () => {
             </svg>
             {!termsAccepted ? 'Accept Terms to Continue' : 'Continue with Google (Recommended)'}
           </Button>
+
 
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">

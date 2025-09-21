@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { BusinessManagementProvider } from "@/contexts/BusinessManagementContext";
-import "@/utils/errorHandler";
 import Index from "./pages/Index";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
@@ -19,22 +18,20 @@ import Dashboard from "./pages/Dashboard";
 import MainDashboard from "./pages/MainDashboard";
 import POS from "./pages/POS";
 import Inventory from "./pages/Inventory";
-import CommodityRegistration from "./pages/CommodityRegistration";
-import Restock from "./pages/Restock";
 import Analytics from "./pages/Analytics";
 import Accounting from "./pages/AccountingNew";
-import Reports from "./pages/Reports";
-import Notifications from "./pages/Notifications";
 import QuickBooksCallback from "./pages/QuickBooksCallback";
+import GoogleCallback from "./pages/GoogleCallback";
 import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
 import Customers from "./pages/Customers";
+import Reports from "./pages/Reports";
 import TestAuth from "./pages/TestAuth";
 import SimpleTest from "./pages/SimpleTest";
+import AuthTestPage from "./pages/AuthTestPage";
 import AuthTest from "./pages/AuthTest";
 import ProfileTest from "./pages/ProfileTest";
 import AdminApp from "./AdminApp";
-import EmployeeRouteGuard from '@/components/EmployeeRouteGuard';
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
@@ -49,20 +46,19 @@ import TierSelection from "./pages/TierSelection";
 import TierGuide from "./pages/TierGuide";
 import IndividualDashboard from "./pages/IndividualDashboard";
 import IndividualSettings from "./pages/IndividualSettings";
-import BusinessDashboardForIndividual from "./pages/BusinessDashboardForIndividual";
 import LoginTypeSelection from "./pages/LoginTypeSelection";
 import BusinessSignIn from "./pages/BusinessSignIn";
 import IndividualSignIn from "./pages/IndividualSignIn";
-import BusinessManagement from "./pages/BusinessManagement";
-import CreateBusiness from "./pages/CreateBusiness";
-import BusinessMembers from "./pages/BusinessMembers";
-import BusinessDashboard from "./pages/BusinessDashboard";
-import BusinessInvitationManager from "./components/BusinessInvitationManager";
-import NetworkStatusIndicator from "./components/NetworkStatusIndicator";
 import NotFound from "./pages/NotFound";
 import OAuthCallback from "./components/OAuthCallback";
-import OTICVision from "./pages/OTICVision";
-import OTICVisionTest from "./pages/OTICVisionTest";
+// Branch Management Components
+import MultiBranchManagement from "./pages/MultiBranchManagement";
+import BranchAnalytics from "./pages/BranchAnalytics";
+import BranchAccounting from "./pages/BranchAccounting";
+import BranchSales from "./pages/BranchSales";
+import BranchStaff from "./pages/BranchStaff";
+import BranchInventory from "./pages/BranchInventory";
+import BranchAIInsights from "./pages/BranchAIInsights";
 
 const queryClient = new QueryClient();
 
@@ -117,9 +113,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 // Public Route Component (redirect to dashboard if already logged in)
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading, profile } = useAuth();
-  
-  console.log('PublicRoute: user:', user?.id, 'loading:', loading, 'profile:', profile?.user_type);
+  const { user, loading } = useAuth();
   
   if (loading) {
     return (
@@ -129,32 +123,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  if (user) {
-    // Check user type and redirect accordingly
-    if (profile) {
-      console.log('PublicRoute: Profile exists, user_type:', profile.user_type);
-      if (profile.user_type === 'individual') {
-        console.log('PublicRoute: Redirecting to individual-dashboard');
-        return <Navigate to="/individual-dashboard" />;
-      } else {
-        console.log('PublicRoute: Redirecting to dashboard');
-        return <Navigate to="/dashboard" />;
-      }
-    }
-    // If no profile yet, check auth metadata for user_type
-    const userType = user.user_metadata?.user_type;
-    console.log('PublicRoute: No profile yet, checking auth metadata user_type:', userType);
-    if (userType === 'individual') {
-      console.log('PublicRoute: Auth metadata says individual, redirecting to individual-dashboard');
-      return <Navigate to="/individual-dashboard" />;
-    } else {
-      console.log('PublicRoute: Auth metadata says business, redirecting to dashboard');
-      return <Navigate to="/dashboard" />;
-    }
-  }
-  
-  console.log('PublicRoute: No user, rendering children');
-  return <>{children}</>;
+  return user ? <Navigate to="/dashboard" /> : <>{children}</>;
 };
 
 const App = () => {
@@ -176,8 +145,7 @@ const App = () => {
         >
           <AuthProvider>
             <BusinessManagementProvider>
-              <NetworkStatusIndicator />
-                <Routes>
+              <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/features" element={<Features />} />
                 <Route path="/pricing" element={<Pricing />} />
@@ -194,7 +162,6 @@ const App = () => {
                 <Route path="/tier-guide" element={<TierGuide />} />
                 <Route path="/individual-dashboard" element={<ProtectedRoute><IndividualDashboard /></ProtectedRoute>} />
                 <Route path="/individual-settings" element={<ProtectedRoute><IndividualSettings /></ProtectedRoute>} />
-                <Route path="/business-dashboard/:businessId" element={<ProtectedRoute><BusinessDashboardForIndividual /></ProtectedRoute>} />
                 <Route path="/login-type" element={<LoginTypeSelection />} />
                 <Route path="/business-signin" element={<PublicRoute><BusinessSignIn /></PublicRoute>} />
                 <Route path="/individual-signin" element={<PublicRoute><IndividualSignIn /></PublicRoute>} />
@@ -207,30 +174,27 @@ const App = () => {
                 <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                 <Route path="/my-extras" element={<ProtectedRoute><MyExtras /></ProtectedRoute>} />
                 <Route path="/simple-dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/pos" element={<ProtectedRoute><EmployeeRouteGuard allowedPages={['pos', 'inventory', 'accounting', 'customers']}><POS /></EmployeeRouteGuard></ProtectedRoute>} />
-                <Route path="/inventory" element={<ProtectedRoute><EmployeeRouteGuard allowedPages={['pos', 'inventory', 'accounting', 'customers']}><Inventory /></EmployeeRouteGuard></ProtectedRoute>} />
-                <Route path="/commodity-registration" element={<ProtectedRoute><CommodityRegistration /></ProtectedRoute>} />
-                <Route path="/restock" element={<ProtectedRoute><Restock /></ProtectedRoute>} />
+                <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
+                <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
                 <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-                <Route path="/accounting" element={<ProtectedRoute><EmployeeRouteGuard allowedPages={['pos', 'inventory', 'accounting', 'customers']}><Accounting /></EmployeeRouteGuard></ProtectedRoute>} />
+                <Route path="/accounting" element={<ProtectedRoute><Accounting /></ProtectedRoute>} />
                 <Route path="/quickbooks/callback" element={<QuickBooksCallback />} />
+                <Route path="/auth/google-callback" element={<GoogleCallback />} />
                 <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-                <Route path="/customers" element={<ProtectedRoute><EmployeeRouteGuard allowedPages={['pos', 'inventory', 'accounting', 'customers']}><Customers /></EmployeeRouteGuard></ProtectedRoute>} />
+                <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-                <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/business-management" element={<ProtectedRoute><BusinessManagement /></ProtectedRoute>} />
-                <Route path="/business-management/create" element={<ProtectedRoute><CreateBusiness /></ProtectedRoute>} />
-                <Route path="/business-management/:businessId" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
-                <Route path="/business-management/:businessId/dashboard" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
-                <Route path="/business-management/:businessId/members" element={<ProtectedRoute><BusinessMembers /></ProtectedRoute>} />
-                <Route path="/business-management/:businessId/edit" element={<ProtectedRoute><CreateBusiness /></ProtectedRoute>} />
-                <Route path="/business-management/:businessId/invitations" element={<ProtectedRoute><BusinessInvitationManager /></ProtectedRoute>} />
-                <Route path="/otic-vision" element={<ProtectedRoute><OTICVision /></ProtectedRoute>} />
-                <Route path="/otic-vision-test" element={<ProtectedRoute><OTICVisionTest /></ProtectedRoute>} />
+                {/* Branch Management Routes */}
+                <Route path="/multi-branch-management" element={<ProtectedRoute><MultiBranchManagement /></ProtectedRoute>} />
+                <Route path="/branch/:branchId/analytics" element={<ProtectedRoute><BranchAnalytics /></ProtectedRoute>} />
+                <Route path="/branch/:branchId/accounting" element={<ProtectedRoute><BranchAccounting /></ProtectedRoute>} />
+                <Route path="/branch/:branchId/sales" element={<ProtectedRoute><BranchSales /></ProtectedRoute>} />
+                <Route path="/branch/:branchId/staff" element={<ProtectedRoute><BranchStaff /></ProtectedRoute>} />
+                <Route path="/branch/:branchId/inventory" element={<ProtectedRoute><BranchInventory /></ProtectedRoute>} />
+                <Route path="/branch/:branchId/ai-insights" element={<ProtectedRoute><BranchAIInsights /></ProtectedRoute>} />
                 <Route path="/test-auth" element={<TestAuth />} />
+                <Route path="/auth-test" element={<AuthTestPage />} />
                 <Route path="/simple-test" element={<SimpleTest />} />
-                <Route path="/auth-test" element={<AuthTest />} />
                 <Route path="/profile-test" element={<ProfileTest />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

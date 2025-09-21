@@ -29,6 +29,8 @@ interface AuthContextType {
   signOut: () => Promise<void>
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: any }>
   getDashboardRoute: () => string
+  requires2FA: boolean
+  setRequires2FA: (requires: boolean) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -47,6 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [pendingUserType, setPendingUserType] = useState<'business' | 'individual' | null>(null)
+  const [requires2FA, setRequires2FA] = useState(false)
 
   // Check if we're in offline mode
   const isOffline = isOfflineMode()
@@ -344,6 +347,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
+
   const signOut = async () => {
     // Prevent multiple signout attempts
     if (loading) return
@@ -445,7 +449,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signInWithGoogle,
     signOut,
     updateProfile,
-    getDashboardRoute
+    getDashboardRoute,
+    requires2FA,
+    setRequires2FA
   }
 
   return (

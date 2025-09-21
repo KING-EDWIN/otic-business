@@ -56,3 +56,5 @@ INSERT INTO system_error_logs (error_type, error_message, error_details, user_id
 
 SELECT 'Missing tables created successfully' as status;
 
+
+

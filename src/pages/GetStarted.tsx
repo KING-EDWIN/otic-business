@@ -33,8 +33,7 @@ const GetStarted = () => {
       content: (
         <div className="text-center space-y-6">
           <div className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Transform your African SME with our comprehensive business management solution. 
-            From mobile POS to intelligent analytics, everything you need in one platform.
+            The AI-Powered Business Platform That Sees, Understands, and Automates.
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
             <div className="text-center p-4">

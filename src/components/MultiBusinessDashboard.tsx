@@ -56,18 +56,13 @@ export default function MultiBusinessDashboard() {
       setStatsLoading(true);
       const businessStats = await businessService.getBusinessStats(currentBusiness.id);
       
-      // Mock data for now - replace with actual API calls
+      // Use real data from business service
       setStats({
-        totalSales: 125000,
-        totalOrders: 342,
-        totalProducts: 156,
-        activeUsers: businessStats.memberCount,
-        recentActivity: [
-          { id: 1, type: 'sale', description: 'New sale: UGX 15,000', time: '2 minutes ago' },
-          { id: 2, type: 'product', description: 'Product "Laptop" added', time: '1 hour ago' },
-          { id: 3, type: 'user', description: 'New team member joined', time: '3 hours ago' },
-          { id: 4, type: 'sale', description: 'New sale: UGX 8,500', time: '5 hours ago' }
-        ]
+        totalSales: businessStats.totalSales || 0,
+        totalOrders: businessStats.totalOrders || 0,
+        totalProducts: businessStats.totalProducts || 0,
+        activeUsers: businessStats.memberCount || 0,
+        recentActivity: businessStats.recentActivity || []
       });
     } catch (error) {
       console.error('Error loading business stats:', error);

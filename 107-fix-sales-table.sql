@@ -96,3 +96,5 @@ INSERT INTO sales (
 ) ON CONFLICT DO NOTHING;
 
 
+
+

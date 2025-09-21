@@ -19,6 +19,8 @@ import BusinessSwitcher from '@/components/BusinessSwitcher'
 import BusinessDropdown from '@/components/BusinessDropdown'
 import AnalyticsReportsDropdown from '@/components/AnalyticsReportsDropdown'
 import MyExtrasDropdown from '@/components/MyExtrasDropdown'
+import { useDateRange } from '@/hooks/useDateRange'
+import DateRangePicker from '@/components/DateRangePicker'
 import { 
   Building2, 
   ShoppingCart, 
@@ -80,6 +82,9 @@ const Dashboard = () => {
   const [chartPeriod, setChartPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week')
   const [chartMetric, setChartMetric] = useState<'revenue' | 'profit' | 'sales' | 'stock'>('revenue')
   const [chartType, setChartType] = useState<'line' | 'bar' | 'area'>('line')
+  
+  // Date range management
+  const { dateRange, updateDateRange, minDate, maxDate, dateRangeString } = useDateRange()
 
   // Load stats using DataService
   useEffect(() => {
@@ -303,17 +308,17 @@ const Dashboard = () => {
       
       {/* Header */}
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 lg:h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+            <Link to="/" className="flex items-center space-x-2 lg:space-x-3 hover:opacity-80 transition-opacity">
               <img 
                 src="/Otic icon@2x.png" 
                 alt="Otic Business Logo" 
-                className="h-8 w-8"
+                className="h-6 w-6 lg:h-8 lg:w-8"
               />
               <div className="flex flex-col">
-                <span className="text-lg font-bold text-[#040458]">Otic</span>
+                <span className="text-base lg:text-lg font-bold text-[#040458]">Otic</span>
                 <span className="text-xs text-[#faa51a] -mt-1">Business</span>
               </div>
             </Link>
@@ -492,7 +497,7 @@ const Dashboard = () => {
       )}
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-3 lg:px-4 py-4 lg:py-8">
         {!profile && (
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-blue-800 text-sm">
@@ -503,27 +508,27 @@ const Dashboard = () => {
         
         
         {/* Welcome Banner */}
-        <div className="mb-8 bg-gradient-to-r from-[#040458] via-purple-600 to-[#faa51a] rounded-2xl p-8 text-white relative overflow-hidden">
+        <div className="mb-6 lg:mb-8 bg-gradient-to-r from-[#040458] via-purple-600 to-[#faa51a] rounded-2xl p-4 lg:p-8 text-white relative overflow-hidden">
           <div className="relative z-10">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
               <div>
-                <h1 className="text-4xl font-bold mb-2">
+                <h1 className="text-2xl lg:text-4xl font-bold mb-2">
                   Welcome back to {currentBusiness?.name || profile?.business_name || 'your business'}!
                 </h1>
-            <p className="text-xl opacity-90">Here's what's happening with your business today.</p>
+            <p className="text-base lg:text-xl opacity-90">Here's what's happening with your business today.</p>
               </div>
-              <div className="flex flex-col items-end space-y-3">
+              <div className="flex flex-col items-center lg:items-end space-y-3">
                 <Button
                   onClick={() => navigate('/otic-vision')}
-                  className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-105 shadow-lg"
+                  className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-105 shadow-lg text-sm lg:text-base"
                 >
-                  <Camera className="h-5 w-5 mr-2" />
+                  <Camera className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
                   OTIC Vision
                   <Badge className="ml-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-2 py-0.5 rounded-full">
                     NEW
                   </Badge>
                 </Button>
-                <p className="text-sm opacity-75 text-right max-w-xs">
+                <p className="text-xs lg:text-sm opacity-75 text-center lg:text-right max-w-xs">
                   AI-powered product recognition<br />
                   <span className="text-xs">Premium feature</span>
                 </p>
@@ -538,89 +543,89 @@ const Dashboard = () => {
         </div>
         
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-6 lg:mb-8">
           {statsLoading ? (
             <>
-              <div className="bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg rounded-xl p-6 animate-pulse">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="h-4 w-20 bg-gray-200 rounded"></div>
-                  <div className="h-6 w-6 bg-gray-200 rounded"></div>
+              <div className="bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg rounded-xl p-3 lg:p-6 animate-pulse">
+                <div className="flex items-center justify-between mb-3 lg:mb-4">
+                  <div className="h-3 lg:h-4 w-16 lg:w-20 bg-gray-200 rounded"></div>
+                  <div className="h-4 w-4 lg:h-6 lg:w-6 bg-gray-200 rounded"></div>
                 </div>
-                <div className="h-8 w-16 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 w-20 bg-gray-200 rounded"></div>
+                <div className="h-6 lg:h-8 w-12 lg:w-16 bg-gray-200 rounded mb-2"></div>
+                <div className="h-2 lg:h-3 w-16 lg:w-20 bg-gray-200 rounded"></div>
               </div>
-              <div className="bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg rounded-xl p-6 animate-pulse">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="h-4 w-20 bg-gray-200 rounded"></div>
-                  <div className="h-6 w-6 bg-gray-200 rounded"></div>
+              <div className="bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg rounded-xl p-3 lg:p-6 animate-pulse">
+                <div className="flex items-center justify-between mb-3 lg:mb-4">
+                  <div className="h-3 lg:h-4 w-16 lg:w-20 bg-gray-200 rounded"></div>
+                  <div className="h-4 w-4 lg:h-6 lg:w-6 bg-gray-200 rounded"></div>
                 </div>
-                <div className="h-8 w-16 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 w-20 bg-gray-200 rounded"></div>
+                <div className="h-6 lg:h-8 w-12 lg:w-16 bg-gray-200 rounded mb-2"></div>
+                <div className="h-2 lg:h-3 w-16 lg:w-20 bg-gray-200 rounded"></div>
               </div>
-              <div className="bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg rounded-xl p-6 animate-pulse">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="h-4 w-20 bg-gray-200 rounded"></div>
-                  <div className="h-6 w-6 bg-gray-200 rounded"></div>
+              <div className="bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg rounded-xl p-3 lg:p-6 animate-pulse">
+                <div className="flex items-center justify-between mb-3 lg:mb-4">
+                  <div className="h-3 lg:h-4 w-16 lg:w-20 bg-gray-200 rounded"></div>
+                  <div className="h-4 w-4 lg:h-6 lg:w-6 bg-gray-200 rounded"></div>
                 </div>
-                <div className="h-8 w-16 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 w-20 bg-gray-200 rounded"></div>
+                <div className="h-6 lg:h-8 w-12 lg:w-16 bg-gray-200 rounded mb-2"></div>
+                <div className="h-2 lg:h-3 w-16 lg:w-20 bg-gray-200 rounded"></div>
               </div>
-              <div className="bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg rounded-xl p-6 animate-pulse">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="h-4 w-20 bg-gray-200 rounded"></div>
-                  <div className="h-6 w-6 bg-gray-200 rounded"></div>
+              <div className="bg-white/70 backdrop-blur-sm border border-white/40 shadow-lg rounded-xl p-3 lg:p-6 animate-pulse">
+                <div className="flex items-center justify-between mb-3 lg:mb-4">
+                  <div className="h-3 lg:h-4 w-16 lg:w-20 bg-gray-200 rounded"></div>
+                  <div className="h-4 w-4 lg:h-6 lg:w-6 bg-gray-200 rounded"></div>
                 </div>
-                <div className="h-8 w-16 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 w-20 bg-gray-200 rounded"></div>
+                <div className="h-6 lg:h-8 w-12 lg:w-16 bg-gray-200 rounded mb-2"></div>
+                <div className="h-2 lg:h-3 w-16 lg:w-20 bg-gray-200 rounded"></div>
               </div>
             </>
           ) : (
             <>
               {/* Total Sales - Green */}
               <Card className="bg-green-500 text-white border-0 shadow-lg rounded-xl">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-medium opacity-90">Total Sales</h3>
-                    <ShoppingCart className="h-5 w-5" />
+                <CardContent className="p-3 lg:p-6">
+                  <div className="flex items-center justify-between mb-3 lg:mb-4">
+                    <h3 className="text-xs lg:text-sm font-medium opacity-90">Total Sales</h3>
+                    <ShoppingCart className="h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
-                  <div className="text-3xl font-bold mb-1">{(stats as any).totalSales || 0}</div>
-                  <p className="text-sm opacity-90">+20.1% from last month</p>
+                  <div className="text-xl lg:text-3xl font-bold mb-1">{(stats as any).totalSales || 0}</div>
+                  <p className="text-xs lg:text-sm opacity-90">+20.1% from last month</p>
             </CardContent>
           </Card>
 
               {/* Total Revenue - Blue */}
               <Card className="bg-blue-500 text-white border-0 shadow-lg rounded-xl">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-medium opacity-90">Total Revenue</h3>
-                    <DollarSign className="h-5 w-5" />
+                <CardContent className="p-3 lg:p-6">
+                  <div className="flex items-center justify-between mb-3 lg:mb-4">
+                    <h3 className="text-xs lg:text-sm font-medium opacity-90">Total Revenue</h3>
+                    <DollarSign className="h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
-                  <div className="text-3xl font-bold mb-1">UGX {((stats as any).totalRevenue || 0).toLocaleString()}</div>
-                  <p className="text-sm opacity-90">+15.3% from last month</p>
+                  <div className="text-lg lg:text-3xl font-bold mb-1">UGX {((stats as any).totalRevenue || 0).toLocaleString()}</div>
+                  <p className="text-xs lg:text-sm opacity-90">+15.3% from last month</p>
             </CardContent>
           </Card>
 
               {/* Products - Orange */}
               <Card className="bg-orange-500 text-white border-0 shadow-lg rounded-xl">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-medium opacity-90">Products</h3>
-                    <Package className="h-5 w-5" />
+                <CardContent className="p-3 lg:p-6">
+                  <div className="flex items-center justify-between mb-3 lg:mb-4">
+                    <h3 className="text-xs lg:text-sm font-medium opacity-90">Products</h3>
+                    <Package className="h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
-                  <div className="text-3xl font-bold mb-1">{(stats as any).totalProducts || 0}</div>
-                  <p className="text-sm opacity-90">+2 new this week</p>
+                  <div className="text-xl lg:text-3xl font-bold mb-1">{(stats as any).totalProducts || 0}</div>
+                  <p className="text-xs lg:text-sm opacity-90">+2 new this week</p>
             </CardContent>
           </Card>
 
               {/* Low Stock - Red */}
               <Card className="bg-red-500 text-white border-0 shadow-lg rounded-xl">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-medium opacity-90">Low Stock</h3>
-                    <Package className="h-5 w-5" />
+                <CardContent className="p-3 lg:p-6">
+                  <div className="flex items-center justify-between mb-3 lg:mb-4">
+                    <h3 className="text-xs lg:text-sm font-medium opacity-90">Low Stock</h3>
+                    <Package className="h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
-                  <div className="text-3xl font-bold mb-1">{(stats as any).lowStockItems || 0}</div>
-                  <p className="text-sm opacity-90">items need restocking</p>
+                  <div className="text-xl lg:text-3xl font-bold mb-1">{(stats as any).lowStockItems || 0}</div>
+                  <p className="text-xs lg:text-sm opacity-90">items need restocking</p>
             </CardContent>
           </Card>
             </>
@@ -628,51 +633,51 @@ const Dashboard = () => {
         </div>
 
         {/* Main Content Grid - 2 columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-8 mb-6 lg:mb-8">
           {/* Left Column - Quick Actions */}
           <div>
-            <div className="flex items-center mb-6">
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-col lg:flex-row lg:items-center mb-4 lg:mb-6">
+              <div className="flex items-center space-x-2 mb-2 lg:mb-0">
                 <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                <h2 className="text-xl font-semibold text-gray-800">Quick Actions</h2>
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-800">Quick Actions</h2>
               </div>
-              <p className="text-sm text-gray-600 ml-4">Common tasks to get you started.</p>
+              <p className="text-xs lg:text-sm text-gray-600 lg:ml-4">Common tasks to get you started.</p>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
                   <Button 
                     onClick={() => navigate('/pos')}
-                className="h-20 md:h-24 bg-gradient-to-r from-[#040458] to-[#faa51a] text-white hover:opacity-90 transition-all duration-200 shadow-lg rounded-xl"
+                className="h-16 lg:h-20 md:h-24 bg-gradient-to-r from-[#040458] to-[#faa51a] text-white hover:opacity-90 transition-all duration-200 shadow-lg rounded-xl"
               >
-                <div className="flex flex-col items-center space-y-2">
-                  <ShoppingCart className="h-8 w-8" />
-                  <span className="text-sm font-medium">Start New Sale</span>
+                <div className="flex flex-col items-center space-y-1 lg:space-y-2">
+                  <ShoppingCart className="h-5 w-5 lg:h-8 lg:w-8" />
+                  <span className="text-xs lg:text-sm font-medium">Start New Sale</span>
                 </div>
                   </Button>
                   <Button 
                     onClick={() => navigate('/inventory')}
-                className="h-20 md:h-24 bg-green-500 text-white hover:bg-green-600 transition-all duration-200 shadow-lg rounded-xl"
+                className="h-16 lg:h-20 md:h-24 bg-green-500 text-white hover:bg-green-600 transition-all duration-200 shadow-lg rounded-xl"
               >
-                <div className="flex flex-col items-center space-y-2">
-                  <Plus className="h-8 w-8" />
-                  <span className="text-sm font-medium">Add New Product</span>
+                <div className="flex flex-col items-center space-y-1 lg:space-y-2">
+                  <Plus className="h-5 w-5 lg:h-8 lg:w-8" />
+                  <span className="text-xs lg:text-sm font-medium">Add New Product</span>
                 </div>
                   </Button>
                   <Button 
                     onClick={() => navigate('/analytics')}
-                className="h-20 md:h-24 bg-blue-500 text-white hover:bg-blue-600 transition-all duration-200 shadow-lg rounded-xl"
+                className="h-16 lg:h-20 md:h-24 bg-blue-500 text-white hover:bg-blue-600 transition-all duration-200 shadow-lg rounded-xl"
               >
-                <div className="flex flex-col items-center space-y-2">
-                  <BarChart3 className="h-8 w-8" />
-                  <span className="text-sm font-medium">View Reports</span>
+                <div className="flex flex-col items-center space-y-1 lg:space-y-2">
+                  <BarChart3 className="h-5 w-5 lg:h-8 lg:w-8" />
+                  <span className="text-xs lg:text-sm font-medium">View Reports</span>
                 </div>
                   </Button>
                     <Button
                 onClick={() => navigate('/accounting')}
-                className="h-20 md:h-24 bg-purple-500 text-white hover:bg-purple-600 transition-all duration-200 shadow-lg rounded-xl"
+                className="h-16 lg:h-20 md:h-24 bg-purple-500 text-white hover:bg-purple-600 transition-all duration-200 shadow-lg rounded-xl"
               >
-                <div className="flex flex-col items-center space-y-2">
-                  <FileText className="h-8 w-8" />
-                  <span className="text-sm font-medium">Accounting</span>
+                <div className="flex flex-col items-center space-y-1 lg:space-y-2">
+                  <FileText className="h-5 w-5 lg:h-8 lg:w-8" />
+                  <span className="text-xs lg:text-sm font-medium">Accounting</span>
                 </div>
                     </Button>
                   </div>
@@ -680,27 +685,45 @@ const Dashboard = () => {
 
           {/* Right Column - Enhanced Sales Performance */}
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-2">
-                <BarChart3 className="h-5 w-5 text-[#040458]" />
-                <h2 className="text-xl font-semibold text-gray-800">Performance Analytics</h2>
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 lg:mb-6">
+              <div className="flex items-center space-x-2 mb-2 lg:mb-0">
+                <BarChart3 className="h-4 w-4 lg:h-5 lg:w-5 text-[#040458]" />
+                <h2 className="text-lg lg:text-xl font-semibold text-gray-800">Performance Analytics</h2>
                     </div>
-              <p className="text-sm text-gray-600">Interactive charts with multiple metrics</p>
+              <p className="text-xs lg:text-sm text-gray-600">Interactive charts with multiple metrics</p>
                     </div>
             
-            <Card className="p-6 bg-white shadow-lg rounded-xl">
+            <Card className="p-3 lg:p-6 bg-white shadow-lg rounded-xl">
               {/* Chart Controls */}
-              <div className="flex flex-wrap gap-3 mb-6">
+              <div className="flex flex-wrap gap-2 lg:gap-3 mb-4 lg:mb-6">
+                {/* Date Range Picker */}
+                <div className="flex flex-col lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-2">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-3 w-3 lg:h-4 lg:w-4 text-gray-500" />
+                    <span className="text-xs lg:text-sm font-medium text-gray-700">Date Range:</span>
+                  </div>
+                  <DateRangePicker
+                    onDateRangeChange={updateDateRange}
+                    initialRange={dateRange}
+                    minDate={minDate}
+                    maxDate={maxDate}
+                    placeholder="Select date range"
+                    className="w-full lg:w-48"
+                  />
+                </div>
+                
                 {/* Time Period Selector */}
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">Period:</span>
+                <div className="flex flex-col lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-2">
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-3 w-3 lg:h-4 lg:w-4 text-gray-500" />
+                    <span className="text-xs lg:text-sm font-medium text-gray-700">Period:</span>
+                  </div>
                   <div className="flex bg-gray-100 rounded-lg p-1">
                     {(['day', 'week', 'month', 'year'] as const).map((period) => (
                       <button
                         key={period}
                         onClick={() => setChartPeriod(period)}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                        className={`px-2 lg:px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                           chartPeriod === period
                             ? 'bg-[#040458] text-white'
                             : 'text-gray-600 hover:text-gray-900'
@@ -713,15 +736,17 @@ const Dashboard = () => {
                 </div>
 
                 {/* Metric Selector */}
-                <div className="flex items-center space-x-2">
-                  <Activity className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">Metric:</span>
+                <div className="flex flex-col lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-2">
+                  <div className="flex items-center space-x-2">
+                    <Activity className="h-3 w-3 lg:h-4 lg:w-4 text-gray-500" />
+                    <span className="text-xs lg:text-sm font-medium text-gray-700">Metric:</span>
+                  </div>
                   <div className="flex bg-gray-100 rounded-lg p-1">
                     {(['revenue', 'profit', 'sales', 'stock'] as const).map((metric) => (
                       <button
                         key={metric}
                         onClick={() => setChartMetric(metric)}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                        className={`px-2 lg:px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                           chartMetric === metric
                             ? 'bg-[#faa51a] text-white'
                             : 'text-gray-600 hover:text-gray-900'
@@ -734,15 +759,17 @@ const Dashboard = () => {
                 </div>
 
                 {/* Chart Type Selector */}
-                <div className="flex items-center space-x-2">
-                  <Layers className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-700">Type:</span>
+                <div className="flex flex-col lg:flex-row lg:items-center space-y-2 lg:space-y-0 lg:space-x-2">
+                  <div className="flex items-center space-x-2">
+                    <Layers className="h-3 w-3 lg:h-4 lg:w-4 text-gray-500" />
+                    <span className="text-xs lg:text-sm font-medium text-gray-700">Type:</span>
+                  </div>
                   <div className="flex bg-gray-100 rounded-lg p-1">
                     {(['line', 'bar', 'area'] as const).map((type) => (
                       <button
                         key={type}
                         onClick={() => setChartType(type)}
-                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                        className={`px-2 lg:px-3 py-1 text-xs font-medium rounded-md transition-colors ${
                           chartType === type
                             ? 'bg-green-500 text-white'
                             : 'text-gray-600 hover:text-gray-900'
@@ -756,7 +783,7 @@ const Dashboard = () => {
               </div>
 
               {/* Chart Display */}
-              <div className="h-72">
+              <div className="h-64 lg:h-72">
                 <ResponsiveContainer width="100%" height="100%">
                   {(() => {
                     const config = getChartConfig()

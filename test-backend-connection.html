@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Backend Connection Test</title>
+</head>
+<body>
+    <h1>Backend Connection Test</h1>
+    <div id="results"></div>
+    
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2';
+        
+        const supabaseUrl = 'https://jvgiyscchxxekcbdicco.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY1NzQ4MzEsImV4cCI6MjA1MjE1MDgzMX0.8QZqJqJqJqJqJqJqJqJqJqJqJqJqJqJqJqJqJqJq';
+        
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        async function testConnection() {
+            const results = document.getElementById('results');
+            
+            try {
+                // Test 1: Check auth
+                const { data: { user }, error: authError } = await supabase.auth.getUser();
+                results.innerHTML += `<p>Auth Test: ${authError ? '❌ ' + authError.message : '✅ User: ' + (user?.id || 'Not signed in')}</p>`;
+                
+                // Test 2: Check user_profiles
+                const { data: profiles, error: profileError } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .limit(1);
+                results.innerHTML += `<p>User Profiles Test: ${profileError ? '❌ ' + profileError.message : '✅ Success'}</p>`;
+                
+                // Test 3: Check visual_filter_tags
+                const { data: vfts, error: vftError } = await supabase
+                    .from('visual_filter_tags')
+                    .select('*')
+                    .limit(1);
+                results.innerHTML += `<p>VFT Test: ${vftError ? '❌ ' + vftError.message : '✅ Success'}</p>`;
+                
+                // Test 4: Check vft_products
+                const { data: products, error: productError } = await supabase
+                    .from('vft_products')
+                    .select('*')
+                    .limit(1);
+                results.innerHTML += `<p>VFT Products Test: ${productError ? '❌ ' + productError.message : '✅ Success'}</p>`;
+                
+            } catch (error) {
+                results.innerHTML += `<p>❌ Connection Error: ${error.message}</p>`;
+            }
+        }
+        
+        testConnection();
+    </script>
+</body>
+</html>
+

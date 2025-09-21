@@ -39,24 +39,39 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
   const [canCreateBusiness, setCanCreateBusiness] = useState(false)
   const loadedBusinessMembersRef = useRef<string | null>(null)
   const isLoadingBusinessesRef = useRef(false)
+  const loadBusinessesTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Load businesses when user changes
   useEffect(() => {
     console.log('BusinessManagementContext - useEffect triggered:', { user: !!user, profile: !!profile })
-    if (user && profile) {
-      // Only load businesses when both user and profile are available
+    
+    // Clear any existing timeout
+    if (loadBusinessesTimeoutRef.current) {
+      clearTimeout(loadBusinessesTimeoutRef.current)
+    }
+    
+    if (user && profile && !isLoadingBusinessesRef.current) {
+      // Only load businesses when both user and profile are available and not already loading
       console.log('User and profile available, loading businesses...')
-      // Add a small delay to prevent race conditions
-      const timeoutId = setTimeout(() => {
+      isLoadingBusinessesRef.current = true
+      
+      // Add a small debounce to prevent rapid re-loading
+      loadBusinessesTimeoutRef.current = setTimeout(() => {
         loadBusinesses()
-      }, 100)
-      return () => clearTimeout(timeoutId)
-    } else {
+      }, 50)
+    } else if (!user || !profile) {
       console.log('User or profile not available, clearing businesses...')
       setBusinesses([])
       setCurrentBusiness(null)
       setBusinessMembers([])
       setLoading(false)
+      isLoadingBusinessesRef.current = false
+    }
+    
+    return () => {
+      if (loadBusinessesTimeoutRef.current) {
+        clearTimeout(loadBusinessesTimeoutRef.current)
+      }
     }
   }, [user?.id, profile?.id]) // Only depend on IDs to prevent unnecessary re-renders
 
@@ -143,7 +158,7 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
           setCanCreateBusiness(canCreate || false)
         } catch (rpcError) {
           console.error('RPC can_create_business failed:', rpcError)
-          setCanCreateBusiness(true) // Fallback to allow business creation
+          throw new Error(`Failed to check business creation permissions: ${rpcError.message}`)
         }
       }
     } catch (error) {

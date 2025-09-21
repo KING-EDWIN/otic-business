@@ -173,3 +173,5 @@ JOIN business_memberships bm ON b.id = bm.business_id
 WHERE bm.user_id = auth.uid()
 ORDER BY b.created_at DESC;
 
+
+

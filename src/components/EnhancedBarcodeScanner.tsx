@@ -388,3 +388,5 @@ const EnhancedBarcodeScanner: React.FC<EnhancedBarcodeScannerProps> = ({
 }
 
 export default EnhancedBarcodeScanner
+
+

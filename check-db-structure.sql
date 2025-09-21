@@ -37,3 +37,5 @@ SELECT
     COUNT(*) as row_count
 FROM user_profiles;
 
+
+

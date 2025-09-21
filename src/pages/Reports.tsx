@@ -10,25 +10,25 @@ import {
   Download, 
   FileText, 
   Printer,
-  Calendar,
-  TrendingUp,
-  DollarSign,
+  Calendar, 
+  TrendingUp, 
+  DollarSign, 
   Receipt,
   BarChart3,
   PieChart,
   Calculator,
   Building2,
   Users,
-  Package,
+  Package, 
   CreditCard,
-  CheckCircle,
+  CheckCircle, 
   AlertCircle,
   Clock,
-  Eye,
-  Edit,
+  Eye, 
+  Edit, 
   MoreVertical,
   Plus,
-  RefreshCw,
+  RefreshCw, 
   Target,
   Activity,
   Zap,
@@ -210,7 +210,7 @@ const Reports: React.FC = () => {
         customerBreakdown: customersData || [],
         expenseBreakdown
       })
-
+      
     } catch (error) {
       console.error('Error loading report data:', error)
       toast.error('Failed to load report data')
@@ -414,7 +414,7 @@ const Reports: React.FC = () => {
                   </div>
                 </CardContent>
               </Card>
-            </div>
+        </div>
 
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -454,7 +454,7 @@ const Reports: React.FC = () => {
                         <Bar dataKey="revenue" fill="#faa51a" />
                       </BarChart>
                     </ResponsiveContainer>
-                  </div>
+                      </div>
                 </CardContent>
               </Card>
             </div>
@@ -469,7 +469,7 @@ const Reports: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <h3 className="text-lg font-semibold">Income Statement</h3>
                       <div className="space-y-2">
@@ -502,7 +502,7 @@ const Reports: React.FC = () => {
                           </div>
                         ))}
                       </div>
-                    </div>
+                  </div>
                   </div>
                 </div>
               </CardContent>
@@ -585,17 +585,17 @@ const Reports: React.FC = () => {
                         <div className="flex justify-between">
                           <span>Email:</span>
                           <span className="font-semibold">{user?.email}</span>
-                        </div>
+                  </div>
                         <div className="flex justify-between">
                           <span>Report Period:</span>
                           <span className="font-semibold">{dateRange}</span>
-                        </div>
+                            </div>
                         <div className="flex justify-between">
                           <span>Generated:</span>
                           <span className="font-semibold">{new Date().toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    </div>
+                              </div>
+                            </div>
+                          </div>
 
                     <div>
                       <h4 className="font-semibold mb-3">Sales Summary</h4>
@@ -613,9 +613,9 @@ const Reports: React.FC = () => {
                           <span className="font-semibold">
                             UGX {reportData.totalSales > 0 ? (reportData.totalRevenue / reportData.totalSales).toLocaleString() : '0'}
                           </span>
-                        </div>
-                      </div>
-                    </div>
+                            </div>
+                            </div>
+                          </div>
 
                     <div>
                       <h4 className="font-semibold mb-3">Product Summary</h4>
@@ -647,9 +647,9 @@ const Reports: React.FC = () => {
                           <div className="text-right">
                             <div className="font-semibold">UGX {product.revenue.toLocaleString()}</div>
                             <div className="text-sm text-gray-500">{product.sales} sales</div>
-                          </div>
                         </div>
-                      ))}
+                      </div>
+                    ))}
                     </div>
                   </div>
                 </div>

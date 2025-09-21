@@ -425,3 +425,5 @@ CREATE TRIGGER update_business_settings_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 
+
+

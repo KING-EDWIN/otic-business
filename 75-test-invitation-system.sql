@@ -88,3 +88,5 @@ SELECT COUNT(*) as system_error_logs_count FROM system_error_logs;
 
 SELECT 'Invitation system test completed successfully!' as status;
 
+
+

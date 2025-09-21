@@ -128,3 +128,5 @@ ORDER BY created_at DESC;
 
 SELECT 'Invitation system check completed!' as status;
 
+
+

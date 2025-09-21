@@ -75,3 +75,5 @@ This file serves as the single source of truth for the Otic Business database st
 - All SQL scripts should reference this file for accuracy
 - Remove any SQL files that don't match the actual database structure
 
+
+

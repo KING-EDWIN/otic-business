@@ -176,6 +176,19 @@ const MyExtrasDropdown = () => {
       action: () => navigate('/accounting')
     },
 
+    // System Features
+    {
+      id: 'multi_branch_management',
+      name: 'Multi-Branch Management',
+      description: 'Manage multiple business locations and branches',
+      icon: <Building2 className="h-4 w-4" />,
+      category: 'system',
+      availableIn: ['grow_intelligence', 'enterprise_advantage'],
+      isPremium: true,
+      action: () => navigate('/multi-branch-management'),
+      showCondition: () => profile?.features_enabled?.multi_branch === true
+    },
+
     // Integration Features
     {
       id: 'multi_branch_sync',

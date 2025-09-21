@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { DataService } from '@/services/dataService'
 import { InventorySkeleton } from '@/components/ui/skeletons'
+import OTICVisionRegistration from '@/components/OTICVisionRegistration'
+import { supabase } from '@/lib/supabaseClient'
 
 interface Product {
   id: string
@@ -23,6 +25,17 @@ interface Product {
   user_id: string
   created_at: string
   updated_at: string
+  // OTIC Vision specific fields
+  brand_name?: string
+  product_name?: string
+  sku?: string
+  weight?: number
+  dimensions?: string
+  color?: string
+  size?: string
+  material?: string
+  country_of_origin?: string
+  is_otic_vision?: boolean
 }
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -56,7 +69,8 @@ import {
   BarChart3,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Camera
 } from 'lucide-react'
 import { toast } from 'sonner'
 import BusinessLoginStatus from '@/components/BusinessLoginStatus'
@@ -98,6 +112,7 @@ const Inventory = () => {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [showOTICVisionRegistration, setShowOTICVisionRegistration] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [activeTab, setActiveTab] = useState('all')
   const [filterStatus, setFilterStatus] = useState('all')
@@ -150,9 +165,74 @@ const Inventory = () => {
     try {
       setLoading(true)
       
-      // Use DataService which handles both online and offline
-      const productsData = await DataService.getProducts(user.id)
-      setProducts(productsData)
+      // Fetch regular products from DataService
+      const regularProducts = await DataService.getProducts(user.id)
+      
+      // Fetch OTIC Vision products from PVFS system
+      const { data: oticVisionProducts, error: oticError } = await supabase
+        .from('vft_products')
+        .select(`
+          id,
+          brand_name,
+          product_name,
+          description,
+          price,
+          cost,
+          stock_quantity,
+          barcode,
+          sku,
+          weight,
+          dimensions,
+          color,
+          size,
+          material,
+          country_of_origin,
+          supplier,
+          created_at,
+          updated_at
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (oticError) {
+        console.error('Error fetching OTIC Vision products:', oticError)
+        // Continue with regular products only
+      }
+
+      // Map OTIC Vision products to match the Product interface
+      const mappedOticProducts = (oticVisionProducts || []).map(product => ({
+        id: product.id,
+        name: `${product.brand_name} ${product.product_name}`,
+        barcode: product.barcode || '',
+        price: product.price || 0,
+        cost: product.cost || 0,
+        stock: product.stock_quantity || 0,
+        min_stock: 0,
+        category_id: null,
+        supplier_id: null,
+        user_id: user.id,
+        created_at: product.created_at,
+        updated_at: product.updated_at,
+        // Additional OTIC Vision specific fields
+        brand_name: product.brand_name,
+        product_name: product.product_name,
+        description: product.description,
+        sku: product.sku,
+        weight: product.weight,
+        dimensions: product.dimensions,
+        color: product.color,
+        size: product.size,
+        material: product.material,
+        country_of_origin: product.country_of_origin,
+        supplier: product.supplier,
+        is_otic_vision: true // Flag to identify OTIC Vision products
+      }))
+
+      // Combine regular products and OTIC Vision products
+      const allProducts = [...regularProducts, ...mappedOticProducts]
+      
+      console.log(`Loaded ${regularProducts.length} regular products and ${mappedOticProducts.length} OTIC Vision products`)
+      setProducts(allProducts)
     } catch (error) {
       console.error('Error fetching products:', error)
       toast.error('Failed to load products')
@@ -164,7 +244,7 @@ const Inventory = () => {
   useEffect(() => {
     // Only fetch products when user is available
     if (user?.id) {
-      fetchProducts()
+    fetchProducts()
     }
   }, [user?.id, fetchProducts]) // Include fetchProducts in dependencies
 
@@ -406,6 +486,14 @@ const Inventory = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 Quick Add
               </Button>
+              
+              <Button
+                onClick={() => setShowOTICVisionRegistration(true)}
+                className="bg-[#040458] hover:bg-[#040458]/90 text-white"
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                Use Camera
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -413,23 +501,30 @@ const Inventory = () => {
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
         {productsToRender.map((product) => {
           const stockStatus = getStockStatus(product.stock, product.min_stock)
           const StatusIcon = stockStatus.icon
           
           return (
             <Card key={product.id} className="bg-white/80 backdrop-blur-sm shadow-lg border-0 hover:shadow-xl transition-all duration-300 group">
-              <CardContent className="p-6">
-                <div className="space-y-4">
+              <CardContent className="p-4 lg:p-6">
+                <div className="space-y-3 lg:space-y-4">
                   {/* Product Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 text-lg line-clamp-2 group-hover:text-[#040458] transition-colors">
-                        {product.name}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-gray-900 text-sm lg:text-lg line-clamp-2 group-hover:text-[#040458] transition-colors">
+                          {product.name}
+                        </h3>
+                        {product.is_otic_vision && (
+                          <Badge className="bg-[#faa51a] text-white text-xs px-1 lg:px-2 py-1">
+                            📷 Camera
+                          </Badge>
+                        )}
+                      </div>
                       {product.description && (
-                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{product.description}</p>
+                        <p className="text-xs lg:text-sm text-gray-500 mt-1 line-clamp-2">{product.description}</p>
                       )}
                       {product.category && (
                         <Badge variant="outline" className="text-xs mt-2">
@@ -439,16 +534,17 @@ const Inventory = () => {
                     </div>
                     <Badge className={`${stockStatus.color} text-xs`}>
                       <StatusIcon className="h-3 w-3 mr-1" />
-                      {stockStatus.status}
+                      <span className="hidden sm:inline">{stockStatus.status}</span>
+                      <span className="sm:hidden">{stockStatus.status.split(' ')[0]}</span>
                     </Badge>
                   </div>
 
                   {/* Barcodes */}
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col space-y-2 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
                       <div className="flex items-center space-x-2">
-                        <Barcode className="h-4 w-4 text-gray-400" />
-                        <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                        <Barcode className="h-3 w-3 lg:h-4 lg:w-4 text-gray-400" />
+                        <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded truncate">
                           {product.barcode}
                         </span>
                       </div>
@@ -458,7 +554,7 @@ const Inventory = () => {
                           size="sm"
                           variant="outline"
                           onClick={() => downloadBarcode(product)}
-                          className="h-6 px-2 text-xs"
+                          className="h-6 px-2 text-xs w-full lg:w-auto"
                         >
                           <Download className="h-3 w-3" />
                         </Button>
@@ -469,24 +565,24 @@ const Inventory = () => {
                   {/* Pricing */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Price:</span>
-                      <span className="font-semibold text-[#040458]">UGX {product.price.toLocaleString()}</span>
+                      <span className="text-xs lg:text-sm text-gray-600">Price:</span>
+                      <span className="font-semibold text-[#040458] text-sm lg:text-base">UGX {product.price.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Cost:</span>
-                      <span className="font-semibold text-gray-700">UGX {product.cost.toLocaleString()}</span>
+                      <span className="text-xs lg:text-sm text-gray-600">Cost:</span>
+                      <span className="font-semibold text-gray-700 text-sm lg:text-base">UGX {product.cost.toLocaleString()}</span>
                     </div>
                   </div>
 
                   {/* Stock Info */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Stock:</span>
-                      <span className="font-semibold text-gray-900">{product.stock} {product.unit_type || 'units'}</span>
+                      <span className="text-xs lg:text-sm text-gray-600">Stock:</span>
+                      <span className="font-semibold text-gray-900 text-sm lg:text-base">{product.stock} {product.unit_type || 'units'}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Min Stock:</span>
-                      <span className="font-semibold text-gray-700">{product.min_stock}</span>
+                      <span className="text-xs lg:text-sm text-gray-600">Min Stock:</span>
+                      <span className="font-semibold text-gray-700 text-sm lg:text-base">{product.min_stock}</span>
                     </div>
                   </div>
 
@@ -550,7 +646,7 @@ const Inventory = () => {
   }
 
   if (!user) {
-    return (
+  return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#040458] mx-auto mb-4"></div>
@@ -566,7 +662,7 @@ const Inventory = () => {
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-lg sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center space-x-4">
               <Button 
                 variant="ghost" 
@@ -575,31 +671,46 @@ const Inventory = () => {
                 className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10"
               >
                 <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">Back</span>
               </Button>
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-lg flex items-center justify-center">
-                  <Package className="h-6 w-6 text-white" />
+                <div className="w-8 h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-lg flex items-center justify-center">
+                  <Package className="h-4 w-4 lg:h-6 lg:w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-[#040458]">Inventory Management</h1>
-                  <p className="text-sm text-gray-600">Manage your products and stock levels</p>
+                  <h1 className="text-lg lg:text-2xl font-bold text-[#040458]">Inventory Management</h1>
+                  <p className="text-xs lg:text-sm text-gray-600">Manage your products and stock levels</p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex flex-wrap items-center gap-2 lg:gap-3">
               <Button
                 onClick={() => navigate('/commodity-registration')}
-                className="bg-[#040458] hover:bg-[#040458]/90 text-white"
+                className="bg-[#040458] hover:bg-[#040458]/90 text-white text-xs lg:text-sm"
+                size="sm"
               >
-                <Barcode className="h-4 w-4 mr-2" />
-                Register Commodity
+                <Barcode className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Register Commodity</span>
+                <span className="sm:hidden">Register</span>
               </Button>
               <Button
                 onClick={() => setIsDialogOpen(true)}
-                className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white"
+                className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white text-xs lg:text-sm"
+                size="sm"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Quick Add
+                <Plus className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Quick Add</span>
+                <span className="sm:hidden">Add</span>
+              </Button>
+              
+              <Button
+                onClick={() => setShowOTICVisionRegistration(true)}
+                className="bg-[#040458] hover:bg-[#040458]/90 text-white text-xs lg:text-sm"
+                size="sm"
+              >
+                <Camera className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+                <span className="hidden sm:inline">Use Camera</span>
+                <span className="sm:hidden">Camera</span>
               </Button>
               <BusinessLoginStatus />
             </div>
@@ -607,60 +718,60 @@ const Inventory = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-3 lg:px-4 py-4 lg:py-8">
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-6 lg:mb-8">
           <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-            <CardContent className="p-6">
+            <CardContent className="p-3 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Products</p>
-                  <p className="text-3xl font-bold text-[#040458]">{products.length}</p>
+                  <p className="text-xs lg:text-sm font-medium text-gray-600">Total Products</p>
+                  <p className="text-xl lg:text-3xl font-bold text-[#040458]">{products.length}</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Package className="h-6 w-6 text-blue-600" />
+                <div className="w-8 h-8 lg:w-12 lg:h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Package className="h-4 w-4 lg:h-6 lg:w-6 text-blue-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-            <CardContent className="p-6">
+            <CardContent className="p-3 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Low Stock Items</p>
-                  <p className="text-3xl font-bold text-red-600">{lowStockItems.length}</p>
+                  <p className="text-xs lg:text-sm font-medium text-gray-600">Low Stock Items</p>
+                  <p className="text-xl lg:text-3xl font-bold text-red-600">{lowStockItems.length}</p>
                 </div>
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <AlertTriangle className="h-6 w-6 text-red-600" />
+                <div className="w-8 h-8 lg:w-12 lg:h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                  <AlertTriangle className="h-4 w-4 lg:h-6 lg:w-6 text-red-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-            <CardContent className="p-6">
+            <CardContent className="p-3 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Value</p>
-                  <p className="text-2xl font-bold text-[#040458]">UGX {totalValue.toLocaleString()}</p>
+                  <p className="text-xs lg:text-sm font-medium text-gray-600">Total Value</p>
+                  <p className="text-lg lg:text-2xl font-bold text-[#040458]">UGX {totalValue.toLocaleString()}</p>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-green-600" />
+                <div className="w-8 h-8 lg:w-12 lg:h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <DollarSign className="h-4 w-4 lg:h-6 lg:w-6 text-green-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-            <CardContent className="p-6">
+            <CardContent className="p-3 lg:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Units</p>
-                  <p className="text-3xl font-bold text-[#040458]">{totalUnits.toLocaleString()}</p>
+                  <p className="text-xs lg:text-sm font-medium text-gray-600">Total Units</p>
+                  <p className="text-xl lg:text-3xl font-bold text-[#040458]">{totalUnits.toLocaleString()}</p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <BarChart3 className="h-6 w-6 text-purple-600" />
+                <div className="w-8 h-8 lg:w-12 lg:h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <BarChart3 className="h-4 w-4 lg:h-6 lg:w-6 text-purple-600" />
                 </div>
               </div>
             </CardContent>
@@ -668,9 +779,9 @@ const Inventory = () => {
         </div>
 
         {/* Search and Filters */}
-        <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0 mb-6">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4">
+        <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0 mb-4 lg:mb-6">
+          <CardContent className="p-4 lg:p-6">
+            <div className="flex flex-col space-y-3 lg:space-y-0 lg:flex-row lg:gap-4">
               <div className="flex-1 relative">
                 {isSearching ? (
                   <RefreshCw className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 animate-spin" />
@@ -681,12 +792,12 @@ const Inventory = () => {
                   placeholder="Search by name or barcode..."
                   value={searchTerm}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className="pl-10 h-12 border-gray-200 focus:border-[#faa51a] focus:ring-[#faa51a]/20"
+                  className="pl-10 h-10 lg:h-12 border-gray-200 focus:border-[#faa51a] focus:ring-[#faa51a]/20 text-sm lg:text-base"
                 />
               </div>
               <div className="flex gap-2">
                 <Select value={filterStatus} onValueChange={handleFilterChange}>
-                  <SelectTrigger className="w-40 h-12">
+                  <SelectTrigger className="w-full lg:w-40 h-10 lg:h-12">
                     <SelectValue placeholder="Filter by status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -697,7 +808,7 @@ const Inventory = () => {
                 <Button
                   onClick={fetchProducts}
                   variant="outline"
-                  className="h-12 px-4"
+                  className="h-10 lg:h-12 px-3 lg:px-4"
                 >
                   <RefreshCw className="h-4 w-4" />
                 </Button>
@@ -708,18 +819,18 @@ const Inventory = () => {
 
         {/* Low Stock Alerts */}
         {lowStockItems.length > 0 && (
-          <Card className="bg-gradient-to-r from-red-50 to-orange-50 border-red-200 mb-6">
-            <CardHeader>
-              <CardTitle className="flex items-center text-red-800">
-                <AlertTriangle className="h-5 w-5 mr-2" />
+          <Card className="bg-gradient-to-r from-red-50 to-orange-50 border-red-200 mb-4 lg:mb-6">
+            <CardHeader className="p-4 lg:p-6">
+              <CardTitle className="flex items-center text-red-800 text-base lg:text-lg">
+                <AlertTriangle className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
                 Low Stock Alerts ({lowStockItems.length})
               </CardTitle>
-              <CardDescription className="text-red-700">
+              <CardDescription className="text-red-700 text-sm">
                 These products need immediate attention
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <CardContent className="p-4 lg:p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 lg:gap-4">
                 {lowStockItems.map((item) => (
                   <div key={item.id} className="bg-white p-4 rounded-lg border border-red-200">
                     <div className="flex items-start justify-between mb-2">
@@ -771,27 +882,41 @@ const Inventory = () => {
                 <Barcode className="h-4 w-4 mr-2" />
                 Register Commodity
               </Button>
-              <Button
-                onClick={() => setIsDialogOpen(true)}
-                className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white"
-              >
-                <Plus className="h-4 w-4 mr-2" />
+                <Button
+                  onClick={() => setIsDialogOpen(true)}
+                  className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
                 Quick Add
+                </Button>
+              
+              <Button
+                onClick={() => setShowOTICVisionRegistration(true)}
+                className="bg-[#040458] hover:bg-[#040458]/90 text-white"
+              >
+                <Camera className="h-4 w-4 mr-2" />
+                Use Camera
               </Button>
-            </div>
-          </div>
+                          </div>
+                        </div>
 
           {/* Tabs for different product views */}
           <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 bg-white/80 backdrop-blur-sm shadow-lg border-0">
-              <TabsTrigger value="all" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white">
-                All Products ({products.length})
+            <TabsList className="grid w-full grid-cols-3 bg-white/80 backdrop-blur-sm shadow-lg border-0 h-auto">
+              <TabsTrigger value="all" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-xs lg:text-sm py-2 lg:py-3">
+                <span className="hidden sm:inline">All Products</span>
+                <span className="sm:hidden">All</span>
+                <span className="ml-1">({products.length})</span>
               </TabsTrigger>
-              <TabsTrigger value="with-barcode" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white">
-                With Barcode ({productsWithBarcode.length})
+              <TabsTrigger value="with-barcode" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-xs lg:text-sm py-2 lg:py-3">
+                <span className="hidden sm:inline">With Barcode</span>
+                <span className="sm:hidden">Barcode</span>
+                <span className="ml-1">({productsWithBarcode.length})</span>
               </TabsTrigger>
-              <TabsTrigger value="generated-barcode" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white">
-                Generated Barcode ({productsWithGeneratedBarcode.length})
+              <TabsTrigger value="generated-barcode" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-xs lg:text-sm py-2 lg:py-3">
+                <span className="hidden sm:inline">Generated</span>
+                <span className="sm:hidden">Generated</span>
+                <span className="ml-1">({productsWithGeneratedBarcode.length})</span>
               </TabsTrigger>
             </TabsList>
 
@@ -807,7 +932,7 @@ const Inventory = () => {
               {renderProductsGrid(productsWithGeneratedBarcode)}
             </TabsContent>
           </Tabs>
-        </div>
+              </div>
 
       </div>
 
@@ -1003,6 +1128,23 @@ const Inventory = () => {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* OTIC Vision Registration Modal */}
+      {showOTICVisionRegistration && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 lg:p-4">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[95vh] lg:max-h-[90vh] overflow-y-auto">
+            <div className="p-3 lg:p-6">
+              <OTICVisionRegistration
+                onProductRegistered={() => {
+                  setShowOTICVisionRegistration(false)
+                  fetchProducts() // Reload products after registration
+                }}
+                onClose={() => setShowOTICVisionRegistration(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

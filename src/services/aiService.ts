@@ -29,26 +29,40 @@ export interface AIPrediction {
 export class AIAnalytics {
   private static async callMistral(prompt: string, context?: any): Promise<string> {
     try {
-      const response = await mistral.chat.complete({
-        model: 'mistral-tiny',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an AI business analyst for African SMEs. Provide concise, actionable insights in English. Focus on practical recommendations for small businesses in Uganda/East Africa.`
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        maxTokens: 200,
-        temperature: 0.7
-      })
+      // Add timeout and retry logic
+      const response = await Promise.race([
+        mistral.chat.complete({
+          model: 'mistral-tiny',
+          messages: [
+            {
+              role: 'system',
+              content: `You are an AI business analyst for African SMEs. Provide concise, actionable insights in English. Focus on practical recommendations for small businesses in Uganda/East Africa.`
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          maxTokens: 200,
+          temperature: 0.7
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Mistral API timeout')), 15000))
+      ]) as any
 
       const content = response.choices[0]?.message?.content
       return typeof content === 'string' ? content : 'Unable to generate insight'
     } catch (error) {
       console.error('Mistral AI error:', error)
+      
+      // Check if it's a network error and provide specific feedback
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          return 'AI service is slow to respond. Please try again.'
+        } else if (error.message.includes('Load failed') || error.message.includes('fetch')) {
+          return 'AI service is currently unavailable. Please check your internet connection.'
+        }
+      }
+      
       return 'AI service temporarily unavailable'
     }
   }
@@ -72,7 +86,7 @@ export class AIAnalytics {
         lowStockCount: lowStockItems.length,
         lowStockItems: lowStockItems.map(item => ({
           name: item.name,
-          currentStock: item.stock,
+          currentStock: item.current_stock || 0,
           minStock: item.min_stock || 5
         }))
       }
@@ -83,6 +97,12 @@ export class AIAnalytics {
       - Low stock details: ${JSON.stringify(context.lowStockItems)}
       
       Provide 3 actionable insights about inventory management, stock optimization, and purchasing recommendations.`
+      
+      console.log('🤖 AI Service: Sending inventory data to Mistral:', {
+        totalProducts: context.totalProducts,
+        lowStockCount: context.lowStockCount,
+        lowStockItems: context.lowStockItems
+      })
 
       const response = await this.callMistral(prompt, context)
       

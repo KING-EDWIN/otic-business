@@ -36,3 +36,5 @@ WHERE table_schema = 'public'
 AND grantee IN ('authenticated', 'anon')
 ORDER BY table_name, grantee;
 
+
+

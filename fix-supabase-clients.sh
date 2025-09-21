@@ -33,3 +33,5 @@ fi
 
 echo "🎉 Supabase client consolidation complete!"
 
+
+
