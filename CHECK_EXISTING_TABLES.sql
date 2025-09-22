@@ -18,3 +18,4 @@ SELECT EXISTS (
     AND table_name = 'expenses'
 ) as expenses_table_exists;
 
+

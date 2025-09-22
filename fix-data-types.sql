@@ -85,3 +85,4 @@ ORDER BY ordinal_position;
 SELECT 'personalised_visual_bank data types fixed successfully!' as status;
 
 
+

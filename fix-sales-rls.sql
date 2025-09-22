@@ -78,3 +78,4 @@ GRANT ALL ON products TO anon;
 SELECT 'RLS policies updated successfully for sales, user_profiles, and products' as status;
 
 
+

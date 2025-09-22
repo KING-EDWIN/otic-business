@@ -102,3 +102,4 @@ FROM pg_constraint
 WHERE conrelid = 'visual_filter_tags'::regclass 
 AND contype = 'u';
 
+

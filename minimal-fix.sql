@@ -99,3 +99,4 @@ GRANT ALL ON personalised_visual_bank TO authenticated;
 SELECT 'Minimal fix completed successfully!' as status;
 
 
+

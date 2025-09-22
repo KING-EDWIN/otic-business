@@ -76,8 +76,8 @@ const BusinessSignup = () => {
           throw profileError;
         }
 
-        toast.success('Business account created successfully! Please check your email to verify your account.');
-        navigate('/signin');
+        toast.success('Business account created successfully! Welcome to your dashboard.');
+        navigate('/dashboard');
       }
     } catch (error: any) {
       console.error('Signup error:', error);

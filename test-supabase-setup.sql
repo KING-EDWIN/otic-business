@@ -88,3 +88,4 @@ SELECT
 SELECT 'Supabase setup verification completed!' as status;
 
 
+

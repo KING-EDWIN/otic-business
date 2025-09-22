@@ -18,3 +18,4 @@ WHERE routine_schema = 'public'
 -- SELECT create_vft('Test Tag', (SELECT id FROM vft_categories LIMIT 1), 0.8);
 
 
+

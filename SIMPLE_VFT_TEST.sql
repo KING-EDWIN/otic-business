@@ -34,3 +34,4 @@ SELECT create_vft(
     0.9::float
 );
 
+

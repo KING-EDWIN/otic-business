@@ -70,3 +70,4 @@ NOTIFY pgrst, 'reload schema';
 -- Test query to verify permissions
 SELECT 'Auth permissions fixed - login should work now' as status;
 
+

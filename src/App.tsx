@@ -8,8 +8,6 @@ import { BusinessManagementProvider } from "@/contexts/BusinessManagementContext
 import Index from "./pages/Index";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
-import SignIn from "./pages/SignInClean";
-import SignUp from "./pages/SignUpClean";
 import GetStarted from "./pages/GetStarted";
 import CompleteProfile from "./pages/CompleteProfile";
 import AIInsightsPage from "./pages/AIInsights";
@@ -39,6 +37,7 @@ import Privacy from "./pages/Privacy";
 import UserTypeSelection from "./pages/UserTypeSelection";
 import BusinessSignup from "./pages/BusinessSignup";
 import IndividualSignup from "./pages/IndividualSignup";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import MyExtras from "./pages/MyExtras";
 import FAQ from "./pages/FAQ";
 import TrialConfirmation from "./pages/TrialConfirmation";
@@ -165,7 +164,9 @@ const App = () => {
                 <Route path="/login-type" element={<LoginTypeSelection />} />
                 <Route path="/business-signin" element={<PublicRoute><BusinessSignIn /></PublicRoute>} />
                 <Route path="/individual-signin" element={<PublicRoute><IndividualSignIn /></PublicRoute>} />
-                <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
+                <Route path="/business-signup" element={<PublicRoute><BusinessSignup /></PublicRoute>} />
+                <Route path="/individual-signup" element={<PublicRoute><IndividualSignup /></PublicRoute>} />
+                <Route path="/payments/success" element={<PaymentSuccess />} />
                 <Route path="/get-started" element={<GetStarted />} />
                 <Route path="/complete-profile" element={<CompleteProfile />} />
                 <Route path="/auth/callback" element={<OAuthCallback />} />

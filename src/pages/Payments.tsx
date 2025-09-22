@@ -6,11 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { ArrowLeft, CreditCard, Smartphone, Building2, Upload, Check, Copy, Clock, CheckCircle, XCircle, Star, Crown, TrendingUp, DollarSign, Users, Calendar, RefreshCw, Download, Eye, MoreVertical } from 'lucide-react'
+import { ArrowLeft, CreditCard, Smartphone, Building2, Upload, Check, Copy, Clock, CheckCircle, XCircle, Star, Crown, TrendingUp, DollarSign, Users, Calendar, RefreshCw, Download, Eye, MoreVertical, Shield } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import PaymentInstructions from '@/components/PaymentInstructions'
 import { paymentService, PaymentRequest } from '@/services/paymentService'
+import { flutterwaveWebService, PaymentTransaction } from '@/services/flutterwaveWebService'
+import { paymentVerificationService, OrderData } from '@/services/paymentVerificationService'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
@@ -35,6 +37,16 @@ const Payments: React.FC = () => {
     rejectedPayments: 0
   })
   const [revenueData, setRevenueData] = useState([])
+  const [flutterwaveTransactions, setFlutterwaveTransactions] = useState<PaymentTransaction[]>([])
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [paymentFormData, setPaymentFormData] = useState({
+    amount: '',
+    currency: 'UGX',
+    description: '',
+    customerName: '',
+    customerEmail: '',
+    customerPhone: ''
+  })
 
   useEffect(() => {
     // Check URL parameters for tier selection
@@ -59,6 +71,13 @@ const Payments: React.FC = () => {
     // Load payment data only if user is available
     if (user?.id) {
       loadPaymentData()
+    } else {
+      // If no user, stop loading after a short delay
+      const timeout = setTimeout(() => {
+        setLoading(false)
+      }, 2000)
+      
+      return () => clearTimeout(timeout)
     }
   }, [searchParams, user])
 
@@ -66,16 +85,46 @@ const Payments: React.FC = () => {
     try {
       setLoading(true)
       
-      // Load payment requests
-      const requests = await paymentService.getPaymentRequests()
-      setPaymentRequests(requests)
-      
-      // Load payment statistics from Supabase
+      if (!user?.id) {
+        console.log('No user ID, skipping payment data load')
+        setLoading(false)
+        return
+      }
+
+      // Load payment requests first
+      const { data: payments, error: paymentsError } = await supabase
+        .from('payment_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (paymentsError) {
+        console.warn('Payment requests error:', paymentsError)
+        setPaymentRequests([])
+      } else {
+        setPaymentRequests(payments || [])
+      }
+
+      // Load other data in parallel
+      const loadPromises = [
+        // Load Flutterwave transactions
+        loadFlutterwaveTransactions().catch(err => {
+          console.warn('Flutterwave transactions failed:', err)
+        })
+      ]
+
+      // Wait for other data
+      await Promise.allSettled(loadPromises)
+
+      // Calculate stats after payment requests are loaded
       await loadPaymentStats()
       
     } catch (error) {
       console.error('Error loading payment data:', error)
-      toast.error('Failed to load payment data')
+      // Don't show error toast for timeout - just log it
+      if (!error.message?.includes('timeout')) {
+        toast.error('Failed to load payment data')
+      }
     } finally {
       setLoading(false)
     }
@@ -88,29 +137,10 @@ const Payments: React.FC = () => {
         return
       }
 
-      console.log('Loading payment stats for user:', user.id)
-
-      // Get all payment requests for this user
-      const { data: payments, error } = await supabase
-        .from('payment_requests')
-        .select('*')
-        .eq('user_id', user.id)
-
-      if (error) {
-        console.error('Payment fetch error:', error)
-        // Don't throw error, just set empty stats
-        setPaymentStats({
-          totalRevenue: 0,
-          monthlyRevenue: 0,
-          totalPayments: 0,
-          pendingPayments: 0,
-          verifiedPayments: 0,
-          rejectedPayments: 0
-        })
-        return
-      }
+      // Use the already loaded payment requests instead of making another query
+      const payments = paymentRequests
       
-      console.log('Found payments:', payments?.length || 0)
+      console.log('Calculating stats for payments:', payments?.length || 0)
 
       // Calculate statistics
       const totalRevenue = payments?.reduce((sum, payment) => sum + (payment.amount || 0), 0) || 0
@@ -172,6 +202,236 @@ const Payments: React.FC = () => {
         revenue: monthlyRevenue.get(monthKey) || 0
       }
     })
+  }
+
+  const loadFlutterwaveTransactions = async () => {
+    try {
+      if (!user?.id) return
+
+      // Load from database directly since web service doesn't have getPaymentHistory
+      const { data, error } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      const transactions = data || []
+      setFlutterwaveTransactions(transactions)
+    } catch (error) {
+      console.error('Error loading Flutterwave transactions:', error)
+    }
+  }
+
+  const saveTransactionToDatabase = async (transactionData: any) => {
+    try {
+      const { error } = await supabase
+        .from('payment_transactions')
+        .insert([{
+          ...transactionData,
+          user_id: user?.id,
+          created_at: new Date().toISOString()
+        }])
+      
+      if (error) throw error
+      console.log('✅ Transaction saved to database')
+    } catch (error) {
+      console.error('❌ Error saving transaction:', error)
+      throw error
+    }
+  }
+
+  const updateTransactionStatus = async (txRef: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from('payment_transactions')
+        .update({ 
+          status: status,
+          updated_at: new Date().toISOString()
+        })
+        .eq('tx_ref', txRef)
+      
+      if (error) throw error
+      console.log('✅ Transaction status updated:', status)
+    } catch (error) {
+      console.error('❌ Error updating transaction status:', error)
+    }
+  }
+
+  const handleFlutterwavePayment = async (tier: 'basic' | 'standard' | 'premium') => {
+    try {
+      setIsProcessingPayment(true)
+
+      // Validate phone number
+      if (!paymentFormData.customerPhone) {
+        toast.error('Please enter your phone number for testing')
+        return
+      }
+
+      // Set tier-specific pricing following OTIC Business specification
+      const tierPricing = {
+        basic: { amount: 50000, description: 'Start Smart Plan - Basic Features' },
+        standard: { amount: 150000, description: 'Grow with Intelligence Plan - Advanced Features' },
+        premium: { amount: 500000, description: 'Enterprise Advantage Plan - Premium Features' }
+      }
+
+      const pricing = tierPricing[tier]
+      const txRef = flutterwaveWebService.generateTxRef() // Generates "OTIC-{timestamp}-{random}"
+
+      // Prepare payment data following the exact specification
+      const paymentData = {
+        amount: pricing.amount,
+        currency: 'UGX',
+        email: profile?.email || user?.email || '',
+        phone_number: paymentFormData.customerPhone,
+        name: profile?.full_name || profile?.business_name || 'Customer',
+        tx_ref: txRef,
+        description: pricing.description,
+        redirect_url: `${window.location.origin}/payments/success?tx_ref=${txRef}`,
+        meta: {
+          tier: tier,
+          user_id: user?.id,
+          phone_number: paymentFormData.customerPhone
+        }
+      }
+
+      console.log('🚀 Flutterwave payment data:', paymentData)
+
+      // Create order in database first (following the specification)
+      const orderData: OrderData = {
+        tx_ref: txRef,
+        amount: pricing.amount,
+        currency: 'UGX',
+        payment_status: 'pending',
+        customer_name: paymentData.name,
+        customer_email: paymentData.email,
+        customer_phone: paymentData.phone_number,
+        user_id: user.id,
+        tier: tier,
+        description: pricing.description
+      }
+
+      const orderResult = await paymentVerificationService.createOrder(orderData)
+      if (!orderResult.success) {
+        throw new Error(`Failed to create order: ${orderResult.error}`)
+      }
+
+      toast.success('Opening Flutterwave payment...')
+
+      // Initialize payment using Flutterwave Checkout Modal
+      const result = await flutterwaveWebService.initializePayment(paymentData)
+
+      if (result.status === 'success' && result.data) {
+        // Payment successful - verify with backend
+        if (result.data.transaction_id) {
+          const verificationResult = await paymentVerificationService.verifyPayment({
+            transaction_id: result.data.transaction_id,
+            tx_ref: txRef
+          })
+
+          if (verificationResult.success) {
+            toast.success('Payment successful!')
+            
+            // Close modal and refresh data
+            setShowPaymentModal(false)
+            setSelectedTier(null)
+            await loadPaymentData()
+          } else {
+            toast.error(`Payment verification failed: ${verificationResult.message}`)
+          }
+        } else {
+          toast.success('Payment initiated! Please check your email for confirmation.')
+          setShowPaymentModal(false)
+          setSelectedTier(null)
+        }
+      } else {
+        throw new Error(result.message || 'Failed to initialize payment')
+      }
+    } catch (error: any) {
+      console.error('❌ Flutterwave payment error:', error)
+      
+      // Handle specific error types
+      if (error.message.includes('cancelled')) {
+        toast.info('Payment cancelled')
+      } else if (error.message.includes('timeout')) {
+        toast.error('Payment timed out. Please try again.')
+      } else {
+        toast.error(`Payment failed: ${error.message}`)
+      }
+    } finally {
+      setIsProcessingPayment(false)
+    }
+  }
+
+  const handleCustomPayment = async () => {
+    try {
+      setIsProcessingPayment(true)
+
+      const amount = parseFloat(paymentFormData.amount)
+      if (isNaN(amount) || amount <= 0) {
+        toast.error('Please enter a valid amount')
+        return
+      }
+
+      const txRef = flutterwaveWebService.generateTxRef()
+
+      const paymentData = {
+        amount: amount,
+        currency: paymentFormData.currency,
+        email: paymentFormData.customerEmail,
+        phone_number: paymentFormData.customerPhone,
+        name: paymentFormData.customerName,
+        tx_ref: txRef,
+        description: paymentFormData.description,
+        redirect_url: `${window.location.origin}/payments/success?tx_ref=${txRef}`,
+        meta: {
+          user_id: user?.id,
+          custom_payment: true
+        }
+      }
+
+      // Save transaction to database first
+      await saveTransactionToDatabase({
+        tx_ref: txRef,
+        amount: amount,
+        currency: paymentFormData.currency,
+        status: 'pending',
+        payment_method: 'flutterwave',
+        customer_email: paymentFormData.customerEmail,
+        customer_name: paymentFormData.customerName,
+        description: paymentFormData.description,
+        user_id: user.id
+      })
+
+      toast.success('Opening Flutterwave payment...')
+
+      const result = await flutterwaveWebService.initializePayment(paymentData)
+
+      if (result.status === 'success' && result.data) {
+        toast.success('Payment successful!')
+        
+        // Update transaction status
+        await updateTransactionStatus(txRef, 'successful')
+        
+        // Refresh data
+        await loadPaymentData()
+      } else {
+        throw new Error(result.message || 'Failed to initialize payment')
+      }
+    } catch (error: any) {
+      console.error('Custom payment error:', error)
+      
+      // Handle specific error types
+      if (error.message.includes('cancelled')) {
+        toast.info('Payment cancelled')
+      } else if (error.message.includes('timeout')) {
+        toast.error('Payment timed out. Please try again.')
+      } else {
+        toast.error(`Payment failed: ${error.message}`)
+      }
+    } finally {
+      setIsProcessingPayment(false)
+    }
   }
 
   const handleUpgrade = (tier: 'basic' | 'standard' | 'premium') => {
@@ -274,6 +534,15 @@ const Payments: React.FC = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-flex items-center space-x-2">
+              <RefreshCw className="w-5 h-5 animate-spin text-[#040458]" />
+              <span className="text-[#040458] font-medium">Loading payment data...</span>
+            </div>
+          </div>
+        )}
+        
         {/* Payment Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
@@ -347,6 +616,9 @@ const Payments: React.FC = () => {
               </TabsTrigger>
               <TabsTrigger value="methods" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
                 Payment Methods
+              </TabsTrigger>
+              <TabsTrigger value="flutterwave" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
+                Flutterwave
               </TabsTrigger>
             </TabsList>
           </div>
@@ -651,33 +923,308 @@ const Payments: React.FC = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Flutterwave Tab */}
+          <TabsContent value="flutterwave">
+            <div className="space-y-6">
+              {/* Flutterwave Transactions */}
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Flutterwave Transactions</CardTitle>
+                      <CardDescription>Your recent payment transactions processed through Flutterwave</CardDescription>
+                    </div>
+                    <Button
+                      onClick={loadFlutterwaveTransactions}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Refresh
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {flutterwaveTransactions.length === 0 ? (
+                    <div className="text-center py-8">
+                      <CreditCard className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-600 mb-2">No Transactions Yet</h3>
+                      <p className="text-gray-500 mb-4">You haven't made any payments through Flutterwave yet.</p>
+                      <Button
+                        onClick={() => setActiveTab('upgrade')}
+                        className="bg-gradient-to-r from-[#040458] to-[#faa51a] hover:from-[#030345] hover:to-[#e6941a]"
+                      >
+                        Make Your First Payment
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {flutterwaveTransactions.map((transaction) => (
+                        <div
+                          key={transaction.id}
+                          className="p-4 border border-gray-200 rounded-lg hover:border-[#040458] transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                transaction.status === 'successful' ? 'bg-green-100' :
+                                transaction.status === 'failed' ? 'bg-red-100' :
+                                transaction.status === 'pending' ? 'bg-yellow-100' : 'bg-gray-100'
+                              }`}>
+                                {transaction.status === 'successful' ? (
+                                  <CheckCircle className="w-5 h-5 text-green-600" />
+                                ) : transaction.status === 'failed' ? (
+                                  <XCircle className="w-5 h-5 text-red-600" />
+                                ) : (
+                                  <Clock className="w-5 h-5 text-yellow-600" />
+                                )}
+                              </div>
+                              <div>
+                                <h4 className="font-semibold">{transaction.description}</h4>
+                                <p className="text-sm text-gray-600">
+                                  {transaction.customer_name} • {transaction.customer_email}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {new Date(transaction.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold text-lg">
+                                {transaction.currency} {transaction.amount.toLocaleString()}
+                              </div>
+                              <Badge
+                                variant={
+                                  transaction.status === 'successful' ? 'default' :
+                                  transaction.status === 'failed' ? 'destructive' :
+                                  'secondary'
+                                }
+                                className="text-xs"
+                              >
+                                {transaction.status}
+                              </Badge>
+                              <p className="text-xs text-gray-500 mt-1">
+                                Ref: {transaction.tx_ref}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Custom Payment Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Custom Payment</CardTitle>
+                  <CardDescription>Process a custom payment through Flutterwave</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="amount">Amount</Label>
+                      <Input
+                        id="amount"
+                        type="number"
+                        placeholder="Enter amount"
+                        value={paymentFormData.amount}
+                        onChange={(e) => setPaymentFormData(prev => ({ ...prev, amount: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="currency">Currency</Label>
+                      <Select
+                        value={paymentFormData.currency}
+                        onValueChange={(value) => setPaymentFormData(prev => ({ ...prev, currency: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {['UGX', 'USD', 'EUR', 'GBP'].map((currency) => (
+                            <SelectItem key={currency} value={currency}>
+                              {currency}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="customerName">Customer Name</Label>
+                      <Input
+                        id="customerName"
+                        placeholder="Customer name"
+                        value={paymentFormData.customerName}
+                        onChange={(e) => setPaymentFormData(prev => ({ ...prev, customerName: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="customerEmail">Customer Email</Label>
+                      <Input
+                        id="customerEmail"
+                        type="email"
+                        placeholder="customer@example.com"
+                        value={paymentFormData.customerEmail}
+                        onChange={(e) => setPaymentFormData(prev => ({ ...prev, customerEmail: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="customerPhone">Customer Phone (Optional)</Label>
+                      <Input
+                        id="customerPhone"
+                        placeholder="+256..."
+                        value={paymentFormData.customerPhone}
+                        onChange={(e) => setPaymentFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="description">Description</Label>
+                      <Input
+                        id="description"
+                        placeholder="Payment description"
+                        value={paymentFormData.description}
+                        onChange={(e) => setPaymentFormData(prev => ({ ...prev, description: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-6">
+                    <Button
+                      onClick={handleCustomPayment}
+                      disabled={isProcessingPayment || !paymentFormData.amount || !paymentFormData.customerName || !paymentFormData.customerEmail}
+                      className="bg-gradient-to-r from-[#040458] to-[#faa51a] hover:from-[#030345] hover:to-[#e6941a]"
+                    >
+                      {isProcessingPayment ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                          Processing Payment...
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="w-4 h-4 mr-2" />
+                          Process Payment
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
 
-      {/* Payment Instructions Modal */}
+      {/* Fixed Payment Modal */}
       {showPaymentModal && selectedTier && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold text-[#040458]">Complete Payment</h2>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#040458] to-[#faa51a] p-4 text-white">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl font-bold">Complete Payment</h2>
+                  <p className="text-white/90 text-sm">Secure payment processing</p>
+                </div>
                 <Button
-                  variant="outline"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
                     setShowPaymentModal(false)
                     setSelectedTier(null)
                   }}
+                  className="text-white hover:bg-white/20"
                 >
                   ✕
                 </Button>
               </div>
-              <PaymentInstructions
-                tier={selectedTier}
-                onPaymentProofUpload={handlePaymentProofUpload}
-                onUpgradeRequest={handleUpgradeRequest}
-                uploadedFile={uploadedFile}
-                isUpgrading={isSubmittingUpgrade}
-              />
+            </div>
+
+            <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+              <div className="space-y-6">
+                {/* Payment Summary */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-gray-800 mb-3">Payment Summary</h3>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h4 className="font-bold text-[#040458] capitalize">{selectedTier} Plan</h4>
+                      <p className="text-sm text-gray-600">
+                        {selectedTier === 'basic' && 'Start Smart Plan'}
+                        {selectedTier === 'standard' && 'Grow with Intelligence Plan'}
+                        {selectedTier === 'premium' && 'Enterprise Advantage Plan'}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-[#040458]">
+                        {selectedTier === 'basic' && 'UGX 50,000'}
+                        {selectedTier === 'standard' && 'UGX 150,000'}
+                        {selectedTier === 'premium' && 'UGX 500,000'}
+                      </div>
+                      <div className="text-sm text-gray-500">per month</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Phone Number Input for Testing */}
+                <div className="space-y-3">
+                  <Label htmlFor="phoneNumber">Phone Number for Testing</Label>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    placeholder="+256 700 000 000"
+                    value={paymentFormData.customerPhone}
+                    onChange={(e) => setPaymentFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
+                  />
+                  <p className="text-xs text-gray-500">
+                    Enter your phone number to test Flutterwave OTP and USSD flow
+                  </p>
+                </div>
+
+                {/* Payment Method */}
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-800">Choose Payment Method</h3>
+                  
+                  {/* Flutterwave Payment */}
+                  <div className="p-4 border-2 border-[#040458] rounded-lg bg-gradient-to-r from-[#040458]/5 to-[#faa51a]/5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-lg flex items-center justify-center">
+                          <CreditCard className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h5 className="font-semibold">Flutterwave</h5>
+                          <p className="text-sm text-gray-600">Cards, Mobile Money, USSD</p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => handleFlutterwavePayment(selectedTier)}
+                        disabled={isProcessingPayment || !paymentFormData.customerPhone}
+                        className="bg-gradient-to-r from-[#040458] to-[#faa51a] hover:from-[#030345] hover:to-[#e6941a]"
+                      >
+                        {isProcessingPayment ? (
+                          <>
+                            <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          'Pay Now'
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Security Notice */}
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <p className="text-sm text-green-800">
+                        Secure payment processing with Flutterwave
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -20,3 +20,4 @@ WHERE table_schema = 'public'
 AND table_name = 'businesses'
 AND column_name LIKE '%user%' OR column_name LIKE '%owner%' OR column_name LIKE '%created%';
 
+

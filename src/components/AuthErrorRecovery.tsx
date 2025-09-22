@@ -183,3 +183,4 @@ export const AuthErrorRecovery: React.FC<AuthErrorRecoveryProps> = ({
     </Card>
   );
 };
+

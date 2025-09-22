@@ -61,3 +61,4 @@ ORDER BY ordinal_position;
 SELECT 'token_similarity_log table fixed successfully!' as status;
 
 
+

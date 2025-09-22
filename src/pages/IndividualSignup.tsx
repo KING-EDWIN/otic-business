@@ -82,8 +82,8 @@ const IndividualSignup = () => {
           throw profileError;
         }
 
-        toast.success('Individual account created successfully! Please check your email to verify your account.');
-        navigate('/signin');
+        toast.success('Individual account created successfully! Welcome to your dashboard.');
+        navigate('/individual-dashboard');
       }
     } catch (error: any) {
       console.error('Signup error:', error);

@@ -363,3 +363,4 @@ const AIInsightsPage = () => {
 }
 
 export default AIInsightsPage
+

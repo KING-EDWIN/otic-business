@@ -128,3 +128,4 @@ SELECT * FROM get_branch_hourly_metrics('066efb80-2a71-41c5-b704-4d9574b5d5bf'::
 
 SELECT 'Hourly metrics schema fixed successfully' as status;
 
+

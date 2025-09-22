@@ -195,3 +195,4 @@ export const AuthStatusIndicator: React.FC<AuthStatusIndicatorProps> = ({
     </Card>
   );
 };
+

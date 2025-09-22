@@ -210,6 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('otic_profile', JSON.stringify(basicProfile))
     } finally {
       setProfileLoading(false)
+      
     }
   }
 
@@ -263,6 +264,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error }
       }
 
+
       return { error: null }
     } catch (error) {
       console.error('Sign up error:', error)
@@ -314,6 +316,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const errorInfo = NetworkErrorHandler.handleAuthError(error)
         toast.error(errorInfo.userMessage)
         return { error: { message: errorInfo.userMessage } }
+      }
+
+      // Validate account type after successful authentication
+      if (data?.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('user_type')
+          .eq('id', data.user.id)
+          .single()
+
+        if (profileError) {
+          console.error('Error fetching user profile for type validation:', profileError)
+          toast.error('Account validation failed. Please try again.')
+          return { error: { message: 'Account validation failed' } }
+        }
+
+        if (profile?.user_type !== userType) {
+          const correctForm = profile?.user_type === 'business' ? 'Business Sign In' : 'Individual Sign In'
+          toast.error(`Account doesn't exist for this account type. Please use the ${correctForm} form.`)
+          return { 
+            error: { 
+              message: `Account doesn't exist for this account type. Please use the ${correctForm} form.`,
+              accountType: profile?.user_type,
+              requestedType: userType
+            } 
+          }
+        }
       }
 
       return { error: null }
