@@ -76,7 +76,7 @@ const SignInClean = () => {
           <div className="flex justify-center mb-4">
             <div className="flex items-center space-x-3">
               <img 
-                src="/Otic icon@2x.png" 
+                src="/Layer 2.png" 
                 alt="Otic Business Logo" 
                 className="h-12 w-12"
               />

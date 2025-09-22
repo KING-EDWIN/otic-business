@@ -313,7 +313,7 @@ const Dashboard = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2 lg:space-x-3 hover:opacity-80 transition-opacity">
               <img 
-                src="/Otic icon@2x.png" 
+                src="/Layer 2.png" 
                 alt="Otic Business Logo" 
                 className="h-6 w-6 lg:h-8 lg:w-8"
               />

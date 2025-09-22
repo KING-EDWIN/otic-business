@@ -11,7 +11,7 @@ const Footer = () => {
           <div className="space-y-4">
             <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
               <img 
-                src="/Otic icon@2x.png" 
+                src="/Layer 2.png" 
                 alt="Otic Business Logo" 
                 className="h-10 w-10"
               />
