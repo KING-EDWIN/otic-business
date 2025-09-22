@@ -28,16 +28,12 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center">
             <img 
               src="/Layer 2.png" 
               alt="Otic Business Logo" 
-              className="h-10 w-10"
+              className="h-10 md:h-12 w-auto object-contain"
             />
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-[#040458]">Otic</span>
-              <span className="text-sm text-[#faa51a] -mt-1">Business</span>
-            </div>
           </Link>
 
           {/* Desktop Navigation */}

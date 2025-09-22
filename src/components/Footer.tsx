@@ -9,16 +9,12 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <Link to="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+            <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
               <img 
-                src="/Layer 2.png" 
+                src="/Business copy 2.png" 
                 alt="Otic Business Logo" 
-                className="h-10 w-10"
+                className="h-12 md:h-14 w-auto object-contain"
               />
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold text-white">Otic</span>
-                <span className="text-sm text-[#faa51a] -mt-1">Business</span>
-              </div>
             </Link>
             <p className="text-white/80">
               Empowering African businesses with AI-driven business automation and growth solutions.

@@ -311,16 +311,12 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 lg:h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2 lg:space-x-3 hover:opacity-80 transition-opacity">
+            <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
               <img 
                 src="/Layer 2.png" 
                 alt="Otic Business Logo" 
-                className="h-6 w-6 lg:h-8 lg:w-8"
+                className="h-8 lg:h-10 w-auto object-contain"
               />
-              <div className="flex flex-col">
-                <span className="text-base lg:text-lg font-bold text-[#040458]">Otic</span>
-                <span className="text-xs text-[#faa51a] -mt-1">Business</span>
-              </div>
             </Link>
 
             {/* Centered Navigation Menu */}
