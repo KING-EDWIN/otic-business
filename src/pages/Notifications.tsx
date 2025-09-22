@@ -168,7 +168,7 @@ const Notifications: React.FC = () => {
               </Button>
               <div className="h-8 w-px bg-gray-300" />
               <div className="flex items-center space-x-3">
-                <img src="/Otic icon@2x.png" alt="Otic Business Logo" className="h-8 w-8" />
+              <img src="/Layer 2.png" alt="Otic Business Logo" className="h-8 w-8 object-contain" />
                 <div>
                   <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
                   <p className="text-sm text-gray-500">

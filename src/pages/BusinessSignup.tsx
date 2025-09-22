@@ -145,9 +145,9 @@ const BusinessSignup = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <img 
-                src="/Otic icon@2x.png" 
+                src="/Layer 2.png" 
                 alt="Otic Business Logo" 
-                className="h-10 w-10"
+                className="h-10 w-10 object-contain"
               />
               <div>
                 <h1 className="text-2xl font-bold text-[#040458]">Business Signup</h1>

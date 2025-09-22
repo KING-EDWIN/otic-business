@@ -89,7 +89,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center space-y-4">
-          <img src="/Otic icon@2x.png" alt="Otic Business Logo" className="h-12 w-12 mx-auto" />
+          <img src="/Layer 2.png" alt="Otic Business Logo" className="h-12 w-12 mx-auto object-contain" />
           <h2 className="text-2xl font-bold text-[#040458]">Pending Admin Approval</h2>
           <p className="text-gray-600">
             Your account was created successfully, but it hasn't been verified by an admin yet. 

@@ -246,10 +246,10 @@ const FAQ = () => {
             <div className="flex items-center space-x-4">
               {/* Logo */}
               <div className="flex items-center space-x-3">
-                <img 
-                  src="/Otic icon@2x.png" 
+              <img 
+                  src="/Layer 2.png" 
                   alt="Otic Business Logo" 
-                  className="h-10 w-10"
+                  className="h-10 w-10 object-contain"
                 />
                 <div className="flex flex-col">
                   <span className="text-xl font-bold text-[#040458]">Otic</span>
@@ -286,10 +286,10 @@ const FAQ = () => {
             <div className="flex items-center justify-between">
               {/* Logo */}
               <div className="flex items-center space-x-3">
-                <img 
-                  src="/Otic icon@2x.png" 
+              <img 
+                  src="/Layer 2.png" 
                   alt="Otic Business Logo" 
-                  className="h-8 w-8"
+                  className="h-8 w-8 object-contain"
                 />
                 <div className="flex flex-col">
                   <span className="text-lg font-bold text-[#040458]">Otic</span>
