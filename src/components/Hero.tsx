@@ -41,17 +41,17 @@ const Hero = () => {
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-16 sm:pt-24 pb-8 sm:pb-16">
         <div className="flex flex-col items-center justify-center min-h-screen text-center">
           {/* Top Headline */}
-          <div className="text-[#faa51a] text-base sm:text-lg font-semibold mb-3 sm:mb-4">
+          <div className="text-[#faa51a] text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
             Streamline Your Business Operations
           </div>
           
           {/* Main Headline */}
-          <h1 className="text-5xl sm:text-5xl md:text-6xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight mb-4 sm:mb-6 max-w-4xl px-4">
+          <h1 className="text-6xl sm:text-6xl md:text-6xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight mb-4 sm:mb-6 max-w-4xl px-4">
             The First Intelligent Eye for Your Business
           </h1>
           
           {/* Sub-headline */}
-          <p className="text-lg sm:text-xl md:text-2xl lg:text-2xl text-white/90 leading-relaxed max-w-4xl mb-8 sm:mb-12 px-4">
+          <p className="text-xl sm:text-2xl md:text-2xl lg:text-2xl text-white/90 leading-relaxed max-w-4xl mb-8 sm:mb-12 px-4">
             The AI-Powered Business Platform That Sees, Understands, and Automates.
           </p>
 
@@ -59,7 +59,7 @@ const Hero = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 sm:mb-16 px-4">
             <Button 
               size="lg"
-              className="text-lg sm:text-xl px-7 sm:px-8 py-4 sm:py-4 h-auto bg-[#faa51a] text-white hover:bg-[#faa51a]/90 font-semibold rounded-lg shadow-xl transition-all duration-300 w-full sm:w-auto"
+              className="text-xl sm:text-2xl px-8 sm:px-9 py-5 sm:py-5 h-auto bg-[#faa51a] text-white hover:bg-[#faa51a]/90 font-semibold rounded-lg shadow-xl transition-all duration-300 w-full sm:w-auto"
               onClick={handleGetStarted}
             >
               Start Free Trial
@@ -68,7 +68,7 @@ const Hero = () => {
             <Button 
               size="lg"
               variant="outline"
-              className="text-lg sm:text-xl px-7 sm:px-8 py-4 sm:py-4 h-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#040458] font-semibold rounded-lg shadow-xl transition-all duration-300 w-full sm:w-auto"
+              className="text-xl sm:text-2xl px-8 sm:px-9 py-5 sm:py-5 h-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#040458] font-semibold rounded-lg shadow-xl transition-all duration-300 w-full sm:w-auto"
               onClick={handleGetStartedGuide}
             >
               Get Started
