@@ -76,21 +76,7 @@ const Hero = () => {
             </Button>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-8 pt-6 sm:pt-8 border-t border-white/20 w-full max-w-2xl px-4">
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-[#faa51a]">80%</div>
-              <div className="text-xs sm:text-sm text-white/80">Cost Reduction</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-[#faa51a]">2000+</div>
-              <div className="text-xs sm:text-sm text-white/80">SMEs Served</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-bold text-[#faa51a]">24/7</div>
-              <div className="text-xs sm:text-sm text-white/80">AI Support</div>
-            </div>
-          </div>
+          {/* Stats removed per request */}
         </div>
       </div>
     </section>

@@ -49,11 +49,9 @@ const Footer = () => {
             <div className="space-y-3 text-white/80">
               <div className="flex items-center space-x-3">
                 <Mail className="h-5 w-5 text-[#faa51a]" />
-                <span>info@oticbusiness.com</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-[#faa51a]" />
-                <span>+256 700 123 456</span>
+                <a href="mailto:sales@otictech.com" className="hover:text-[#faa51a] transition-colors">
+                  sales@otictech.com
+                </a>
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="h-5 w-5 text-[#faa51a]" />
