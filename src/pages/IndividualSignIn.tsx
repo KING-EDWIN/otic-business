@@ -9,7 +9,7 @@ import { ArrowLeft, User, Eye, EyeOff, Building2, Loader2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabaseClient'
-import { getPasswordResetUrl } from '@/services/environmentService'
+import { getPasswordResetUrl, getUrl } from '@/services/environmentService'
 
 const IndividualSignIn = () => {
   const navigate = useNavigate()
@@ -110,7 +110,7 @@ const IndividualSignIn = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?user_type=individual`,
+          redirectTo: getUrl(`/auth/callback?user_type=individual`),
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

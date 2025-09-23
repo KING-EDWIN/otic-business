@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'sonner'
+import { getUrl } from './environmentService'
 
 export interface EmailVerificationResult {
   success: boolean
@@ -17,7 +18,7 @@ export class EmailVerificationService {
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?user_type=${userType}`
+          emailRedirectTo: getUrl(`/auth/callback?user_type=${userType}`)
         }
       })
 
@@ -145,7 +146,7 @@ export class EmailVerificationService {
   static async sendPasswordResetEmail(email: string, userType: 'business' | 'individual' = 'business'): Promise<EmailVerificationResult> {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password?user_type=${userType}`
+        redirectTo: getUrl(`/reset-password?user_type=${userType}`)
       })
 
       if (error) {

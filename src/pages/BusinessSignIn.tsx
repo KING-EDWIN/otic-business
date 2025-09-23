@@ -9,7 +9,7 @@ import { ArrowLeft, Building2, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
-import { getPasswordResetUrl } from '@/services/environmentService';
+import { getPasswordResetUrl, getUrl } from '@/services/environmentService';
 
 const BusinessSignIn = () => {
   const navigate = useNavigate();
@@ -92,7 +92,7 @@ const BusinessSignIn = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?user_type=business`,
+          redirectTo: getUrl(`/auth/callback?user_type=business`),
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

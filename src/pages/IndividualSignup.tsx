@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowLeft, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { getUrl } from '@/services/environmentService';
 import { InputValidator } from '@/utils/inputValidation';
 import { countries } from '@/data/countries';
 
@@ -71,7 +72,7 @@ const IndividualSignup = () => {
         email: sanitizedData.email,
         password: sanitizedData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?user_type=individual`,
+          emailRedirectTo: getUrl(`/auth/callback?user_type=individual`),
           data: {
             full_name: sanitizedData.fullName,
             user_type: 'individual'
@@ -123,7 +124,7 @@ const IndividualSignup = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/oauth-callback?user_type=individual&action=signup`
+          redirectTo: getUrl(`/oauth-callback?user_type=individual&action=signup`)
         }
       });
 
