@@ -3,7 +3,16 @@ import { supabase } from '@/lib/supabaseClient'
 import { clearProblematicSession, checkForProblematicSession } from '@/utils/sessionCleanup'
 import { ProfessionalSignupService } from '@/services/professionalSignup'
 import { EnhancedEmailVerificationService } from '@/services/enhancedEmailVerificationWithDB'
-import { testSupabaseConnection, clearAuthStorage } from '@/utils/networkTest'
+import { 
+  testSupabaseConnectionWithRetry, 
+  clearAuthStorage, 
+  fetchProfileWithRetry,
+  signInWithRetry,
+  getSessionWithRetry,
+  isNetworkError,
+  isOnline,
+  waitForOnline
+} from '@/utils/networkResilience'
 import { toast } from 'sonner'
 
 interface UnifiedUser {
@@ -66,7 +75,7 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
           return
         }
 
-        const { data: { session } } = await supabase.auth.getSession()
+        const { data: { session } } = await getSessionWithRetry()
         
         if (mounted) {
           setSession(session)
@@ -74,24 +83,15 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
           
           if (session?.user) {
             try {
-              // Simple profile loading
-              const { data: profileData, error } = await supabase
-                .from('user_profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single()
+              // Use robust profile loading with retry
+              const profileData = await fetchProfileWithRetry(session.user.id)
               
               if (mounted) {
-                if (error) {
-                  console.warn('Profile fetch error:', error)
-                  setProfile(null)
-                } else {
-                  setProfile(profileData)
-                }
+                setProfile(profileData)
                 setLoading(false)
               }
             } catch (error) {
-              console.warn('Profile fetch failed:', error)
+              console.warn('Profile fetch failed after retries:', error)
               if (mounted) {
                 setProfile(null)
                 setLoading(false)
@@ -135,21 +135,11 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         
         if (session?.user) {
           try {
-            // Simple profile loading
-            const { data: profileData, error } = await supabase
-              .from('user_profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single()
-            
-            if (error) {
-              console.warn('Profile fetch error:', error)
-              setProfile(null)
-            } else {
-              setProfile(profileData)
-            }
+            // Use robust profile loading with retry
+            const profileData = await fetchProfileWithRetry(session.user.id)
+            setProfile(profileData)
           } catch (error) {
-            console.warn('Profile fetch failed:', error)
+            console.warn('Profile fetch failed after retries:', error)
             setProfile(null)
           }
         } else {
@@ -171,66 +161,47 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       console.log(`🔐 Starting sign in for ${email} as ${userType}`)
       
       // Test network connectivity first
-      const isConnected = await testSupabaseConnection()
+      const isConnected = await testSupabaseConnectionWithRetry()
       if (!isConnected) {
         console.error('❌ Network connectivity test failed')
-        clearAuthStorage()
         return { error: { message: 'Network connection failed. Please check your internet connection and try again.' } }
       }
       
       // Clear any problematic sessions before attempting sign in
       clearAuthStorage()
       
-      // Add timeout and retry logic
-      const signInWithRetry = async (retries = 3) => {
-        for (let i = 0; i < retries; i++) {
-          try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-              email,
-              password,
-            })
+      // Use robust sign in with retry
+      const { data, error } = await signInWithRetry(email, password)
 
-            if (error) {
-              console.error(`Sign in attempt ${i + 1} failed:`, error)
-              if (i === retries - 1) {
-                return { error }
-              }
-              // Wait before retry
-              await new Promise(resolve => setTimeout(resolve, 1000))
-              continue
-            }
-
-            // Check if email is verified
-            if (data.user && !data.user.email_confirmed_at) {
-              console.log('⚠️ Email not verified, preventing login')
-              return { 
-                error: { 
-                  message: 'Please verify your email before signing in. Check your inbox for a verification link.' 
-                } 
-              }
-            }
-
-            console.log('✅ Sign in successful')
-            return { error: null, data }
-          } catch (err: any) {
-            console.error(`Sign in attempt ${i + 1} error:`, err)
-            if (err.message?.includes('Load failed') || err.message?.includes('timeout')) {
-              console.log('🔄 Network error detected, clearing storage and retrying...')
-              clearAuthStorage()
-            }
-            if (i === retries - 1) {
-              return { error: { message: err.message || 'Sign in failed' } }
-            }
-            // Wait before retry
-            await new Promise(resolve => setTimeout(resolve, 1000))
-          }
-        }
-        return { error: { message: 'Sign in failed after retries' } }
+      if (error) {
+        console.error('Sign in failed:', error)
+        return { error }
       }
 
-      return await signInWithRetry()
+      // Check if email is verified
+      if (data.user && !data.user.email_confirmed_at) {
+        console.log('⚠️ Email not verified, preventing login')
+        return { 
+          error: { 
+            message: 'Please verify your email before signing in. Check your inbox for a verification link.' 
+          } 
+        }
+      }
+
+      console.log('✅ Sign in successful')
+      return { error: null, data }
     } catch (error: any) {
       console.error('Sign in error:', error)
+      
+      // Handle network errors specifically
+      if (isNetworkError(error)) {
+        return { 
+          error: { 
+            message: 'Network connection failed. Please check your internet connection and try again.' 
+          } 
+        }
+      }
+      
       return { error: { message: error.message || 'Sign in failed' } }
     }
   }

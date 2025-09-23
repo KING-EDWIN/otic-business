@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { EnhancedEmailVerificationService } from './enhancedEmailVerificationWithDB'
 import { EmailVerificationCleanupService } from './emailVerificationCleanup'
 import { getUrl } from './environmentService'
+import { signUpWithRetry, isNetworkError } from '@/utils/networkResilience'
 import { toast } from 'sonner'
 
 export interface SignupData {
@@ -33,10 +34,10 @@ export class ProfessionalSignupService {
       console.log(`🚀 Starting professional signup for ${data.email} (${data.userType})`)
       
       // Step 1: Create auth user with email verification required
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
+      const { data: authData, error: authError } = await signUpWithRetry(
+        data.email,
+        data.password,
+        {
           emailRedirectTo: getUrl('/verify-email'),
           data: {
             business_name: data.businessName || data.fullName,
@@ -48,10 +49,19 @@ export class ProfessionalSignupService {
             country_code: data.countryCode
           }
         }
-      })
+      )
 
       if (authError) {
         console.error('Auth signup error:', authError)
+        
+        // Handle network errors specifically
+        if (isNetworkError(authError)) {
+          return {
+            success: false,
+            error: 'Network connection failed. Please check your internet connection and try again.'
+          }
+        }
+        
         return {
           success: false,
           error: authError.message
@@ -140,6 +150,15 @@ export class ProfessionalSignupService {
 
     } catch (error: any) {
       console.error('Error in signup process:', error)
+      
+      // Handle network errors specifically
+      if (isNetworkError(error)) {
+        return {
+          success: false,
+          error: 'Network connection failed. Please check your internet connection and try again.'
+        }
+      }
+      
       return {
         success: false,
         error: error.message || 'Signup failed'
