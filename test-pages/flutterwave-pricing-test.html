@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flutterwave Pricing Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #040458;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #faa51a; }
+        .code {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Flutterwave Pricing Test</h1>
+        
+        <div class="test-section">
+            <h3>Test Amount Formatting</h3>
+            <p>Testing different amount formats to see what Flutterwave expects:</p>
+            
+            <button onclick="testAmountFormatting()">Test Amount Formatting</button>
+            <div id="amountResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Current Pricing Structure</h3>
+            <div class="code">
+const tierPricing = {
+  basic: { amount: 1000000, description: 'Start Smart Plan' },
+  standard: { amount: 3000000, description: 'Grow with Intelligence Plan' },
+  premium: { amount: 5000000, description: 'Enterprise Advantage Plan' }
+}
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Flutterwave Config Test</h3>
+            <button onclick="testFlutterwaveConfig()">Test Flutterwave Config</button>
+            <div id="configResults"></div>
+        </div>
+    </div>
+
+    <script>
+        // Test amount formatting
+        function testAmountFormatting() {
+            const results = document.getElementById('amountResults');
+            const amounts = [1000000, 3000000, 5000000];
+            
+            results.innerHTML = '<h4>Amount Formatting Tests:</h4>';
+            
+            amounts.forEach(amount => {
+                // Current format (no multiplication)
+                const currentFormat = Math.round(amount);
+                
+                // Old format (multiply by 100)
+                const oldFormat = Math.round(amount * 100);
+                
+                results.innerHTML += `
+                    <div style="margin: 10px 0; padding: 10px; border: 1px solid #eee;">
+                        <strong>Original Amount: ${amount.toLocaleString()} UGX</strong><br>
+                        Current Format: ${currentFormat.toLocaleString()} (${currentFormat})<br>
+                        Old Format: ${oldFormat.toLocaleString()} (${oldFormat})<br>
+                        <small>Difference: ${(oldFormat - currentFormat).toLocaleString()}</small>
+                    </div>
+                `;
+            });
+        }
+
+        // Test Flutterwave config
+        function testFlutterwaveConfig() {
+            const results = document.getElementById('configResults');
+            
+            const tierPricing = {
+                basic: { amount: 1000000, description: 'Start Smart Plan' },
+                standard: { amount: 3000000, description: 'Grow with Intelligence Plan' },
+                premium: { amount: 5000000, description: 'Enterprise Advantage Plan' }
+            };
+
+            results.innerHTML = '<h4>Flutterwave Config Tests:</h4>';
+            
+            Object.entries(tierPricing).forEach(([tier, pricing]) => {
+                const flutterwaveConfig = {
+                    public_key: 'test_key',
+                    tx_ref: `OTIC-${Date.now()}-test`,
+                    amount: Math.round(pricing.amount), // Current format
+                    currency: 'UGX',
+                    customer: {
+                        email: 'test@example.com',
+                        phonenumber: '+256700000000',
+                        name: 'Test Customer',
+                    },
+                    customizations: {
+                        title: "OTIC Business Payment",
+                        description: pricing.description,
+                        logo: "https://oticbusiness.com/logo.png"
+                    }
+                };
+                
+                results.innerHTML += `
+                    <div style="margin: 10px 0; padding: 10px; border: 1px solid #eee;">
+                        <strong>${tier.toUpperCase()} Plan:</strong><br>
+                        <div class="code">
+amount: ${flutterwaveConfig.amount}<br>
+description: "${flutterwaveConfig.customizations.description}"<br>
+currency: ${flutterwaveConfig.currency}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // Initialize
+        testAmountFormatting();
+    </script>
+</body>
+</html>
