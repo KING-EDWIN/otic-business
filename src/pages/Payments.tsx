@@ -13,6 +13,7 @@ import PaymentInstructions from '@/components/PaymentInstructions'
 import { paymentService, PaymentRequest } from '@/services/paymentService'
 import { flutterwaveWebService, PaymentTransaction } from '@/services/flutterwaveWebService'
 import { paymentVerificationService, OrderData } from '@/services/paymentVerificationService'
+import { getUrl } from '@/services/environmentService'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts'
@@ -287,7 +288,7 @@ const Payments: React.FC = () => {
         name: profile?.full_name || profile?.business_name || 'Customer',
         tx_ref: txRef,
         description: pricing.description,
-        redirect_url: `${window.location.origin}/payments/success?tx_ref=${txRef}`,
+        redirect_url: getUrl(`/payments/success?tx_ref=${txRef}`),
         meta: {
           tier: tier,
           user_id: user?.id,
@@ -383,7 +384,7 @@ const Payments: React.FC = () => {
         name: paymentFormData.customerName,
         tx_ref: txRef,
         description: paymentFormData.description,
-        redirect_url: `${window.location.origin}/payments/success?tx_ref=${txRef}`,
+        redirect_url: getUrl(`/payments/success?tx_ref=${txRef}`),
         meta: {
           user_id: user?.id,
           custom_payment: true

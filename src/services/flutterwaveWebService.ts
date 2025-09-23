@@ -1,6 +1,8 @@
 // Flutterwave Web SDK Service - Following OTIC Business Integration Plan
 // This service implements the exact Flutterwave integration flow specified
 
+import { getUrl } from './environmentService'
+
 export interface FlutterwavePaymentData {
   amount: number
   currency: string
@@ -114,9 +116,9 @@ class FlutterwaveWebService {
         customizations: {
           title: "OTIC Business Payment",
           description: paymentData.description,
-          logo: `${window.location.origin}/logo.png`
+          logo: getUrl('/logo.png')
         },
-        redirect_url: paymentData.redirect_url || `${window.location.origin}/payments/success`,
+        redirect_url: paymentData.redirect_url || getUrl('/payments/success'),
         meta: paymentData.meta || {}
       }
 

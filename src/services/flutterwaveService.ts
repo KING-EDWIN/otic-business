@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient'
+import { getUrl } from './environmentService'
 
 export interface FlutterwavePaymentData {
   amount: number
@@ -75,7 +76,7 @@ class FlutterwaveService {
         tx_ref: paymentData.tx_ref,
         amount: paymentData.amount,
         currency: paymentData.currency,
-        redirect_url: paymentData.redirect_url || `${window.location.origin}/payments/success`,
+        redirect_url: paymentData.redirect_url || getUrl('/payments/success'),
         customer: {
           email: paymentData.email,
           phonenumber: paymentData.phone_number || '',
@@ -84,7 +85,7 @@ class FlutterwaveService {
         customizations: {
           title: 'Otic Business Payment',
           description: paymentData.description,
-          logo: `${window.location.origin}/logo.png`
+          logo: getUrl('/logo.png')
         },
         meta: paymentData.meta || {},
         // Enable mobile money for Uganda
