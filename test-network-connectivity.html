@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Connectivity Test - OTIC Business</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+        .warning { color: #ffc107; }
+        .info { color: #17a2b8; }
+        button {
+            background: #040458;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #faa51a; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .status.loading { background: #fff3cd; border: 1px solid #ffeaa7; }
+        .status.success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🌐 Network Connectivity Test - OTIC Business</h1>
+    
+    <div class="container">
+        <h2>Test Network Connectivity</h2>
+        <button onclick="testSupabaseConnection()">Test Supabase Connection</button>
+        <button onclick="testProfileQuery()">Test Profile Query</button>
+        <button onclick="testSignIn()">Test Sign In</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+        <div id="status" class="status loading" style="display: none;"></div>
+    </div>
+
+    <div class="container">
+        <h2>Debug Logs</h2>
+        <div id="logs" class="log"></div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2';
+
+        // Initialize Supabase client
+        const supabaseUrl = 'https://jvgiyscchxxekcbdicco.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8';
+        
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        let logs = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push({ message: logEntry, type });
+            
+            const logsDiv = document.getElementById('logs');
+            const logElement = document.createElement('div');
+            logElement.className = type;
+            logElement.textContent = logEntry;
+            logsDiv.appendChild(logElement);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'loading') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        // Test Supabase connection
+        window.testSupabaseConnection = async () => {
+            try {
+                updateStatus('Testing Supabase connection...', 'loading');
+                log('Testing Supabase connection...', 'info');
+
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('count')
+                    .limit(1);
+
+                if (error) {
+                    log(`Supabase connection error: ${error.message}`, 'error');
+                    updateStatus(`Connection error: ${error.message}`, 'error');
+                } else {
+                    log('Supabase connection successful!', 'success');
+                    updateStatus('Supabase connection successful!', 'success');
+                }
+            } catch (error) {
+                log(`Supabase connection exception: ${error.message}`, 'error');
+                updateStatus(`Connection exception: ${error.message}`, 'error');
+            }
+        };
+
+        // Test profile query
+        window.testProfileQuery = async () => {
+            try {
+                updateStatus('Testing profile query...', 'loading');
+                log('Testing profile query for user: 3488046f-56cf-4711-9045-7e6e158a1c91', 'info');
+
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', '3488046f-56cf-4711-9045-7e6e158a1c91')
+                    .single();
+
+                if (error) {
+                    log(`Profile query error: ${error.message}`, 'error');
+                    log(`Error code: ${error.code}`, 'error');
+                    updateStatus(`Profile query error: ${error.message}`, 'error');
+                } else {
+                    log(`Profile query successful: ${JSON.stringify(data, null, 2)}`, 'success');
+                    updateStatus('Profile query successful!', 'success');
+                }
+            } catch (error) {
+                log(`Profile query exception: ${error.message}`, 'error');
+                updateStatus(`Profile query exception: ${error.message}`, 'error');
+            }
+        };
+
+        // Test sign in
+        window.testSignIn = async () => {
+            try {
+                updateStatus('Testing sign in...', 'loading');
+                log('Testing sign in for: dylankatambad@gmail.com', 'info');
+
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: 'dylankatambad@gmail.com',
+                    password: 'password123' // You'll need to enter the actual password
+                });
+
+                if (error) {
+                    log(`Sign in error: ${error.message}`, 'error');
+                    updateStatus(`Sign in error: ${error.message}`, 'error');
+                } else {
+                    log(`Sign in successful: ${data.user.email}`, 'success');
+                    updateStatus('Sign in successful!', 'success');
+                }
+            } catch (error) {
+                log(`Sign in exception: ${error.message}`, 'error');
+                updateStatus(`Sign in exception: ${error.message}`, 'error');
+            }
+        };
+
+        // Clear logs
+        window.clearLogs = () => {
+            logs = [];
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('status').style.display = 'none';
+        };
+
+        // Initial log
+        log('Network connectivity test page loaded', 'success');
+        log('Ready to test Supabase connection and queries', 'info');
+    </script>
+</body>
+</html>

@@ -275,7 +275,7 @@ export const imageStorageConfigs = {
   // Future dedicated server setup
   local: {
     provider: 'local' as const,
-    baseUrl: 'http://localhost:3000',
+    baseUrl: import.meta.env.VITE_SUPABASE_URL || window.location.origin,
     uploadPath: '/uploads'
   },
   

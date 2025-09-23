@@ -16,7 +16,9 @@ import {
   ExternalLink,
   Clock,
   ThumbsUp,
-  ThumbsDown
+  ThumbsDown,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
@@ -58,6 +60,9 @@ const FAQ = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [questionsPerPage] = useState(10);
+  const [totalQuestions, setTotalQuestions] = useState(0);
 
   // Load FAQ data
   useEffect(() => {
@@ -69,11 +74,11 @@ const FAQ = () => {
     filterQuestions();
   }, [searchQuery, selectedCategory, questions]);
 
-  const loadFAQData = async () => {
+  const loadFAQData = async (page = 1) => {
     try {
       setLoading(true);
       
-      // Load categories
+      // Load categories (cache these as they don't change often)
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('faq_categories')
         .select('*')
@@ -86,24 +91,31 @@ const FAQ = () => {
         setCategories(categoriesData || []);
       }
 
-      // Load questions
-      const { data: questionsData, error: questionsError } = await supabase
+      // Load questions with pagination
+      const from = (page - 1) * questionsPerPage;
+      const to = from + questionsPerPage - 1;
+
+      const { data: questionsData, error: questionsError, count } = await supabase
         .from('faq_questions')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('is_active', true)
-        .order('created_at', { ascending: false });
+        .order('view_count', { ascending: false }) // Show most viewed first
+        .range(from, to);
 
       if (questionsError) {
         console.error('Error loading questions:', questionsError);
         setQuestions([]);
+        setTotalQuestions(0);
       } else {
         setQuestions(questionsData || []);
+        setTotalQuestions(count || 0);
       }
     } catch (error) {
       console.error('Error loading FAQ data:', error);
       toast.error('Failed to load FAQ data. Please check your connection and try again.');
       setCategories([]);
       setQuestions([]);
+      setTotalQuestions(0);
     } finally {
       setLoading(false);
     }
@@ -464,6 +476,69 @@ const FAQ = () => {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Pagination Controls */}
+        {totalQuestions > questionsPerPage && (
+          <div className="mt-8 flex items-center justify-between">
+            <div className="text-sm text-gray-600">
+              Showing {((currentPage - 1) * questionsPerPage) + 1} to {Math.min(currentPage * questionsPerPage, totalQuestions)} of {totalQuestions} questions
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setCurrentPage(prev => Math.max(1, prev - 1));
+                  loadFAQData(Math.max(1, currentPage - 1));
+                }}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </Button>
+              
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: Math.ceil(totalQuestions / questionsPerPage) }, (_, i) => i + 1)
+                  .filter(page => 
+                    page === 1 || 
+                    page === Math.ceil(totalQuestions / questionsPerPage) || 
+                    Math.abs(page - currentPage) <= 2
+                  )
+                  .map((page, index, array) => (
+                    <React.Fragment key={page}>
+                      {index > 0 && array[index - 1] !== page - 1 && (
+                        <span className="px-2 text-gray-400">...</span>
+                      )}
+                      <Button
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => {
+                          setCurrentPage(page);
+                          loadFAQData(page);
+                        }}
+                        className={currentPage === page ? "bg-[#040458] text-white" : ""}
+                      >
+                        {page}
+                      </Button>
+                    </React.Fragment>
+                  ))}
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setCurrentPage(prev => Math.min(Math.ceil(totalQuestions / questionsPerPage), prev + 1));
+                  loadFAQData(Math.min(Math.ceil(totalQuestions / questionsPerPage), currentPage + 1));
+                }}
+                disabled={currentPage >= Math.ceil(totalQuestions / questionsPerPage)}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

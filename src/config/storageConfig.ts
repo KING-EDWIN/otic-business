@@ -21,9 +21,9 @@ export const ENV_CONFIG = {
   
   // Database Configuration
   DATABASE: {
-    // Supabase Configuration - Use environment variables first, fallback to hardcoded
-    SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || 'https://jvgiyscchxxekcbdicco.supabase.co',
-    SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8',
+    // Supabase Configuration - Use environment variables only
+    SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+    SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
     
     // Alternative Database URLs (for different environments)
     DEVELOPMENT: {
@@ -116,6 +116,19 @@ export const getCurrentConfig = () => {
 // Get Supabase configuration
 export const getSupabaseConfig = () => {
   const config = getCurrentConfig()
+  
+  // Check if environment variables are available
+  if (!config.DATABASE.SUPABASE_URL || !config.DATABASE.SUPABASE_ANON_KEY) {
+    console.error('❌ Missing Supabase environment variables!')
+    console.error('Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment')
+    
+    // Fallback to development config for now
+    return {
+      url: 'https://jvgiyscchxxekcbdicco.supabase.co',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8'
+    }
+  }
+  
   return {
     url: config.DATABASE.SUPABASE_URL,
     anonKey: config.DATABASE.SUPABASE_ANON_KEY

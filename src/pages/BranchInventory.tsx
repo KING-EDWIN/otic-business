@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabaseClient'
-import { useAuth } from '@/contexts/AuthContextOptimized'
+import { useAuth } from '@/contexts/AuthContext'
 import { branchDataService, type BranchInventory } from '@/services/branchDataService'
 import { useDateRange } from '@/hooks/useDateRange'
 import DateRangePicker from '@/components/DateRangePicker'

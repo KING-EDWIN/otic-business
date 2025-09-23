@@ -9,7 +9,8 @@ import TierUpgradeRequests from '@/components/TierUpgradeRequests'
 import EmailVerificationManager from '@/components/EmailVerificationManager'
 import AdminFAQManagement from '@/components/AdminFAQManagement'
 import AdminUserDeletion from '@/components/AdminUserDeletion'
-import { Crown, Mail, HelpCircle, Trash2 } from 'lucide-react'
+import ContactManagement from './ContactManagement'
+import { Crown, Mail, HelpCircle, Trash2, MessageSquare } from 'lucide-react'
 
 const isDesktop = () => {
   if (typeof window === 'undefined') return true
@@ -23,6 +24,7 @@ const AdminConsole = () => {
   const [showEmailVerification, setShowEmailVerification] = useState(false)
   const [showFAQManagement, setShowFAQManagement] = useState(false)
   const [showUserDeletion, setShowUserDeletion] = useState(false)
+  const [showContactManagement, setShowContactManagement] = useState(false)
 
   const desktopOnly = useMemo(() => isDesktop(), [])
 
@@ -129,16 +131,16 @@ const AdminConsole = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>User Deletion</CardTitle>
+            <CardTitle>Contact Management</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p className="text-sm text-gray-600">Permanently delete users and all their associated data from the system. Use with extreme caution.</p>
+            <p className="text-sm text-gray-600">Manage customer inquiries and support requests from the contact form. View messages, update status, and send responses.</p>
             <Button 
-              variant="destructive"
-              onClick={() => setShowUserDeletion(true)}
+              className="bg-[#040458] hover:bg-[#030345] text-white"
+              onClick={() => setShowContactManagement(true)}
             >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete User
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Manage Contact Messages
             </Button>
           </CardContent>
         </Card>
@@ -198,6 +200,26 @@ const AdminConsole = () => {
                 </Button>
               </div>
               <AdminUserDeletion />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Contact Management Modal */}
+      {showContactManagement && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-7xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-[#040458]">Contact Management</h2>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowContactManagement(false)}
+                >
+                  Close
+                </Button>
+              </div>
+              <ContactManagement />
             </div>
           </div>
         </div>

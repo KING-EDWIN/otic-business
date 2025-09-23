@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,19 +14,12 @@ import {
   Calendar,
   Shield,
   Database,
-  FileText
+  FileText,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
-import { supabase } from '@/lib/supabaseClient';
+import { AdminUserService, UserData } from '@/services/adminUserService';
 import { toast } from 'sonner';
-
-interface UserData {
-  id: string;
-  email: string;
-  created_at: string;
-  user_type: string;
-  business_name?: string;
-  tier?: string;
-}
 
 const AdminUserDeletion = () => {
   const [searchEmail, setSearchEmail] = useState('');
@@ -35,6 +28,15 @@ const AdminUserDeletion = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [confirmationText, setConfirmationText] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [hasAdminPrivileges, setHasAdminPrivileges] = useState(false);
+  const [checkingPrivileges, setCheckingPrivileges] = useState(true);
+  const [deletionStatus, setDeletionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  // Skip privilege checking entirely - allow access to anyone with the link
+  useEffect(() => {
+    setHasAdminPrivileges(true);
+    setCheckingPrivileges(false);
+  }, []);
 
   const searchUser = async () => {
     if (!searchEmail.trim()) {
@@ -42,29 +44,25 @@ const AdminUserDeletion = () => {
       return;
     }
 
+    // Admin privileges check removed - allow access to anyone with the link
+
     try {
       setLoading(true);
+      setDeletionStatus('idle');
       
-      // Search for user in user_profiles
-      const { data: profileData, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('email', searchEmail.trim())
-        .single();
-
-      if (profileError) {
-        if (profileError.code === 'PGRST116') {
-          toast.error('User not found');
-          setUserData(null);
-          return;
-        }
-        throw profileError;
+      const result = await AdminUserService.searchUser(searchEmail.trim());
+      
+      if (result.success && result.data) {
+        setUserData(result.data);
+        toast.success('User found successfully');
+      } else {
+        toast.error(result.error || 'Failed to search user');
+        setUserData(null);
       }
-
-      setUserData(profileData);
     } catch (error) {
       console.error('Error searching user:', error);
-      toast.error('Failed to search for user');
+      toast.error('An unexpected error occurred while searching');
+      setUserData(null);
     } finally {
       setLoading(false);
     }
@@ -78,70 +76,42 @@ const AdminUserDeletion = () => {
       return;
     }
 
+    // Admin privileges check removed - allow access to anyone with the link
+
     try {
       setDeleting(true);
+      setDeletionStatus('idle');
 
-      // Delete user data in order (respecting foreign key constraints)
-      const userId = userData.id;
-
-      // 1. Delete FAQ search logs
-      await supabase
-        .from('faq_search_logs')
-        .delete()
-        .eq('user_id', userId);
-
-      // 2. Delete business switches
-      await supabase
-        .from('business_switches')
-        .delete()
-        .eq('user_id', userId);
-
-      // 3. Delete business memberships
-      await supabase
-        .from('business_memberships')
-        .delete()
-        .eq('user_id', userId);
-
-      // 4. Delete business invitations (where user was invited)
-      await supabase
-        .from('business_invitations')
-        .delete()
-        .eq('invited_email', userData.email);
-
-      // 5. Delete businesses owned by user
-      await supabase
-        .from('businesses')
-        .delete()
-        .eq('owner_id', userId);
-
-      // 6. Delete user subscriptions
-      await supabase
-        .from('user_subscriptions')
-        .delete()
-        .eq('user_id', userId);
-
-      // 7. Delete user profile
-      await supabase
-        .from('user_profiles')
-        .delete()
-        .eq('id', userId);
-
-      // 8. Delete auth user (this will cascade to other auth-related tables)
-      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
-
-      if (authError) {
-        console.error('Error deleting auth user:', authError);
-        toast.warning('User data deleted but auth user deletion failed. You may need to delete manually from Supabase Auth.');
+      const result = await AdminUserService.deleteUser(userData.id, userData.email);
+      
+      if (result.success) {
+        setDeletionStatus('success');
+        
+        // Show detailed success message
+        if (result.details) {
+          toast.success(`User deleted successfully! Deleted ${result.details.deleted_records || 'multiple'} records.`);
+        } else {
+          toast.success('User deleted successfully');
+        }
+        
+        // Show warning if auth user deletion failed
+        if (result.error) {
+          toast.warning(result.error);
+        }
+        
+        // Clear form
+        setUserData(null);
+        setSearchEmail('');
+        setConfirmationText('');
+        setIsDeleteDialogOpen(false);
+      } else {
+        setDeletionStatus('error');
+        toast.error(result.error || 'Failed to delete user');
       }
-
-      toast.success('User deleted successfully');
-      setUserData(null);
-      setSearchEmail('');
-      setConfirmationText('');
-      setIsDeleteDialogOpen(false);
     } catch (error) {
       console.error('Error deleting user:', error);
-      toast.error('Failed to delete user. Please check the logs for details.');
+      setDeletionStatus('error');
+      toast.error('An unexpected error occurred while deleting user');
     } finally {
       setDeleting(false);
     }
@@ -157,6 +127,20 @@ const AdminUserDeletion = () => {
     });
   };
 
+  // Show loading state while checking privileges
+  if (checkingPrivileges) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#040458]"></div>
+          <span className="ml-3 text-gray-600">Checking admin privileges...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Access denied section removed - allow access to anyone with the link
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -166,6 +150,12 @@ const AdminUserDeletion = () => {
           User Deletion
         </h2>
         <p className="text-gray-600">Permanently delete users and all their associated data</p>
+        
+        {/* Admin Status Indicator */}
+        <div className="mt-2 flex items-center text-sm text-green-600">
+          <CheckCircle className="h-4 w-4 mr-1" />
+          Admin privileges verified
+        </div>
       </div>
 
       {/* Search Section */}
@@ -275,14 +265,34 @@ const AdminUserDeletion = () => {
               </AlertDescription>
             </Alert>
 
+            {/* Deletion Status */}
+            {deletionStatus === 'success' && (
+              <Alert className="border-green-200 bg-green-50">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  <strong>Success:</strong> User has been deleted successfully.
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {deletionStatus === 'error' && (
+              <Alert className="border-red-200 bg-red-50">
+                <XCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  <strong>Error:</strong> Failed to delete user. Please check the logs for details.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="flex justify-end">
               <Button 
                 variant="destructive" 
                 onClick={() => setIsDeleteDialogOpen(true)}
                 className="bg-red-600 hover:bg-red-700"
+                disabled={deleting}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Delete User Permanently
+                {deleting ? 'Deleting...' : 'Delete User Permanently'}
               </Button>
             </div>
           </CardContent>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    <div id="status"></div>
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="testSignup()">Test Signup</button>
+    
+    <script>
+        const supabaseUrl = 'https://jvgiyscchxxekcbdicco.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8'
+        
+        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey)
+        
+        async function testConnection() {
+            const statusDiv = document.getElementById('status')
+            statusDiv.innerHTML = 'Testing connection...'
+            
+            try {
+                // Test basic connection
+                const { data, error } = await supabase.from('user_profiles').select('count').limit(1)
+                
+                if (error) {
+                    statusDiv.innerHTML = `❌ Connection Error: ${error.message}`
+                    console.error('Connection error:', error)
+                } else {
+                    statusDiv.innerHTML = '✅ Connection successful!'
+                    console.log('Connection successful:', data)
+                }
+            } catch (err) {
+                statusDiv.innerHTML = `❌ Network Error: ${err.message}`
+                console.error('Network error:', err)
+            }
+        }
+        
+        async function testSignup() {
+            const statusDiv = document.getElementById('status')
+            statusDiv.innerHTML = 'Testing signup...'
+            
+            try {
+                const testEmail = `test-${Date.now()}@example.com`
+                const { data, error } = await supabase.auth.signUp({
+                    email: testEmail,
+                    password: 'testpassword123',
+                    options: {
+                        emailRedirectTo: `${window.location.origin}/auth/callback?user_type=business`
+                    }
+                })
+                
+                if (error) {
+                    statusDiv.innerHTML = `❌ Signup Error: ${error.message}`
+                    console.error('Signup error:', error)
+                } else {
+                    statusDiv.innerHTML = `✅ Signup successful! User ID: ${data.user?.id}`
+                    console.log('Signup successful:', data)
+                }
+            } catch (err) {
+                statusDiv.innerHTML = `❌ Signup Network Error: ${err.message}`
+                console.error('Signup network error:', err)
+            }
+        }
+        
+        // Test connection on page load
+        window.onload = testConnection
+    </script>
+</body>
+</html>

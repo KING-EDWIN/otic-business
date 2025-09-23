@@ -421,7 +421,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!profile) return '/'
     
     if (profile.user_type === 'business') {
-      return '/business-dashboard'
+      return '/dashboard'
     } else {
       return '/individual-dashboard'
     }

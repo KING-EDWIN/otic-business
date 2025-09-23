@@ -2,23 +2,90 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Mail, Phone, MapPin, Send } from "lucide-react";
+import { ArrowLeft, Mail, Phone, MapPin, Send, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
+import { toast } from "sonner";
 
 const Contact = () => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     subject: '',
     message: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission here
-    console.log('Form submitted:', formData);
-    // You can add actual form submission logic here
+    setIsSubmitting(true);
+
+    try {
+      // Auto-fill email if user is logged in
+      const emailToUse = user?.email || formData.email;
+      
+      // Create contact message record
+      const { data, error } = await supabase
+        .from('contact_messages')
+        .insert([{
+          name: formData.name,
+          email: emailToUse,
+          subject: formData.subject,
+          message: formData.message,
+          user_id: user?.id || null,
+          status: 'new',
+          created_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error submitting contact form:', error);
+        toast.error('Failed to send message. Please try again.');
+        return;
+      }
+
+      // Send notification email to admin (using Supabase Edge Function)
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-contact-notification', {
+          body: {
+            contactId: data.id,
+            name: formData.name,
+            email: emailToUse,
+            subject: formData.subject,
+            message: formData.message,
+            userId: user?.id || null
+          }
+        });
+
+        if (emailError) {
+          console.warn('Email notification failed:', emailError);
+          // Don't fail the form submission if email fails
+        }
+      } catch (emailError) {
+        console.warn('Email notification error:', emailError);
+        // Don't fail the form submission if email fails
+      }
+
+      toast.success('Message sent successfully! We\'ll get back to you within 24 hours.');
+      
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+      });
+
+    } catch (error) {
+      console.error('Contact form error:', error);
+      toast.error('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -27,6 +94,13 @@ const Contact = () => {
       [e.target.name]: e.target.value
     });
   };
+
+  // Auto-fill email if user is logged in
+  useState(() => {
+    if (user?.email && !formData.email) {
+      setFormData(prev => ({ ...prev, email: user.email }));
+    }
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
@@ -131,10 +205,20 @@ const Contact = () => {
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-[#040458] hover:bg-[#faa51a] text-white"
+                  disabled={isSubmitting}
+                  className="w-full bg-[#040458] hover:bg-[#faa51a] text-white disabled:opacity-50"
                 >
-                  <Send className="mr-2 h-4 w-4" />
-                  Send Message
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      Send Message
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>

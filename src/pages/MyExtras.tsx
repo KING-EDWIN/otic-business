@@ -303,7 +303,7 @@ const MyExtras = () => {
     }
   ];
 
-  const currentTier = profile?.tier || 'free_trial';
+  const currentTier = (profile?.tier as 'free_trial' | 'start_smart' | 'grow_intelligence' | 'enterprise_advantage') || 'free_trial';
   const userFeatures = allFeatures.filter(feature => 
     feature.availableIn.includes(currentTier) && 
     (!feature.showCondition || feature.showCondition())

@@ -56,7 +56,7 @@ const LoginTypeSelection = () => {
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-[#faa51a] rounded-full"></div>
-                  <span className="text-gray-700">Complete POS system with barcode scanning</span>
+                  <span className="text-gray-700">Use camera to register stock</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-[#faa51a] rounded-full"></div>

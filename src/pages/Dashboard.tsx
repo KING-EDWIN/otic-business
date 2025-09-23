@@ -130,20 +130,10 @@ const Dashboard = () => {
   }, [stats])
 
   useEffect(() => {
-    // Add a timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      if (authLoading) {
-        console.warn('Auth loading timeout - forcing redirect to signin')
-        navigate('/signin')
-      }
-    }, 5000) // Reduced to 5 second timeout
-
     if (!authLoading && !user) {
       // No user and not loading, redirect to signin
       navigate('/signin')
     }
-
-    return () => clearTimeout(timeout)
   }, [authLoading, user, navigate])
 
 
@@ -514,16 +504,15 @@ const Dashboard = () => {
             <p className="text-base lg:text-xl opacity-90">Here's what's happening with your business today.</p>
               </div>
               <div className="flex flex-col items-center lg:items-end space-y-3">
-                <Button
-                  onClick={() => navigate('/otic-vision')}
-                  className="bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 hover:scale-105 shadow-lg text-sm lg:text-base"
+                <div
+                  className="bg-white/20 text-white border border-white/30 backdrop-blur-sm text-sm lg:text-base px-4 py-2 rounded-lg shadow-lg opacity-75 cursor-not-allowed"
                 >
-                  <Camera className="h-4 w-4 lg:h-5 lg:w-5 mr-2" />
+                  <Camera className="h-4 w-4 lg:h-5 lg:w-5 mr-2 inline" />
                   OTIC Vision
                   <Badge className="ml-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-2 py-0.5 rounded-full">
                     NEW
                   </Badge>
-                </Button>
+                </div>
                 <p className="text-xs lg:text-sm opacity-75 text-center lg:text-right max-w-xs">
                   AI-powered product recognition<br />
                   <span className="text-xs">Premium feature</span>
@@ -705,7 +694,7 @@ const Dashboard = () => {
                     minDate={minDate}
                     maxDate={maxDate}
                     placeholder="Select date range"
-                    className="w-full lg:w-48"
+                    className="w-full lg:w-56 min-w-48"
                   />
                 </div>
                 
@@ -791,20 +780,26 @@ const Dashboard = () => {
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                     <XAxis 
                       dataKey="name" 
-                            fontSize={11}
-                            tick={{ fill: '#6b7280' }}
-                            axisLine={{ stroke: '#d1d5db' }}
+                      fontSize={window.innerWidth < 768 ? 9 : 11}
+                      tick={{ fill: '#6b7280' }}
+                      axisLine={{ stroke: '#d1d5db' }}
+                      label={{ value: 'Time Period', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fontSize: '10px', fill: '#6b7280' } }}
+                      angle={window.innerWidth < 768 ? -45 : 0}
+                      textAnchor={window.innerWidth < 768 ? 'end' : 'middle'}
+                      height={window.innerWidth < 768 ? 60 : 40}
                     />
                     <YAxis 
-                            fontSize={11}
-                            tick={{ fill: '#6b7280' }}
-                            axisLine={{ stroke: '#d1d5db' }}
-                            tickFormatter={(value) => {
-                              if (chartMetric === 'revenue' || chartMetric === 'profit') {
-                                return `${(value / 1000).toFixed(0)}k`
-                              }
-                              return value.toString()
-                            }}
+                      fontSize={window.innerWidth < 768 ? 9 : 11}
+                      tick={{ fill: '#6b7280' }}
+                      axisLine={{ stroke: '#d1d5db' }}
+                      label={{ value: getChartConfig().label, angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: '10px', fill: '#6b7280' } }}
+                      tickFormatter={(value) => {
+                        if (chartMetric === 'revenue' || chartMetric === 'profit') {
+                          return `${(value / 1000).toFixed(0)}k`
+                        }
+                        return value.toString()
+                      }}
+                      width={window.innerWidth < 768 ? 50 : 60}
                     />
                     <Tooltip 
                             formatter={(value: number) => [config.formatter(value), config.label]}
@@ -832,20 +827,26 @@ const Dashboard = () => {
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                           <XAxis 
                             dataKey="name" 
-                            fontSize={11}
+                            fontSize={window.innerWidth < 768 ? 9 : 11}
                             tick={{ fill: '#6b7280' }}
                             axisLine={{ stroke: '#d1d5db' }}
+                            label={{ value: 'Time Period', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fontSize: '10px', fill: '#6b7280' } }}
+                            angle={window.innerWidth < 768 ? -45 : 0}
+                            textAnchor={window.innerWidth < 768 ? 'end' : 'middle'}
+                            height={window.innerWidth < 768 ? 60 : 40}
                           />
                           <YAxis 
-                            fontSize={11}
+                            fontSize={window.innerWidth < 768 ? 9 : 11}
                             tick={{ fill: '#6b7280' }}
                             axisLine={{ stroke: '#d1d5db' }}
+                            label={{ value: getChartConfig().label, angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: '10px', fill: '#6b7280' } }}
                             tickFormatter={(value) => {
                               if (chartMetric === 'revenue' || chartMetric === 'profit') {
                                 return `${(value / 1000).toFixed(0)}k`
                               }
                               return value.toString()
                             }}
+                            width={window.innerWidth < 768 ? 50 : 60}
                           />
                           <Tooltip 
                             formatter={(value: number) => [config.formatter(value), config.label]}
@@ -870,20 +871,26 @@ const Dashboard = () => {
                           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                           <XAxis 
                             dataKey="name" 
-                            fontSize={11}
+                            fontSize={window.innerWidth < 768 ? 9 : 11}
                             tick={{ fill: '#6b7280' }}
                             axisLine={{ stroke: '#d1d5db' }}
+                            label={{ value: 'Time Period', position: 'insideBottom', offset: -5, style: { textAnchor: 'middle', fontSize: '10px', fill: '#6b7280' } }}
+                            angle={window.innerWidth < 768 ? -45 : 0}
+                            textAnchor={window.innerWidth < 768 ? 'end' : 'middle'}
+                            height={window.innerWidth < 768 ? 60 : 40}
                           />
                           <YAxis 
-                            fontSize={11}
+                            fontSize={window.innerWidth < 768 ? 9 : 11}
                             tick={{ fill: '#6b7280' }}
                             axisLine={{ stroke: '#d1d5db' }}
+                            label={{ value: getChartConfig().label, angle: -90, position: 'insideLeft', style: { textAnchor: 'middle', fontSize: '10px', fill: '#6b7280' } }}
                             tickFormatter={(value) => {
                               if (chartMetric === 'revenue' || chartMetric === 'profit') {
                                 return `${(value / 1000).toFixed(0)}k`
                               }
                               return value.toString()
                             }}
+                            width={window.innerWidth < 768 ? 50 : 60}
                           />
                           <Tooltip 
                             formatter={(value: number) => [config.formatter(value), config.label]}

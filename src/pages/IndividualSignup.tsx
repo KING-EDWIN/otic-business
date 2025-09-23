@@ -5,9 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, User, ArrowRight } from 'lucide-react';
+import { ArrowLeft, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
+import { InputValidator } from '@/utils/inputValidation';
+import { countries } from '@/data/countries';
 
 const IndividualSignup = () => {
   const navigate = useNavigate();
@@ -16,10 +18,15 @@ const IndividualSignup = () => {
     fullName: '',
     email: '',
     profession: '',
+    country: '',
+    countryCode: '',
     phoneNumber: '',
     password: '',
     confirmPassword: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -28,29 +35,45 @@ const IndividualSignup = () => {
     }));
   };
 
+  const handleCountryChange = (countryCode: string) => {
+    const country = countries.find(c => c.code === countryCode);
+    setFormData(prev => ({
+      ...prev,
+      country: country?.name || '',
+      countryCode: country?.phoneCode || ''
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return;
-    }
-
     setLoading(true);
+    setValidationErrors([]);
 
     try {
+      // Validate form data
+      const requiredFields = [
+        'fullName', 'email', 'profession', 'country', 'phoneNumber', 'password', 'confirmPassword'
+      ];
+      
+      const validation = InputValidator.validateFormData(formData, requiredFields);
+      
+      if (!validation.isValid) {
+        setValidationErrors(validation.errors);
+        toast.error('Please fix the validation errors');
+        return;
+      }
+
+      // Use validated and sanitized data
+      const sanitizedData = validation.sanitizedData;
+
       // Create the auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
+        email: sanitizedData.email,
+        password: sanitizedData.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?user_type=individual`,
           data: {
-            full_name: formData.fullName,
+            full_name: sanitizedData.fullName,
             user_type: 'individual'
           }
         }
@@ -64,10 +87,10 @@ const IndividualSignup = () => {
           .from('user_profiles')
           .upsert({
             id: authData.user.id, // Use 'id' not 'user_id'
-            email: formData.email,
-            full_name: formData.fullName,
-            business_name: formData.fullName, // Use full_name as business_name for individuals
-            phone: formData.phoneNumber,
+            email: sanitizedData.email,
+            full_name: sanitizedData.fullName,
+            business_name: sanitizedData.fullName, // Use full_name as business_name for individuals
+            phone: sanitizedData.phoneNumber,
             user_type: 'individual',
             tier: 'basic',
             email_verified: false,
@@ -82,7 +105,7 @@ const IndividualSignup = () => {
           throw profileError;
         }
 
-        toast.success('Individual account created successfully! Welcome to your dashboard.');
+        toast.success('Individual account created successfully! Please check your email to verify your account.');
         navigate('/individual-dashboard');
       }
     } catch (error: any) {
@@ -209,52 +232,129 @@ const IndividualSignup = () => {
                 </Select>
               </div>
 
+              {/* Country */}
+              <div className="space-y-2">
+                <Label htmlFor="country" className="text-sm font-medium">
+                  Country *
+                </Label>
+                <Select onValueChange={handleCountryChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your country" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {countries.map((country) => (
+                      <SelectItem key={country.code} value={country.code}>
+                        {country.name} ({country.phoneCode})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Phone Number */}
               <div className="space-y-2">
                 <Label htmlFor="phoneNumber" className="text-sm font-medium">
-                  Phone Number
+                  Phone Number *
                 </Label>
-                <Input
-                  id="phoneNumber"
-                  type="tel"
-                  value={formData.phoneNumber}
-                  onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                  placeholder="e.g., +256 700 123 456"
-                  className="w-full"
-                />
+                <div className="flex gap-2">
+                  <div className="w-24">
+                    <Input
+                      type="text"
+                      value={formData.countryCode}
+                      placeholder="+256"
+                      className="w-full"
+                      readOnly
+                    />
+                  </div>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    required
+                    value={formData.phoneNumber}
+                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                    placeholder="700 123 456"
+                    className="flex-1"
+                  />
+                </div>
               </div>
 
-              {/* Password */}
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
-                  Password *
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  placeholder="Create a secure password"
-                  className="w-full"
-                />
+              {/* Password Fields */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-sm font-medium">
+                    Password *
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={formData.password}
+                      onChange={(e) => handleInputChange('password', e.target.value)}
+                      placeholder="Create a secure password"
+                      className="w-full pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword" className="text-sm font-medium">
+                    Confirm Password *
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                      placeholder="Confirm your password"
+                      className="w-full pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
 
-              {/* Confirm Password */}
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                  Confirm Password *
-                </Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                  placeholder="Confirm your password"
-                  className="w-full"
-                />
-              </div>
+              {/* Validation Errors */}
+              {validationErrors.length > 0 && (
+                <div className="space-y-2">
+                  <div className="text-sm text-red-600 font-medium">Please fix the following errors:</div>
+                  <ul className="text-sm text-red-600 space-y-1">
+                    {validationErrors.map((error, index) => (
+                      <li key={index} className="flex items-start">
+                        <span className="mr-2">•</span>
+                        <span>{error}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Google Sign Up */}
               <div className="space-y-3">

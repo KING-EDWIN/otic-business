@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Flow Debug - OTIC Business</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+        .warning { color: #ffc107; }
+        .info { color: #17a2b8; }
+        button {
+            background: #040458;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #faa51a; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .status.loading { background: #fff3cd; border: 1px solid #ffeaa7; }
+        .status.success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🔍 OTIC Business Auth Flow Debug</h1>
+    
+    <div class="container">
+        <h2>Current Status</h2>
+        <div id="status" class="status loading">Checking authentication status...</div>
+        <div id="user-info"></div>
+        <div id="profile-info"></div>
+    </div>
+
+    <div class="container">
+        <h2>Test Actions</h2>
+        <button onclick="testSignIn()">Test Business Sign In</button>
+        <button onclick="testGoogleSignIn()">Test Google Sign In</button>
+        <button onclick="testSignOut()">Test Sign Out</button>
+        <button onclick="testDashboardAccess()">Test Dashboard Access</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+
+    <div class="container">
+        <h2>Debug Logs</h2>
+        <div id="logs" class="log"></div>
+    </div>
+
+    <div class="container">
+        <h2>Network Requests</h2>
+        <div id="network-logs" class="log"></div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2';
+
+        // Initialize Supabase client
+        const supabaseUrl = 'https://jvgiyscchxxekcbdicco.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8';
+        
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        let logs = [];
+        let networkLogs = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push({ message: logEntry, type });
+            
+            const logsDiv = document.getElementById('logs');
+            const logElement = document.createElement('div');
+            logElement.className = type;
+            logElement.textContent = logEntry;
+            logsDiv.appendChild(logElement);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function networkLog(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            networkLogs.push({ message: logEntry, type });
+            
+            const networkDiv = document.getElementById('network-logs');
+            const logElement = document.createElement('div');
+            logElement.className = type;
+            logElement.textContent = logEntry;
+            networkDiv.appendChild(logElement);
+            networkDiv.scrollTop = networkDiv.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'loading') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function updateUserInfo(user) {
+            const userDiv = document.getElementById('user-info');
+            if (user) {
+                userDiv.innerHTML = `
+                    <h3>User Info:</h3>
+                    <p><strong>ID:</strong> ${user.id}</p>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Email Confirmed:</strong> ${user.email_confirmed_at ? 'Yes' : 'No'}</p>
+                    <p><strong>Provider:</strong> ${user.app_metadata?.provider || 'email'}</p>
+                    <p><strong>Created:</strong> ${new Date(user.created_at).toLocaleString()}</p>
+                `;
+            } else {
+                userDiv.innerHTML = '<p>No user logged in</p>';
+            }
+        }
+
+        function updateProfileInfo(profile) {
+            const profileDiv = document.getElementById('profile-info');
+            if (profile) {
+                profileDiv.innerHTML = `
+                    <h3>Profile Info:</h3>
+                    <p><strong>User Type:</strong> ${profile.user_type}</p>
+                    <p><strong>Business Name:</strong> ${profile.business_name || 'N/A'}</p>
+                    <p><strong>Full Name:</strong> ${profile.full_name || 'N/A'}</p>
+                    <p><strong>Tier:</strong> ${profile.tier || 'N/A'}</p>
+                    <p><strong>Email Verified:</strong> ${profile.email_verified ? 'Yes' : 'No'}</p>
+                    <p><strong>Created:</strong> ${new Date(profile.created_at).toLocaleString()}</p>
+                `;
+            } else {
+                profileDiv.innerHTML = '<p>No profile found</p>';
+            }
+        }
+
+        async function checkAuthStatus() {
+            try {
+                log('Checking current authentication status...', 'info');
+                
+                // Get current session
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                
+                if (sessionError) {
+                    log(`Session error: ${sessionError.message}`, 'error');
+                    updateStatus('Session error', 'error');
+                    return;
+                }
+
+                if (session?.user) {
+                    log(`User found: ${session.user.email}`, 'success');
+                    updateUserInfo(session.user);
+                    
+                    // Try to get profile
+                    log('Fetching user profile...', 'info');
+                    const { data: profile, error: profileError } = await supabase
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('id', session.user.id)
+                        .single();
+
+                    if (profileError) {
+                        log(`Profile error: ${profileError.message}`, 'error');
+                        updateProfileInfo(null);
+                    } else {
+                        log(`Profile found: ${profile.user_type}`, 'success');
+                        updateProfileInfo(profile);
+                    }
+                    
+                    updateStatus('User authenticated', 'success');
+                } else {
+                    log('No user session found', 'warning');
+                    updateUserInfo(null);
+                    updateProfileInfo(null);
+                    updateStatus('No user logged in', 'warning');
+                }
+            } catch (error) {
+                log(`Error checking auth status: ${error.message}`, 'error');
+                updateStatus('Error checking auth', 'error');
+            }
+        }
+
+        async function testSignIn() {
+            const email = prompt('Enter email for test sign in:');
+            const password = prompt('Enter password:');
+            
+            if (!email || !password) {
+                log('Sign in cancelled', 'warning');
+                return;
+            }
+
+            try {
+                log(`Attempting sign in with email: ${email}`, 'info');
+                networkLog(`POST /auth/v1/token`, 'info');
+                
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+
+                if (error) {
+                    log(`Sign in error: ${error.message}`, 'error');
+                    networkLog(`Sign in failed: ${error.message}`, 'error');
+                } else {
+                    log(`Sign in successful: ${data.user?.email}`, 'success');
+                    networkLog(`Sign in successful`, 'success');
+                    await checkAuthStatus();
+                }
+            } catch (error) {
+                log(`Sign in exception: ${error.message}`, 'error');
+                networkLog(`Sign in exception: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGoogleSignIn() {
+            try {
+                log('Attempting Google OAuth sign in...', 'info');
+                networkLog(`GET /auth/v1/authorize (Google OAuth)`, 'info');
+                
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${window.location.origin}/auth/callback?user_type=business`,
+                    }
+                });
+
+                if (error) {
+                    log(`Google OAuth error: ${error.message}`, 'error');
+                    networkLog(`Google OAuth failed: ${error.message}`, 'error');
+                } else {
+                    log('Google OAuth initiated, redirecting...', 'info');
+                    networkLog('Google OAuth redirect initiated', 'info');
+                }
+            } catch (error) {
+                log(`Google OAuth exception: ${error.message}`, 'error');
+                networkLog(`Google OAuth exception: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSignOut() {
+            try {
+                log('Attempting sign out...', 'info');
+                networkLog(`POST /auth/v1/logout`, 'info');
+                
+                const { error } = await supabase.auth.signOut();
+
+                if (error) {
+                    log(`Sign out error: ${error.message}`, 'error');
+                    networkLog(`Sign out failed: ${error.message}`, 'error');
+                } else {
+                    log('Sign out successful', 'success');
+                    networkLog('Sign out successful', 'success');
+                    await checkAuthStatus();
+                }
+            } catch (error) {
+                log(`Sign out exception: ${error.message}`, 'error');
+                networkLog(`Sign out exception: ${error.message}`, 'error');
+            }
+        }
+
+        async function testDashboardAccess() {
+            try {
+                log('Testing dashboard access...', 'info');
+                
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                if (!session?.user) {
+                    log('No user session - cannot access dashboard', 'warning');
+                    return;
+                }
+
+                // Test profile fetch
+                log('Testing profile fetch for dashboard...', 'info');
+                networkLog(`GET /rest/v1/user_profiles`, 'info');
+                
+                const startTime = Date.now();
+                const { data: profile, error: profileError } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                const fetchTime = Date.now() - startTime;
+                
+                if (profileError) {
+                    log(`Profile fetch error: ${profileError.message}`, 'error');
+                    networkLog(`Profile fetch failed (${fetchTime}ms): ${profileError.message}`, 'error');
+                } else {
+                    log(`Profile fetch successful (${fetchTime}ms): ${profile.user_type}`, 'success');
+                    networkLog(`Profile fetch successful (${fetchTime}ms)`, 'success');
+                }
+
+                // Test stats fetch
+                log('Testing stats fetch for dashboard...', 'info');
+                networkLog(`GET /rest/v1/sales`, 'info');
+                
+                const statsStartTime = Date.now();
+                const { data: salesData, error: salesError } = await supabase
+                    .from('sales')
+                    .select('total')
+                    .eq('user_id', session.user.id);
+
+                const statsTime = Date.now() - statsStartTime;
+                
+                if (salesError) {
+                    log(`Sales fetch error: ${salesError.message}`, 'error');
+                    networkLog(`Sales fetch failed (${statsTime}ms): ${salesError.message}`, 'error');
+                } else {
+                    log(`Sales fetch successful (${statsTime}ms): ${salesData?.length || 0} sales`, 'success');
+                    networkLog(`Sales fetch successful (${statsTime}ms)`, 'success');
+                }
+
+            } catch (error) {
+                log(`Dashboard access test exception: ${error.message}`, 'error');
+                networkLog(`Dashboard access test exception: ${error.message}`, 'error');
+            }
+        }
+
+        function clearLogs() {
+            logs = [];
+            networkLogs = [];
+            document.getElementById('logs').innerHTML = '';
+            document.getElementById('network-logs').innerHTML = '';
+            log('Logs cleared', 'info');
+        }
+
+        // Listen for auth state changes
+        supabase.auth.onAuthStateChange((event, session) => {
+            log(`Auth state change: ${event}`, 'info');
+            if (session?.user) {
+                log(`User: ${session.user.email}`, 'success');
+            } else {
+                log('User signed out', 'warning');
+            }
+            checkAuthStatus();
+        });
+
+        // Initial check
+        checkAuthStatus();
+
+        // Make functions global for button clicks
+        window.testSignIn = testSignIn;
+        window.testGoogleSignIn = testGoogleSignIn;
+        window.testSignOut = testSignOut;
+        window.testDashboardAccess = testDashboardAccess;
+        window.clearLogs = clearLogs;
+    </script>
+</body>
+</html>

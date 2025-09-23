@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 
 function setCors(res: any) {
   const allowedOrigins = [
-    'http://localhost:8080',
+    process.env.FRONTEND_URL || 'https://oticbusiness.com',
     'http://localhost:5173',
     'https://otic-businesssss.vercel.app'
   ]

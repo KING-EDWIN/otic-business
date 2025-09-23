@@ -32,44 +32,45 @@ class OpenRouterVisionService {
   private readonly API_URL = 'https://openrouter.ai/api/v1/chat/completions'
   private readonly API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || ''
   
-  // Available models for vision tasks (in order of preference)
+  // Available models for vision tasks - STANDARDIZED ON GROK FREE ONLY
   private readonly VISION_MODELS = [
     {
       id: 'x-ai/grok-4-fast:free',
       name: 'Grok 4 Fast (FREE)',
-      description: 'Consistent object detection - primary choice',
+      description: 'Consistent object detection - PRIMARY CHOICE',
       cost: 'free'
-    },
-    {
-      id: 'openrouter/sonoma-dusk-alpha',
-      name: 'Sonoma Dusk Alpha',
-      description: 'Excellent for object detection - fallback option',
-      cost: 'free'
-    },
-    {
-      id: 'moonshotai/kimi-vl-a3b-thinking',
-      name: 'Kimi VL A3B Thinking',
-      description: 'High accuracy vision model - fallback option',
-      cost: 'paid'
-    },
-    {
-      id: 'mistralai/mistral-small-3.2-24b-instruct:free',
-      name: 'Mistral Small 3.2 24B (FREE)',
-      description: 'Free Mistral model with vision capabilities',
-      cost: 'free'
-    },
-    {
-      id: 'anthropic/claude-3.5-sonnet',
-      name: 'Claude 3.5 Sonnet',
-      description: 'Best for detailed object analysis',
-      cost: 'paid'
-    },
-    {
-      id: 'google/gemini-pro-1.5',
-      name: 'Google Gemini Pro 1.5',
-      description: 'Google\'s vision model',
-      cost: 'paid'
     }
+    // COMMENTED OUT OTHER MODELS FOR CONSISTENCY
+    // {
+    //   id: 'openrouter/sonoma-dusk-alpha',
+    //   name: 'Sonoma Dusk Alpha',
+    //   description: 'Excellent for object detection - fallback option',
+    //   cost: 'free'
+    // },
+    // {
+    //   id: 'moonshotai/kimi-vl-a3b-thinking',
+    //   name: 'Kimi VL A3B Thinking',
+    //   description: 'High accuracy vision model - fallback option',
+    //   cost: 'paid'
+    // },
+    // {
+    //   id: 'mistralai/mistral-small-3.2-24b-instruct:free',
+    //   name: 'Mistral Small 3.2 24B (FREE)',
+    //   description: 'Free Mistral model with vision capabilities',
+    //   cost: 'free'
+    // },
+    // {
+    //   id: 'anthropic/claude-3.5-sonnet',
+    //   name: 'Claude 3.5 Sonnet',
+    //   description: 'Best for detailed object analysis',
+    //   cost: 'paid'
+    // },
+    // {
+    //   id: 'google/gemini-pro-1.5',
+    //   name: 'Google Gemini Pro 1.5',
+    //   description: 'Google\'s vision model',
+    //   cost: 'paid'
+    // }
   ]
 
   /**

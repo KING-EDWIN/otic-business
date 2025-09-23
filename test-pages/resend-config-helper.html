@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resend Configuration Helper</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 700px; margin: 50px auto; padding: 20px; }
+        .config-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background: #d4edda; color: #155724; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        .info { background: #d1ecf1; color: #0c5460; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        .warning { background: #fff3cd; color: #856404; padding: 15px; border-radius: 4px; margin: 10px 0; }
+        code { background: #f8f9fa; padding: 2px 6px; border-radius: 3px; font-family: monospace; }
+        .copy-btn { background: #040458; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; margin-left: 10px; }
+        .copy-btn:hover { background: #030344; }
+    </style>
+</head>
+<body>
+    <h1>📧 Resend Configuration Helper</h1>
+    
+    <div class="config-section">
+        <h3>✅ Your Domain Status</h3>
+        <div class="success">
+            <strong>Domain:</strong> oticbusiness.com<br>
+            <strong>Status:</strong> Verified ✅<br>
+            <strong>You can now send emails from this domain!</strong>
+        </div>
+    </div>
+
+    <div class="config-section">
+        <h3>🔧 Supabase SMTP Configuration</h3>
+        <div class="info">
+            <p><strong>Copy these exact settings to your Supabase Dashboard:</strong></p>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 4px; margin: 10px 0;">
+                <strong>SMTP Host:</strong> <code>smtp.resend.com</code>
+                <button class="copy-btn" onclick="copyToClipboard('smtp.resend.com')">Copy</button><br><br>
+                
+                <strong>SMTP Port:</strong> <code>587</code>
+                <button class="copy-btn" onclick="copyToClipboard('587')">Copy</button><br><br>
+                
+                <strong>SMTP User:</strong> <code>resend</code>
+                <button class="copy-btn" onclick="copyToClipboard('resend')">Copy</button><br><br>
+                
+                <strong>SMTP Password:</strong> <code>[Your Resend API Key]</code><br>
+                <small>Get this from: <a href="https://resend.com/api-keys" target="_blank">resend.com/api-keys</a></small><br><br>
+                
+                <strong>Sender Email:</strong> <code>noreply@oticbusiness.com</code>
+                <button class="copy-btn" onclick="copyToClipboard('noreply@oticbusiness.com')">Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="config-section">
+        <h3>📋 Step-by-Step Instructions</h3>
+        <ol>
+            <li><strong>Get your Resend API Key:</strong>
+                <ul>
+                    <li>Go to <a href="https://resend.com/api-keys" target="_blank">resend.com/api-keys</a></li>
+                    <li>Copy your API key (starts with <code>re_</code>)</li>
+                </ul>
+            </li>
+            <li><strong>Configure Supabase:</strong>
+                <ul>
+                    <li>Go to <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a></li>
+                    <li>Select your project: <code>jvgiyscchxxekcbdicco</code></li>
+                    <li>Go to <strong>Authentication → Settings</strong></li>
+                    <li>Scroll to <strong>SMTP Settings</strong></li>
+                    <li>Enable <strong>"Enable custom SMTP"</strong></li>
+                    <li>Enter the settings above</li>
+                </ul>
+            </li>
+            <li><strong>Test the configuration:</strong>
+                <ul>
+                    <li>Click <strong>"Send test email"</strong> in Supabase</li>
+                    <li>Enter your email address</li>
+                    <li>Check your inbox</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="config-section">
+        <h3>🚀 Alternative Sender Emails</h3>
+        <div class="warning">
+            <p>You can use any of these sender emails (all from your verified domain):</p>
+            <ul>
+                <li><code>noreply@oticbusiness.com</code> <button class="copy-btn" onclick="copyToClipboard('noreply@oticbusiness.com')">Copy</button></li>
+                <li><code>support@oticbusiness.com</code> <button class="copy-btn" onclick="copyToClipboard('support@oticbusiness.com')">Copy</button></li>
+                <li><code>hello@oticbusiness.com</code> <button class="copy-btn" onclick="copyToClipboard('hello@oticbusiness.com')">Copy</button></li>
+                <li><code>admin@oticbusiness.com</code> <button class="copy-btn" onclick="copyToClipboard('admin@oticbusiness.com')">Copy</button></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="config-section">
+        <h3>🧪 Test After Configuration</h3>
+        <p>Once you've configured SMTP in Supabase, test it here:</p>
+        <a href="http://localhost:8082/quick-smtp-test.html" target="_blank">
+            <button style="background: #040458; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
+                Test SMTP Configuration
+            </button>
+        </a>
+    </div>
+
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                alert('Copied to clipboard: ' + text);
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        }
+    </script>
+</body>
+</html>

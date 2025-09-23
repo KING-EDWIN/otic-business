@@ -11,7 +11,7 @@ export class QuickBooksService {
   constructor() {
     this.clientId = import.meta.env.VITE_QB_CLIENT_ID || ''
     this.clientSecret = import.meta.env.VITE_QB_CLIENT_SECRET || ''
-    this.redirectUri = import.meta.env.VITE_QB_REDIRECT_URI || 'http://localhost:8080/quickbooks/callback'
+    this.redirectUri = import.meta.env.VITE_QB_REDIRECT_URI || `${window.location.origin}/quickbooks/callback`
     this.environment = (import.meta.env.VITE_QB_ENVIRONMENT as 'sandbox' | 'production') || 'sandbox'
     this.baseUrl = this.environment === 'sandbox' 
       ? 'https://sandbox-quickbooks.api.intuit.com'

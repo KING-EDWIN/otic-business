@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Debug - Profile Loading</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .error { color: #dc3545; }
+        .success { color: #28a745; }
+        .warning { color: #ffc107; }
+        .info { color: #17a2b8; }
+        button {
+            background: #040458;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #faa51a; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .status.loading { background: #fff3cd; border: 1px solid #ffeaa7; }
+        .status.success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Auth Debug - Profile Loading Issue</h1>
+    
+    <div class="container">
+        <h2>Test Profile Loading</h2>
+        <button onclick="testProfileLoading()">Test Profile Loading</button>
+        <button onclick="testAuthState()">Test Auth State</button>
+        <button onclick="clearSession()">Clear Session</button>
+        <div id="status" class="status loading" style="display: none;"></div>
+    </div>
+
+    <div class="container">
+        <h2>Debug Logs</h2>
+        <div id="logs" class="log"></div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2';
+
+        // Initialize Supabase client
+        const supabaseUrl = 'https://jvgiyscchxxekcbdicco.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8';
+        
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        let logs = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logs.push({ message: logEntry, type });
+            
+            const logsDiv = document.getElementById('logs');
+            const logElement = document.createElement('div');
+            logElement.className = type;
+            logElement.textContent = logEntry;
+            logsDiv.appendChild(logElement);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function updateStatus(message, type = 'loading') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        // Test profile loading
+        window.testProfileLoading = async () => {
+            try {
+                updateStatus('Testing profile loading...', 'loading');
+                log('Testing profile loading for user: 3488046f-56cf-4711-9045-7e6e158a1c91', 'info');
+
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .eq('id', '3488046f-56cf-4711-9045-7e6e158a1c91')
+                    .single();
+
+                if (error) {
+                    log(`Profile loading error: ${error.message}`, 'error');
+                    updateStatus(`Error: ${error.message}`, 'error');
+                } else {
+                    log(`Profile loaded successfully: ${JSON.stringify(data, null, 2)}`, 'success');
+                    updateStatus('Profile loaded successfully!', 'success');
+                }
+            } catch (error) {
+                log(`Profile loading exception: ${error.message}`, 'error');
+                updateStatus(`Exception: ${error.message}`, 'error');
+            }
+        };
+
+        // Test auth state
+        window.testAuthState = async () => {
+            try {
+                updateStatus('Testing auth state...', 'loading');
+                log('Testing auth state...', 'info');
+
+                const { data: { session }, error } = await supabase.auth.getSession();
+
+                if (error) {
+                    log(`Auth state error: ${error.message}`, 'error');
+                    updateStatus(`Error: ${error.message}`, 'error');
+                } else if (session) {
+                    log(`Session found: ${JSON.stringify(session, null, 2)}`, 'success');
+                    updateStatus('Session found!', 'success');
+                } else {
+                    log('No active session', 'warning');
+                    updateStatus('No active session', 'warning');
+                }
+            } catch (error) {
+                log(`Auth state exception: ${error.message}`, 'error');
+                updateStatus(`Exception: ${error.message}`, 'error');
+            }
+        };
+
+        // Clear session
+        window.clearSession = async () => {
+            try {
+                updateStatus('Clearing session...', 'loading');
+                log('Clearing session...', 'info');
+
+                const { error } = await supabase.auth.signOut();
+
+                if (error) {
+                    log(`Sign out error: ${error.message}`, 'error');
+                    updateStatus(`Error: ${error.message}`, 'error');
+                } else {
+                    log('Session cleared successfully', 'success');
+                    updateStatus('Session cleared!', 'success');
+                }
+            } catch (error) {
+                log(`Clear session exception: ${error.message}`, 'error');
+                updateStatus(`Exception: ${error.message}`, 'error');
+            }
+        };
+
+        // Initial log
+        log('Auth debug page loaded', 'success');
+        log('Ready to test profile loading and auth state', 'info');
+    </script>
+</body>
+</html>

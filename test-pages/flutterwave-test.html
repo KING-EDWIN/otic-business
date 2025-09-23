@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flutterwave Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Flutterwave Payment Test</h1>
+        <p>This page tests the Flutterwave integration with proper library loading.</p>
+        
+        <div>
+            <label>Phone Number: </label>
+            <input type="tel" id="phone" placeholder="+256 700 000 000" value="+256700000000">
+        </div>
+        
+        <button onclick="testPayment()">Test Payment (UGX 50,000)</button>
+        
+        <div id="status"></div>
+    </div>
+
+    <script>
+        // Load cryptico library first
+        const crypticoScript = document.createElement('script');
+        crypticoScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/cryptico/0.0.1/cryptico.min.js';
+        crypticoScript.onload = () => {
+            console.log('✅ Cryptico loaded');
+            
+            // Load Flutterwave SDK
+            const flutterwaveScript = document.createElement('script');
+            flutterwaveScript.src = 'https://checkout.flutterwave.com/v3.js';
+            flutterwaveScript.onload = () => {
+                console.log('✅ Flutterwave SDK loaded');
+                document.getElementById('status').innerHTML = '<div class="success">✅ Libraries loaded successfully!</div>';
+            };
+            flutterwaveScript.onerror = () => {
+                document.getElementById('status').innerHTML = '<div class="error">❌ Failed to load Flutterwave SDK</div>';
+            };
+            document.head.appendChild(flutterwaveScript);
+        };
+        crypticoScript.onerror = () => {
+            document.getElementById('status').innerHTML = '<div class="error">❌ Failed to load Cryptico</div>';
+        };
+        document.head.appendChild(crypticoScript);
+
+        function testPayment() {
+            const phone = document.getElementById('phone').value;
+            if (!phone) {
+                alert('Please enter a phone number');
+                return;
+            }
+
+            const publicKey = 'FLWPUBK_TEST-1234567890abcdef1234567890abcdef-X'; // Replace with your test key
+            
+            if (!window.FlutterwaveCheckout) {
+                alert('Flutterwave SDK not loaded yet. Please wait.');
+                return;
+            }
+
+            FlutterwaveCheckout({
+                public_key: publicKey,
+                tx_ref: `test_${Date.now()}`,
+                amount: 5000000, // UGX 50,000 in kobo
+                currency: 'UGX',
+                customer: {
+                    email: 'test@example.com',
+                    phone_number: phone,
+                    name: 'Test Customer'
+                },
+                customizations: {
+                    title: 'Test Payment',
+                    description: 'Testing Flutterwave Integration',
+                    logo: 'https://via.placeholder.com/100x100'
+                },
+                callback: function(response) {
+                    console.log('Payment response:', response);
+                    if (response.status === 'successful') {
+                        document.getElementById('status').innerHTML = '<div class="success">✅ Payment successful!</div>';
+                    } else {
+                        document.getElementById('status').innerHTML = '<div class="error">❌ Payment failed</div>';
+                    }
+                },
+                onclose: function() {
+                    document.getElementById('status').innerHTML = '<div class="error">❌ Payment cancelled</div>';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+

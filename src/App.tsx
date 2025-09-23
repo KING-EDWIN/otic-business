@@ -32,6 +32,11 @@ import ProfileTest from "./pages/ProfileTest";
 import AdminApp from "./AdminApp";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import ContactManagement from "./pages/ContactManagement";
+import BusinessManagement from "./pages/BusinessManagement";
+import Invoices from "./pages/Invoices";
+import EmailVerification from "./pages/EmailVerification";
+import PasswordReset from "./pages/PasswordReset";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import UserTypeSelection from "./pages/UserTypeSelection";
@@ -50,6 +55,7 @@ import BusinessSignIn from "./pages/BusinessSignIn";
 import IndividualSignIn from "./pages/IndividualSignIn";
 import NotFound from "./pages/NotFound";
 import OAuthCallback from "./components/OAuthCallback";
+import ResetPassword from "./pages/ResetPassword";
 // Branch Management Components
 import MultiBranchManagement from "./pages/MultiBranchManagement";
 import BranchAnalytics from "./pages/BranchAnalytics";
@@ -62,13 +68,11 @@ import BranchAIInsights from "./pages/BranchAIInsights";
 const queryClient = new QueryClient();
 
 // Protected Route Component with manual email verification gate
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+// Individual Protected Route
+const IndividualProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, profile } = useAuth();
 
-  console.log('ProtectedRoute: user:', user?.id, 'loading:', loading, 'profile:', profile);
-
   if (loading) {
-    console.log('ProtectedRoute: Still loading...');
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -76,44 +80,17 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // Not logged in → go to sign in
-  if (!user) {
-    console.log('ProtectedRoute: No user, redirecting to /login-type');
-    return <Navigate to="/login-type" />;
+  if (!user || !profile || profile.user_type !== 'individual') {
+    return <Navigate to="/individual-signin" />;
   }
 
-  // Logged in but not yet admin-verified → block with friendly screen
-  if (profile && profile.email_verified === false) {
-    console.log('ProtectedRoute: Email not verified, showing approval screen');
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-8 text-center space-y-4">
-          <img src="/Layer 2.png" alt="Otic Business Logo" className="h-12 w-12 mx-auto object-contain" />
-          <h2 className="text-2xl font-bold text-[#040458]">Pending Admin Approval</h2>
-          <p className="text-gray-600">
-            Your account was created successfully, but it hasn't been verified by an admin yet. 
-            Once approved, you'll be able to access the system.
-          </p>
-          <p className="text-sm text-gray-500">If you believe this is a mistake, please contact your administrator.</p>
-          <a
-            href="/login-type"
-            className="inline-flex items-center justify-center w-full rounded-lg bg-[#faa51a] text-white font-semibold py-2 hover:bg-[#040458] transition-colors"
-          >
-            Return to Sign In
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  console.log('ProtectedRoute: Access granted, rendering children');
   return <>{children}</>;
 };
 
-// Public Route Component (redirect to dashboard if already logged in)
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
+// Business Protected Route
+const BusinessProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading, profile } = useAuth();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -121,8 +98,17 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
       </div>
     );
   }
-  
-  return user ? <Navigate to="/dashboard" /> : <>{children}</>;
+
+  if (!user || !profile || profile.user_type !== 'business') {
+    return <Navigate to="/business-signin" />;
+  }
+
+  return <>{children}</>;
+};
+
+// Public Route Component - simplified for now
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
 };
 
 const App = () => {
@@ -154,45 +140,50 @@ const App = () => {
                 <Route path="/terms" element={<Terms />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/user-type" element={<UserTypeSelection />} />
-                <Route path="/business-signup" element={<BusinessSignup />} />
-                <Route path="/individual-signup" element={<IndividualSignup />} />
+                <Route path="/business-signup" element={<PublicRoute><BusinessSignup /></PublicRoute>} />
+                <Route path="/individual-signup" element={<PublicRoute><IndividualSignup /></PublicRoute>} />
                 <Route path="/trial-confirmation" element={<TrialConfirmation />} />
                 <Route path="/tier-selection" element={<TierSelection />} />
                 <Route path="/tier-guide" element={<TierGuide />} />
-                <Route path="/individual-dashboard" element={<ProtectedRoute><IndividualDashboard /></ProtectedRoute>} />
-                <Route path="/individual-settings" element={<ProtectedRoute><IndividualSettings /></ProtectedRoute>} />
+                <Route path="/individual-dashboard" element={<IndividualProtectedRoute><IndividualDashboard /></IndividualProtectedRoute>} />
+                <Route path="/individual-settings" element={<IndividualProtectedRoute><IndividualSettings /></IndividualProtectedRoute>} />
                 <Route path="/login-type" element={<LoginTypeSelection />} />
                 <Route path="/business-signin" element={<PublicRoute><BusinessSignIn /></PublicRoute>} />
                 <Route path="/individual-signin" element={<PublicRoute><IndividualSignIn /></PublicRoute>} />
-                <Route path="/business-signup" element={<PublicRoute><BusinessSignup /></PublicRoute>} />
-                <Route path="/individual-signup" element={<PublicRoute><IndividualSignup /></PublicRoute>} />
                 <Route path="/payments/success" element={<PaymentSuccess />} />
                 <Route path="/get-started" element={<GetStarted />} />
                 <Route path="/complete-profile" element={<CompleteProfile />} />
                 <Route path="/auth/callback" element={<OAuthCallback />} />
+                <Route path="/oauth-callback" element={<OAuthCallback />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/ai-insights" element={<AIInsightsPage />} />
-                <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
-                <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/my-extras" element={<ProtectedRoute><MyExtras /></ProtectedRoute>} />
-                <Route path="/simple-dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
-                <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
-                <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-                <Route path="/accounting" element={<ProtectedRoute><Accounting /></ProtectedRoute>} />
+                <Route path="/ai-chat" element={<BusinessProtectedRoute><AIChat /></BusinessProtectedRoute>} />
+                <Route path="/dashboard" element={<BusinessProtectedRoute><Dashboard /></BusinessProtectedRoute>} />
+                <Route path="/my-extras" element={<BusinessProtectedRoute><MyExtras /></BusinessProtectedRoute>} />
+                <Route path="/simple-dashboard" element={<BusinessProtectedRoute><Dashboard /></BusinessProtectedRoute>} />
+                <Route path="/pos" element={<BusinessProtectedRoute><POS /></BusinessProtectedRoute>} />
+                <Route path="/inventory" element={<BusinessProtectedRoute><Inventory /></BusinessProtectedRoute>} />
+                <Route path="/analytics" element={<BusinessProtectedRoute><Analytics /></BusinessProtectedRoute>} />
+                <Route path="/accounting" element={<BusinessProtectedRoute><Accounting /></BusinessProtectedRoute>} />
                 <Route path="/quickbooks/callback" element={<QuickBooksCallback />} />
                 <Route path="/auth/google-callback" element={<GoogleCallback />} />
-                <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-                <Route path="/customers" element={<ProtectedRoute><Customers /></ProtectedRoute>} />
-                <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                <Route path="/payments" element={<BusinessProtectedRoute><Payments /></BusinessProtectedRoute>} />
+                <Route path="/customers" element={<BusinessProtectedRoute><Customers /></BusinessProtectedRoute>} />
+                <Route path="/reports" element={<BusinessProtectedRoute><Reports /></BusinessProtectedRoute>} />
+                <Route path="/settings" element={<BusinessProtectedRoute><Settings /></BusinessProtectedRoute>} />
+                <Route path="/business-management" element={<BusinessProtectedRoute><BusinessManagement /></BusinessProtectedRoute>} />
+                <Route path="/invoices" element={<BusinessProtectedRoute><Invoices /></BusinessProtectedRoute>} />
+                {/* Email Verification and Password Reset Routes */}
+                <Route path="/verify-email" element={<EmailVerification />} />
+                <Route path="/reset-password" element={<PasswordReset />} />
                 {/* Branch Management Routes */}
-                <Route path="/multi-branch-management" element={<ProtectedRoute><MultiBranchManagement /></ProtectedRoute>} />
-                <Route path="/branch/:branchId/analytics" element={<ProtectedRoute><BranchAnalytics /></ProtectedRoute>} />
-                <Route path="/branch/:branchId/accounting" element={<ProtectedRoute><BranchAccounting /></ProtectedRoute>} />
-                <Route path="/branch/:branchId/sales" element={<ProtectedRoute><BranchSales /></ProtectedRoute>} />
-                <Route path="/branch/:branchId/staff" element={<ProtectedRoute><BranchStaff /></ProtectedRoute>} />
-                <Route path="/branch/:branchId/inventory" element={<ProtectedRoute><BranchInventory /></ProtectedRoute>} />
-                <Route path="/branch/:branchId/ai-insights" element={<ProtectedRoute><BranchAIInsights /></ProtectedRoute>} />
+                <Route path="/multi-branch-management" element={<BusinessProtectedRoute><MultiBranchManagement /></BusinessProtectedRoute>} />
+                <Route path="/branch/:branchId/analytics" element={<BusinessProtectedRoute><BranchAnalytics /></BusinessProtectedRoute>} />
+                <Route path="/branch/:branchId/accounting" element={<BusinessProtectedRoute><BranchAccounting /></BusinessProtectedRoute>} />
+                <Route path="/branch/:branchId/sales" element={<BusinessProtectedRoute><BranchSales /></BusinessProtectedRoute>} />
+                <Route path="/branch/:branchId/staff" element={<BusinessProtectedRoute><BranchStaff /></BusinessProtectedRoute>} />
+                <Route path="/branch/:branchId/inventory" element={<BusinessProtectedRoute><BranchInventory /></BusinessProtectedRoute>} />
+                <Route path="/branch/:branchId/ai-insights" element={<BusinessProtectedRoute><BranchAIInsights /></BusinessProtectedRoute>} />
                 <Route path="/test-auth" element={<TestAuth />} />
                 <Route path="/auth-test" element={<AuthTestPage />} />
                 <Route path="/simple-test" element={<SimpleTest />} />

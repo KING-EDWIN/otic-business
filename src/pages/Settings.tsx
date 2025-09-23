@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
   Settings as SettingsIcon, 
   User, 
@@ -23,14 +24,27 @@ import {
   Smartphone,
   Mail,
   MapPin,
-  Phone
+  Phone,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+  Eye,
+  EyeOff,
+  CheckCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
 
 const Settings = () => {
-  const { user, profile, updateProfile } = useAuth()
+  const { user, profile, updateProfile, signOut } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [changingPassword, setChangingPassword] = useState(false)
   const [formData, setFormData] = useState({
     business_name: '',
     phone: '',
@@ -73,6 +87,69 @@ const Settings = () => {
       toast.error('Failed to update profile')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    if (newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters long')
+      return
+    }
+
+    setChangingPassword(true)
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+
+      if (error) throw error
+
+      toast.success('Password updated successfully!')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (error: any) {
+      console.error('Error updating password:', error)
+      toast.error(error.message || 'Failed to update password')
+    } finally {
+      setChangingPassword(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== 'DELETE') {
+      toast.error('Please type DELETE to confirm account deletion')
+      return
+    }
+
+    setDeleting(true)
+    try {
+      // First, delete all related data
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('id', user?.id)
+
+      if (profileError) throw profileError
+
+      // Then delete the auth user
+      const { error: authError } = await supabase.auth.admin.deleteUser(user?.id || '')
+
+      if (authError) throw authError
+
+      toast.success('Account deleted successfully')
+      navigate('/')
+    } catch (error: any) {
+      console.error('Error deleting account:', error)
+      toast.error(error.message || 'Failed to delete account')
+    } finally {
+      setDeleting(false)
+      setShowDeleteModal(false)
+      setDeleteConfirmation('')
     }
   }
 
@@ -155,6 +232,12 @@ const Settings = () => {
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#040458] data-[state=active]:to-[#1e40af] data-[state=active]:text-white text-[#040458] font-semibold rounded-lg transition-all duration-200"
               >
                 Billing
+              </TabsTrigger>
+              <TabsTrigger 
+                value="account"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#040458] data-[state=active]:to-[#1e40af] data-[state=active]:text-white text-[#040458] font-semibold rounded-lg transition-all duration-200"
+              >
+                Account
               </TabsTrigger>
             </TabsList>
           </div>
@@ -431,10 +514,63 @@ const Settings = () => {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t">
-                  <Button variant="outline" className="w-full">
-                    Change Password
-                  </Button>
+                <div className="pt-4 border-t space-y-4">
+                  <div className="space-y-4">
+                    <h4 className="font-semibold">Change Password</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="newPassword">New Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="newPassword"
+                          type={showPassword ? "text" : "password"}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Enter new password"
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
+                      <Input
+                        id="confirmNewPassword"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                      />
+                    </div>
+                    <Button 
+                      onClick={handleChangePassword}
+                      disabled={changingPassword || !newPassword || !confirmPassword}
+                      className="w-full bg-[#040458] hover:bg-[#040458]/90 text-white"
+                    >
+                      {changingPassword ? (
+                        <div className="flex items-center space-x-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Updating...</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <CheckCircle className="h-4 w-4" />
+                          <span>Update Password</span>
+                        </div>
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -481,8 +617,123 @@ const Settings = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          <TabsContent value="account" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Trash2 className="h-5 w-5 text-red-500" />
+                  <span>Account Management</span>
+                </CardTitle>
+                <CardDescription>
+                  Manage your account data and deletion
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Warning:</strong> Account deletion is permanent and cannot be undone. 
+                    All your business data, transactions, and settings will be permanently deleted.
+                  </AlertDescription>
+                </Alert>
+
+                <div className="space-y-4">
+                  <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+                    <h4 className="font-semibold text-red-900 mb-2">Delete Account</h4>
+                    <p className="text-sm text-red-700 mb-4">
+                      This action will permanently delete your account and all associated data. 
+                      This cannot be undone.
+                    </p>
+                    <Button
+                      variant="destructive"
+                      onClick={() => setShowDeleteModal(true)}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Account
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-red-600">
+                <AlertTriangle className="h-5 w-5" />
+                <span>Delete Account</span>
+              </CardTitle>
+              <CardDescription>
+                This action cannot be undone. All your data will be permanently deleted.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert variant="destructive">
+                <AlertDescription>
+                  <strong>Warning:</strong> This will delete:
+                  <ul className="mt-2 list-disc list-inside text-sm">
+                    <li>Your business profile and settings</li>
+                    <li>All transaction history</li>
+                    <li>Customer data</li>
+                    <li>Inventory records</li>
+                    <li>All other business data</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2">
+                <Label htmlFor="deleteConfirmation">
+                  Type <strong>DELETE</strong> to confirm:
+                </Label>
+                <Input
+                  id="deleteConfirmation"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder="Type DELETE here"
+                />
+              </div>
+
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setDeleteConfirmation('')
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteAccount}
+                  disabled={deleting || deleteConfirmation !== 'DELETE'}
+                  className="flex-1"
+                >
+                  {deleting ? (
+                    <div className="flex items-center space-x-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Deleting...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Trash2 className="h-4 w-4" />
+                      <span>Delete Account</span>
+                    </div>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

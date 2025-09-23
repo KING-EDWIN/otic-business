@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick SMTP Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        button { background: #040458; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #030344; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; }
+        .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; }
+        .info { background: #d1ecf1; color: #0c5460; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Quick SMTP Test</h1>
+    
+    <div class="test-section">
+        <h3>Test Email Signup (This will test SMTP)</h3>
+        <input type="email" id="testEmail" placeholder="Enter your email" value="dylankats12@gmail.com">
+        <button onclick="testSignup()">Test Signup Email</button>
+        <div id="signupResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Password Reset (This will test SMTP)</h3>
+        <input type="email" id="resetEmail" placeholder="Enter your email" value="dylankats12@gmail.com">
+        <button onclick="testPasswordReset()">Test Password Reset</button>
+        <div id="resetResult"></div>
+    </div>
+
+    <div class="test-section info">
+        <h3>📋 What to Check in Supabase Dashboard:</h3>
+        <ol>
+            <li>Go to <a href="https://supabase.com/dashboard" target="_blank">Supabase Dashboard</a></li>
+            <li>Select project: <code>jvgiyscchxxekcbdicco</code></li>
+            <li>Go to <strong>Authentication → Settings</strong></li>
+            <li>Check <strong>SMTP Settings</strong> section</li>
+            <li>Either configure Resend properly OR disable custom SMTP</li>
+        </ol>
+        
+        <h4>If SMTP is enabled, use these Resend settings:</h4>
+        <ul>
+            <li><strong>Host:</strong> smtp.resend.com</li>
+            <li><strong>Port:</strong> 587</li>
+            <li><strong>User:</strong> resend</li>
+            <li><strong>Password:</strong> Your Resend API key</li>
+            <li><strong>Sender:</strong> Your verified domain email</li>
+        </ul>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://jvgiyscchxxekcbdicco.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8';
+        
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        async function testSignup() {
+            const email = document.getElementById('testEmail').value;
+            const resultDiv = document.getElementById('signupResult');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<div class="error">Please enter an email address</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info">🔄 Testing signup email...</div>';
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: 'testpassword123',
+                    options: {
+                        emailRedirectTo: 'http://localhost:8082/auth/callback'
+                    }
+                });
+
+                if (error) {
+                    resultDiv.innerHTML = `<div class="error">❌ SMTP Error: ${error.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="success">✅ Signup email sent! Check your inbox at ${email}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testPasswordReset() {
+            const email = document.getElementById('resetEmail').value;
+            const resultDiv = document.getElementById('resetResult');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<div class="error">Please enter an email address</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="info">🔄 Testing password reset email...</div>';
+
+            try {
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: 'http://localhost:8082/reset-password'
+                });
+
+                if (error) {
+                    resultDiv.innerHTML = `<div class="error">❌ SMTP Error: ${error.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="success">✅ Password reset email sent! Check your inbox at ${email}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+
+    <!-- Load Supabase client -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</body>
+</html>

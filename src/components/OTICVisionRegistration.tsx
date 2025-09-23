@@ -22,7 +22,7 @@ import { toast } from 'sonner'
 import { visionApiManager } from '@/services/visionApiManager'
 import { pvfsService, VFTCategory } from '@/services/pvfsService'
 import { DetectedObject } from '@/services/huggingFaceVisionService'
-import { useAuth } from '@/contexts/AuthContextOptimized'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface OTICVisionRegistrationProps {
   onProductRegistered?: () => void

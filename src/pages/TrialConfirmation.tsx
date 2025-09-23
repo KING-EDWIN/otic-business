@@ -39,7 +39,7 @@ const TrialConfirmation = () => {
   }, []);
 
   const trialFeatures = [
-    'Complete POS system with barcode scanning',
+    'Use camera to register stock',
     'Full inventory management',
     'Sales reporting and analytics',
     'Multi-user access (up to 5 users)',

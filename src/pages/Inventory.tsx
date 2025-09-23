@@ -46,6 +46,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { 
   Package, 
   Plus, 
@@ -70,7 +71,8 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
-  Camera
+  Camera,
+  Menu
 } from 'lucide-react'
 import { toast } from 'sonner'
 import BusinessLoginStatus from '@/components/BusinessLoginStatus'
@@ -683,15 +685,15 @@ const Inventory = () => {
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2 lg:gap-3">
+            {/* Desktop buttons */}
+            <div className="hidden md:flex items-center gap-2 lg:gap-3">
               <Button
                 onClick={() => navigate('/commodity-registration')}
                 className="bg-[#040458] hover:bg-[#040458]/90 text-white text-xs lg:text-sm"
                 size="sm"
               >
                 <Barcode className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
-                <span className="hidden sm:inline">Register Commodity</span>
-                <span className="sm:hidden">Register</span>
+                Register Commodity
               </Button>
               <Button
                 onClick={() => setIsDialogOpen(true)}
@@ -699,21 +701,44 @@ const Inventory = () => {
                 size="sm"
               >
                 <Plus className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
-                <span className="hidden sm:inline">Quick Add</span>
-                <span className="sm:hidden">Add</span>
+                Quick Add
               </Button>
-              
               <Button
                 onClick={() => setShowOTICVisionRegistration(true)}
                 className="bg-[#040458] hover:bg-[#040458]/90 text-white text-xs lg:text-sm"
                 size="sm"
               >
                 <Camera className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
-                <span className="hidden sm:inline">Use Camera</span>
-                <span className="sm:hidden">Camera</span>
+                Use Camera
               </Button>
-              <BusinessLoginStatus />
             </div>
+
+            {/* Mobile dropdown */}
+            <div className="md:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-xs">
+                    <Menu className="h-4 w-4 mr-1" />
+                    Actions
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate('/commodity-registration')}>
+                    <Barcode className="h-4 w-4 mr-2" />
+                    Register Commodity
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setIsDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Quick Add
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowOTICVisionRegistration(true)}>
+                    <Camera className="h-4 w-4 mr-2" />
+                    Use Camera
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            <BusinessLoginStatus />
           </div>
         </div>
       </header>

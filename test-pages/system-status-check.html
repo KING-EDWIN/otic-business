@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Status Check</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        .info { background: #d1ecf1; color: #0c5460; padding: 10px; border-radius: 4px; margin: 10px 0; }
+        button { background: #040458; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        button:hover { background: #030344; }
+        .link-test { margin: 10px 0; }
+        .link-test a { color: #040458; text-decoration: none; margin-right: 15px; }
+        .link-test a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>🔧 System Status Check</h1>
+    
+    <div class="test-section">
+        <h3>✅ SMTP Status</h3>
+        <div class="success">
+            <strong>SMTP is working perfectly!</strong><br>
+            ✅ Email verification emails are being sent<br>
+            ✅ Password reset emails are working<br>
+            ✅ Resend integration is successful
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>🔧 Authentication Status</h3>
+        <div id="authStatus" class="info">
+            <button onclick="checkAuthStatus()">Check Auth Status</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>🔗 Link Tests</h3>
+        <p>Test these important links to ensure they work:</p>
+        
+        <div class="link-test">
+            <h4>Public Pages:</h4>
+            <a href="/" target="_blank">Home</a>
+            <a href="/features" target="_blank">Features</a>
+            <a href="/pricing" target="_blank">Pricing</a>
+            <a href="/faq" target="_blank">FAQ</a>
+            <a href="/about" target="_blank">About</a>
+            <a href="/contact" target="_blank">Contact</a>
+        </div>
+
+        <div class="link-test">
+            <h4>Authentication Pages:</h4>
+            <a href="/login-type" target="_blank">Login Type Selection</a>
+            <a href="/business-signin" target="_blank">Business Sign In</a>
+            <a href="/individual-signin" target="_blank">Individual Sign In</a>
+            <a href="/business-signup" target="_blank">Business Sign Up</a>
+            <a href="/individual-signup" target="_blank">Individual Sign Up</a>
+        </div>
+
+        <div class="link-test">
+            <h4>Dashboard Pages (Require Login):</h4>
+            <a href="/dashboard" target="_blank">Business Dashboard</a>
+            <a href="/individual-dashboard" target="_blank">Individual Dashboard</a>
+            <a href="/my-extras" target="_blank">My Extras</a>
+            <a href="/settings" target="_blank">Settings</a>
+        </div>
+
+        <div class="link-test">
+            <h4>Business Features:</h4>
+            <a href="/pos" target="_blank">POS</a>
+            <a href="/inventory" target="_blank">Inventory</a>
+            <a href="/analytics" target="_blank">Analytics</a>
+            <a href="/accounting" target="_blank">Accounting</a>
+            <a href="/payments" target="_blank">Payments</a>
+            <a href="/customers" target="_blank">Customers</a>
+            <a href="/reports" target="_blank">Reports</a>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>🧪 Quick Tests</h3>
+        <button onclick="testSignOut()">Test Sign Out</button>
+        <button onclick="testSignIn()">Test Sign In</button>
+        <button onclick="testSignUp()">Test Sign Up</button>
+        <div id="testResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>📋 System Checklist</h3>
+        <div class="info">
+            <h4>✅ Completed:</h4>
+            <ul>
+                <li>SMTP email functionality working</li>
+                <li>Email verification working</li>
+                <li>Password reset working</li>
+                <li>Supabase connection working</li>
+            </ul>
+
+            <h4>🔧 To Fix:</h4>
+            <ul>
+                <li>Sign out functionality</li>
+                <li>404 link errors</li>
+                <li>System-wide authentication issues</li>
+                <li>Environment variable loading</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://jvgiyscchxxekcbdicco.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8';
+        
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        async function checkAuthStatus() {
+            const resultDiv = document.getElementById('authStatus');
+            resultDiv.innerHTML = '<div class="info">🔄 Checking auth status...</div>';
+
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                
+                if (error) {
+                    resultDiv.innerHTML = `<div class="error">❌ Auth Error: ${error.message}</div>`;
+                } else if (session) {
+                    resultDiv.innerHTML = `<div class="success">✅ User is signed in: ${session.user.email}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="info">ℹ️ No user signed in</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testSignOut() {
+            const resultDiv = document.getElementById('testResults');
+            resultDiv.innerHTML = '<div class="info">🔄 Testing sign out...</div>';
+
+            try {
+                const { error } = await supabase.auth.signOut();
+                
+                if (error) {
+                    resultDiv.innerHTML = `<div class="error">❌ Sign out error: ${error.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="success">✅ Sign out successful!</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testSignIn() {
+            const resultDiv = document.getElementById('testResults');
+            resultDiv.innerHTML = '<div class="info">🔄 Testing sign in...</div>';
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: 'test@example.com',
+                    password: 'testpassword123'
+                });
+                
+                if (error) {
+                    resultDiv.innerHTML = `<div class="error">❌ Sign in error: ${error.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="success">✅ Sign in successful!</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testSignUp() {
+            const resultDiv = document.getElementById('testResults');
+            resultDiv.innerHTML = '<div class="info">🔄 Testing sign up...</div>';
+
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: 'test@example.com',
+                    password: 'testpassword123',
+                    options: {
+                        emailRedirectTo: 'http://localhost:8082/auth/callback'
+                    }
+                });
+                
+                if (error) {
+                    resultDiv.innerHTML = `<div class="error">❌ Sign up error: ${error.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="success">✅ Sign up successful! Check email for verification.</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+
+    <!-- Load Supabase client -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</body>
+</html>

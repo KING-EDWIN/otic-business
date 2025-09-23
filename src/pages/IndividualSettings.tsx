@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabaseClient'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { 
   ArrowLeft,
   User,
@@ -20,16 +22,29 @@ import {
   Globe,
   Save,
   Edit,
-  Check
+  Check,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+  Eye,
+  EyeOff,
+  CheckCircle
 } from 'lucide-react'
 import { toast } from 'sonner'
 
 const IndividualSettings = () => {
-  const { user, profile, signOut } = useAuth()
+  const { user, profile, signOut, updateProfile } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirmation, setDeleteConfirmation] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [changingPassword, setChangingPassword] = useState(false)
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -65,19 +80,19 @@ const IndividualSettings = () => {
           fullName: profile?.full_name || '',
           email: user.email || '',
           phone: profile?.phone || '',
-          location: profile?.location || '',
-          profession: profile?.profession || '',
-          bio: profile?.bio || '',
-          availability: profile?.availability || 'available',
+          location: (profile as any)?.location || '',
+          profession: (profile as any)?.profession || '',
+          bio: (profile as any)?.bio || '',
+          availability: (profile as any)?.availability || 'available',
           notifications: {
-            email: profile?.email_notifications ?? true,
-            push: profile?.push_notifications ?? true,
-            sms: profile?.sms_notifications ?? false
+            email: (profile as any)?.email_notifications ?? true,
+            push: (profile as any)?.push_notifications ?? true,
+            sms: (profile as any)?.sms_notifications ?? false
           },
           privacy: {
-            profileVisible: profile?.profile_visible ?? true,
-            showEmail: profile?.show_email ?? false,
-            showPhone: profile?.show_phone ?? false
+            profileVisible: (profile as any)?.profile_visible ?? true,
+            showEmail: (profile as any)?.show_email ?? false,
+            showPhone: (profile as any)?.show_phone ?? false
           }
         })
       } catch (error) {
@@ -102,7 +117,7 @@ const IndividualSettings = () => {
     setFormData(prev => ({
       ...prev,
       [parent]: {
-        ...prev[parent as keyof typeof prev],
+        ...(prev[parent as keyof typeof prev] as any),
         [field]: value
       }
     }))
@@ -111,19 +126,87 @@ const IndividualSettings = () => {
   const handleSave = async () => {
     try {
       setSaving(true)
-      // Simulate save delay
-      await new Promise(resolve => setTimeout(resolve, 1500))
       
-      // Here you would save to database
-      console.log('Saving profile:', formData)
+      // Update profile using the auth context
+      const { error } = await updateProfile({
+        full_name: formData.fullName,
+        phone: formData.phone,
+        address: formData.location,
+        // Add other fields as needed
+      })
+      
+      if (error) throw error
       
       toast.success('Profile updated successfully!')
       setEditing(false)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving profile:', error)
-      toast.error('Failed to save profile')
+      toast.error(error.message || 'Failed to save profile')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    if (newPassword.length < 8) {
+      toast.error('Password must be at least 8 characters long')
+      return
+    }
+
+    setChangingPassword(true)
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+
+      if (error) throw error
+
+      toast.success('Password updated successfully!')
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (error: any) {
+      console.error('Error updating password:', error)
+      toast.error(error.message || 'Failed to update password')
+    } finally {
+      setChangingPassword(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== 'DELETE') {
+      toast.error('Please type DELETE to confirm account deletion')
+      return
+    }
+
+    setDeleting(true)
+    try {
+      // First, delete all related data
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('id', user?.id)
+
+      if (profileError) throw profileError
+
+      // Then delete the auth user
+      const { error: authError } = await supabase.auth.admin.deleteUser(user?.id || '')
+
+      if (authError) throw authError
+
+      toast.success('Account deleted successfully')
+      navigate('/')
+    } catch (error: any) {
+      console.error('Error deleting account:', error)
+      toast.error(error.message || 'Failed to delete account')
+    } finally {
+      setDeleting(false)
+      setShowDeleteModal(false)
+      setDeleteConfirmation('')
     }
   }
 
@@ -444,6 +527,77 @@ const IndividualSettings = () => {
             </CardContent>
           </Card>
 
+          {/* Security Settings */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Shield className="h-5 w-5 text-[#faa51a]" />
+                <span>Security Settings</span>
+              </CardTitle>
+              <CardDescription>
+                Manage your account security and password
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <h4 className="font-semibold">Change Password</h4>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword">New Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="newPassword"
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
+                  <Input
+                    id="confirmNewPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+                <Button 
+                  onClick={handleChangePassword}
+                  disabled={changingPassword || !newPassword || !confirmPassword}
+                  className="w-full bg-[#faa51a] hover:bg-[#faa51a]/90 text-white"
+                >
+                  {changingPassword ? (
+                    <div className="flex items-center space-x-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Updating...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Update Password</span>
+                    </div>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Account Actions */}
           <Card>
             <CardHeader>
@@ -467,6 +621,30 @@ const IndividualSettings = () => {
                   className="border-red-300 text-red-700 hover:bg-red-100"
                 >
                   Sign Out
+                </Button>
+              </div>
+
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Warning:</strong> Account deletion is permanent and cannot be undone. 
+                  All your professional data and settings will be permanently deleted.
+                </AlertDescription>
+              </Alert>
+
+              <div className="p-4 border border-red-200 rounded-lg bg-red-50">
+                <h4 className="font-semibold text-red-900 mb-2">Delete Account</h4>
+                <p className="text-sm text-red-700 mb-4">
+                  This action will permanently delete your account and all associated data. 
+                  This cannot be undone.
+                </p>
+                <Button
+                  variant="destructive"
+                  onClick={() => setShowDeleteModal(true)}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete Account
                 </Button>
               </div>
             </CardContent>
@@ -503,6 +681,79 @@ const IndividualSettings = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Account Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-red-600">
+                <AlertTriangle className="h-5 w-5" />
+                <span>Delete Account</span>
+              </CardTitle>
+              <CardDescription>
+                This action cannot be undone. All your data will be permanently deleted.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Alert variant="destructive">
+                <AlertDescription>
+                  <strong>Warning:</strong> This will delete:
+                  <ul className="mt-2 list-disc list-inside text-sm">
+                    <li>Your professional profile and settings</li>
+                    <li>All business connections</li>
+                    <li>Professional networking data</li>
+                    <li>All other account data</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+
+              <div className="space-y-2">
+                <Label htmlFor="deleteConfirmation">
+                  Type <strong>DELETE</strong> to confirm:
+                </Label>
+                <Input
+                  id="deleteConfirmation"
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder="Type DELETE here"
+                />
+              </div>
+
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setDeleteConfirmation('')
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteAccount}
+                  disabled={deleting || deleteConfirmation !== 'DELETE'}
+                  className="flex-1"
+                >
+                  {deleting ? (
+                    <div className="flex items-center space-x-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Deleting...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2">
+                      <Trash2 className="h-4 w-4" />
+                      <span>Delete Account</span>
+                    </div>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

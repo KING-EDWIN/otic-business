@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Service Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #040458, #faa51a);
+            color: white;
+        }
+        .test-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        button {
+            background: #faa51a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #e0941a; }
+        pre { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🌍 Environment Service Test</h1>
+    
+    <div class="test-container">
+        <h2>Current Environment Info</h2>
+        <div id="env-info">
+            <p>Loading environment information...</p>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>URL Generation Tests</h2>
+        <button onclick="testUrls()">Test URL Generation</button>
+        <div id="url-tests"></div>
+    </div>
+
+    <div class="test-container">
+        <h2>Email Redirect Tests</h2>
+        <button onclick="testEmailRedirects()">Test Email Redirects</button>
+        <div id="email-tests"></div>
+    </div>
+
+    <script type="module">
+        // Simulate the environment service logic
+        class TestEnvironmentService {
+            constructor() {
+                this.config = this.initializeConfig();
+            }
+
+            initializeConfig() {
+                const isProduction = this.isProductionEnvironment();
+                const isDevelopment = !isProduction;
+                const baseUrl = isProduction ? 'https://oticbusiness.com' : window.location.origin;
+
+                return {
+                    baseUrl,
+                    isProduction,
+                    isDevelopment,
+                    hostname: window.location.hostname,
+                    origin: window.location.origin
+                };
+            }
+
+            isProductionEnvironment() {
+                const hostname = window.location.hostname;
+                const productionDomains = [
+                    'oticbusiness.com',
+                    'www.oticbusiness.com',
+                    'otic-business.vercel.app',
+                    'otic-business.netlify.app'
+                ];
+
+                if (productionDomains.includes(hostname)) {
+                    return true;
+                }
+
+                if (!hostname.includes('localhost') && !hostname.includes('127.0.0.1')) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            getBaseUrl() {
+                return this.config.baseUrl;
+            }
+
+            getUrl(path = '') {
+                const baseUrl = this.getBaseUrl();
+                const cleanPath = path.startsWith('/') ? path : `/${path}`;
+                return `${baseUrl}${cleanPath}`;
+            }
+
+            getAuthCallbackUrl(userType) {
+                const baseUrl = this.getBaseUrl();
+                const userTypeParam = userType ? `?user_type=${userType}` : '';
+                return `${baseUrl}/auth/callback${userTypeParam}`;
+            }
+
+            getPasswordResetUrl() {
+                return this.getUrl('/reset-password');
+            }
+
+            logEnvironmentInfo() {
+                console.log('🌍 Environment Configuration:');
+                console.log(`   Base URL: ${this.config.baseUrl}`);
+                console.log(`   Production: ${this.config.isProduction}`);
+                console.log(`   Development: ${this.config.isDevelopment}`);
+                console.log(`   Hostname: ${this.config.hostname}`);
+                console.log(`   Origin: ${this.config.origin}`);
+            }
+        }
+
+        // Initialize the service
+        const envService = new TestEnvironmentService();
+        
+        // Display environment info
+        function displayEnvironmentInfo() {
+            const envInfo = document.getElementById('env-info');
+            envInfo.innerHTML = `
+                <p><strong>Base URL:</strong> <span class="info">${envService.config.baseUrl}</span></p>
+                <p><strong>Environment:</strong> <span class="${envService.config.isProduction ? 'success' : 'info'}">${envService.config.isProduction ? 'Production' : 'Development'}</span></p>
+                <p><strong>Hostname:</strong> <span class="info">${envService.config.hostname}</span></p>
+                <p><strong>Origin:</strong> <span class="info">${envService.config.origin}</span></p>
+                <p><strong>Status:</strong> <span class="success">✅ Environment Service Working</span></p>
+            `;
+        }
+
+        // Test URL generation
+        window.testUrls = function() {
+            const urlTests = document.getElementById('url-tests');
+            const tests = [
+                { name: 'Base URL', url: envService.getBaseUrl() },
+                { name: 'Dashboard', url: envService.getUrl('/dashboard') },
+                { name: 'Individual Dashboard', url: envService.getUrl('/individual-dashboard') },
+                { name: 'Settings', url: envService.getUrl('/settings') },
+                { name: 'Reset Password', url: envService.getPasswordResetUrl() }
+            ];
+
+            urlTests.innerHTML = tests.map(test => `
+                <div style="margin: 10px 0;">
+                    <strong>${test.name}:</strong><br>
+                    <code style="background: rgba(0,0,0,0.3); padding: 5px; border-radius: 3px; display: block; margin-top: 5px;">${test.url}</code>
+                </div>
+            `).join('');
+        };
+
+        // Test email redirects
+        window.testEmailRedirects = function() {
+            const emailTests = document.getElementById('email-tests');
+            const tests = [
+                { name: 'Business Auth Callback', url: envService.getAuthCallbackUrl('business') },
+                { name: 'Individual Auth Callback', url: envService.getAuthCallbackUrl('individual') },
+                { name: 'Generic Auth Callback', url: envService.getAuthCallbackUrl() },
+                { name: 'Password Reset', url: envService.getPasswordResetUrl() }
+            ];
+
+            emailTests.innerHTML = tests.map(test => `
+                <div style="margin: 10px 0;">
+                    <strong>${test.name}:</strong><br>
+                    <code style="background: rgba(0,0,0,0.3); padding: 5px; border-radius: 3px; display: block; margin-top: 5px;">${test.url}</code>
+                </div>
+            `).join('');
+        };
+
+        // Initialize
+        displayEnvironmentInfo();
+        envService.logEnvironmentInfo();
+
+        // Auto-run tests
+        setTimeout(() => {
+            testUrls();
+            testEmailRedirects();
+        }, 500);
+    </script>
+</body>
+</html>

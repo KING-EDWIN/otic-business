@@ -177,29 +177,29 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
               !dateRange.from ? 'text-muted-foreground' : ''
             }`}
           >
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span className="truncate">{formatDateRange()}</span>
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <Calendar className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate text-sm">{formatDateRange()}</span>
             </div>
-            <ChevronDown className="h-4 w-4 opacity-50" />
+            <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
           </Button>
         </PopoverTrigger>
         
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0 max-w-sm" align="start">
           <Card className="border-0 shadow-lg">
-            <CardContent className="p-4">
-              <div className="space-y-4">
+            <CardContent className="p-3 max-h-96 overflow-y-auto">
+              <div className="space-y-3">
                 {/* Preset buttons */}
                 {showPresets && (
                   <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-900">Quick Select</h4>
-                    <div className="grid grid-cols-2 gap-2">
+                    <h4 className="text-xs font-medium text-gray-900">Quick Select</h4>
+                    <div className="grid grid-cols-2 gap-1">
                       {presets.map((preset, index) => (
                         <Button
                           key={index}
                           variant="outline"
                           size="sm"
-                          className="text-xs"
+                          className="text-xs h-7 px-2"
                           onClick={() => handlePresetSelect(preset)}
                         >
                           {preset.label}
@@ -211,38 +211,41 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
                 {/* Calendar */}
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-gray-900">Custom Range</h4>
-                  <CalendarComponent
-                    mode="range"
-                    selected={tempRange}
-                    onSelect={handleDateSelect}
-                    numberOfMonths={2}
-                    disabled={(date) => {
-                      if (minDate && date < minDate) return true
-                      if (date > maxDate) return true
-                      return false
-                    }}
-                    className="rounded-md border"
-                  />
+                  <h4 className="text-xs font-medium text-gray-900">Custom Range</h4>
+                  <div className="scale-75 origin-top-left">
+                    <CalendarComponent
+                      mode="range"
+                      selected={tempRange}
+                      onSelect={handleDateSelect}
+                      numberOfMonths={1}
+                      disabled={(date) => {
+                        if (minDate && date < minDate) return true
+                        if (date > maxDate) return true
+                        return false
+                      }}
+                      className="rounded-md border"
+                    />
+                  </div>
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex items-center justify-between pt-4 border-t">
+                <div className="flex items-center justify-between pt-2 border-t">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleClear}
-                    className="text-gray-500 hover:text-gray-700"
+                    className="text-gray-500 hover:text-gray-700 h-7 px-2 text-xs"
                   >
-                    <X className="h-4 w-4 mr-1" />
+                    <X className="h-3 w-3 mr-1" />
                     Clear
                   </Button>
                   
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setIsOpen(false)}
+                      className="h-7 px-2 text-xs"
                     >
                       Cancel
                     </Button>
@@ -250,6 +253,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                       size="sm"
                       onClick={handleApply}
                       disabled={!isRangeComplete}
+                      className="h-7 px-2 text-xs"
                     >
                       Apply
                     </Button>
@@ -260,8 +264,8 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                 {isRangeComplete && (
                   <div className="pt-2 border-t">
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {format(tempRange.from!, 'MMM dd, yyyy')} - {format(tempRange.to!, 'MMM dd, yyyy')}
+                      <Badge variant="secondary" className="text-xs px-2 py-1">
+                        {format(tempRange.from!, 'MMM dd')} - {format(tempRange.to!, 'MMM dd')}
                       </Badge>
                     </div>
                   </div>

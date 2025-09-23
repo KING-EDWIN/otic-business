@@ -172,17 +172,21 @@ export class DataService {
           .select('total')
           .eq('user_id', userId || '')
 
-        // Get products data
-        const { data: productsData } = await supabase
+        // Get products count and low stock count efficiently
+        const { count: totalProducts } = await supabase
           .from('products')
-          .select('*')
+          .select('*', { count: 'exact', head: true })
           .eq('user_id', userId || '')
+
+        const { count: lowStockItems } = await supabase
+          .from('products')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId || '')
+          .lte('current_stock', 5)
 
         // Calculate stats
         const totalSales = salesData?.length || 0
         const totalRevenue = salesData?.reduce((sum, sale) => sum + sale.total, 0) || 0
-        const totalProducts = productsData?.length || 0
-        const lowStockItems = productsData?.filter(p => p.stock <= 5).length || 0
 
         return {
           totalSales,

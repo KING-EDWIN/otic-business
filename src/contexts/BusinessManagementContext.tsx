@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
-import { useAuth } from './AuthContext'
+import { useAuth } from './UnifiedAuthContext'
 import { businessManagementService, Business, BusinessMember } from '@/services/businessManagementService'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -50,17 +50,18 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
       clearTimeout(loadBusinessesTimeoutRef.current)
     }
     
-    if (user && profile && !isLoadingBusinessesRef.current) {
-      // Only load businesses when both user and profile are available and not already loading
-      console.log('User and profile available, loading businesses...')
+    if (user && !isLoadingBusinessesRef.current) {
+      // User exists - load businesses immediately
+      console.log('User available, loading businesses')
       isLoadingBusinessesRef.current = true
       
       // Add a small debounce to prevent rapid re-loading
       loadBusinessesTimeoutRef.current = setTimeout(() => {
         loadBusinesses()
       }, 50)
-    } else if (!user || !profile) {
-      console.log('User or profile not available, clearing businesses...')
+    } else if (!user) {
+      // Only clear businesses if user is completely gone
+      console.log('User not available, clearing businesses...')
       setBusinesses([])
       setCurrentBusiness(null)
       setBusinessMembers([])
@@ -73,7 +74,7 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
         clearTimeout(loadBusinessesTimeoutRef.current)
       }
     }
-  }, [user?.id, profile?.id]) // Only depend on IDs to prevent unnecessary re-renders
+  }, [user?.id]) // Only depend on user ID, not profile
 
   // Set current business from localStorage on mount
   useEffect(() => {

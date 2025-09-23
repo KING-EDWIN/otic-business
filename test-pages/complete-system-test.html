@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete System Test - Email Verification & Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #040458, #faa51a);
+            color: white;
+        }
+        .test-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        .warning { color: #fbbf24; }
+        button {
+            background: #faa51a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #e0941a; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        .test-section {
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        pre { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background: #4ade80; }
+        .status-error { background: #f87171; }
+        .status-warning { background: #fbbf24; }
+        .status-info { background: #60a5fa; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Complete System Test - Email Verification & Login</h1>
+    
+    <div class="test-container">
+        <h2>📊 System Status Overview</h2>
+        <div id="system-status">
+            <p>Loading system status...</p>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>🔐 Authentication Tests</h2>
+        <div class="test-section">
+            <h3>Business Login Performance Test</h3>
+            <button onclick="testBusinessLogin()">Test Business Login Speed</button>
+            <div id="business-login-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Individual Login Test</h3>
+            <button onclick="testIndividualLogin()">Test Individual Login</button>
+            <div id="individual-login-results"></div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>📧 Email Verification Tests</h2>
+        <div class="test-section">
+            <h3>Email Verification System</h3>
+            <button onclick="testEmailVerification()">Test Email Verification Flow</button>
+            <div id="email-verification-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Password Reset Test</h3>
+            <button onclick="testPasswordReset()">Test Password Reset</button>
+            <div id="password-reset-results"></div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>🌍 Environment & URL Tests</h2>
+        <div class="test-section">
+            <h3>URL Generation Test</h3>
+            <button onclick="testUrlGeneration()">Test URL Generation</button>
+            <div id="url-generation-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Production URL Test</h3>
+            <button onclick="testProductionUrls()">Test Production URLs</button>
+            <div id="production-url-results"></div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>📊 Database Integration Tests</h2>
+        <div class="test-section">
+            <h3>Email Verification Logs</h3>
+            <button onclick="testEmailLogs()">Test Email Logging</button>
+            <div id="email-logs-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Rate Limiting Test</h3>
+            <button onclick="testRateLimiting()">Test Rate Limiting</button>
+            <div id="rate-limiting-results"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Test configuration
+        const TEST_CONFIG = {
+            supabaseUrl: 'https://jvgiyscchxxekcbdicco.supabase.co',
+            supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8',
+            testEmail: 'test@oticbusiness.com',
+            testPassword: 'TestPassword123!'
+        };
+
+        // Initialize Supabase client
+        const { createClient } = supabase;
+        const supabaseClient = createClient(TEST_CONFIG.supabaseUrl, TEST_CONFIG.supabaseKey);
+
+        // System status check
+        async function checkSystemStatus() {
+            const statusDiv = document.getElementById('system-status');
+            const checks = [];
+
+            // Check Supabase connection
+            try {
+                const { data, error } = await supabaseClient.from('user_profiles').select('count').limit(1);
+                checks.push({
+                    name: 'Supabase Connection',
+                    status: error ? 'error' : 'success',
+                    message: error ? `Error: ${error.message}` : 'Connected successfully'
+                });
+            } catch (e) {
+                checks.push({
+                    name: 'Supabase Connection',
+                    status: 'error',
+                    message: `Connection failed: ${e.message}`
+                });
+            }
+
+            // Check email verification tables
+            try {
+                const { data, error } = await supabaseClient.from('email_verification_logs').select('count').limit(1);
+                checks.push({
+                    name: 'Email Verification Tables',
+                    status: error ? 'error' : 'success',
+                    message: error ? `Tables missing: ${error.message}` : 'Tables exist'
+                });
+            } catch (e) {
+                checks.push({
+                    name: 'Email Verification Tables',
+                    status: 'error',
+                    message: `Tables check failed: ${e.message}`
+                });
+            }
+
+            // Check environment service
+            try {
+                const isProduction = window.location.hostname.includes('oticbusiness.com');
+                checks.push({
+                    name: 'Environment Detection',
+                    status: 'success',
+                    message: `Environment: ${isProduction ? 'Production' : 'Development'}`
+                });
+            } catch (e) {
+                checks.push({
+                    name: 'Environment Detection',
+                    status: 'error',
+                    message: `Environment check failed: ${e.message}`
+                });
+            }
+
+            // Display results
+            statusDiv.innerHTML = checks.map(check => `
+                <div style="margin: 10px 0;">
+                    <span class="status-indicator status-${check.status}"></span>
+                    <strong>${check.name}:</strong> ${check.message}
+                </div>
+            `).join('');
+        }
+
+        // Business login performance test
+        window.testBusinessLogin = async function() {
+            const resultsDiv = document.getElementById('business-login-results');
+            resultsDiv.innerHTML = '<p>Testing business login performance...</p>';
+            
+            const startTime = performance.now();
+            
+            try {
+                // Simulate login process timing
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: TEST_CONFIG.testEmail,
+                    password: TEST_CONFIG.testPassword
+                });
+                
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+                
+                if (error) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-error"></span>
+                            <strong>Login Failed:</strong> ${error.message}
+                            <br><small>Duration: ${duration.toFixed(2)}ms</small>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-success"></span>
+                            <strong>Login Successful!</strong>
+                            <br><small>Duration: ${duration.toFixed(2)}ms</small>
+                            <br><small>User ID: ${data.user?.id}</small>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                const endTime = performance.now();
+                const duration = endTime - startTime;
+                resultsDiv.innerHTML = `
+                    <div class="test-section">
+                        <span class="status-indicator status-error"></span>
+                        <strong>Login Error:</strong> ${e.message}
+                        <br><small>Duration: ${duration.toFixed(2)}ms</small>
+                    </div>
+                `;
+            }
+        };
+
+        // Individual login test
+        window.testIndividualLogin = async function() {
+            const resultsDiv = document.getElementById('individual-login-results');
+            resultsDiv.innerHTML = '<p>Testing individual login...</p>';
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: 'individual@test.com',
+                    password: TEST_CONFIG.testPassword
+                });
+                
+                if (error) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-warning"></span>
+                            <strong>Individual Login:</strong> ${error.message}
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-success"></span>
+                            <strong>Individual Login Successful!</strong>
+                            <br><small>User ID: ${data.user?.id}</small>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                resultsDiv.innerHTML = `
+                    <div class="test-section">
+                        <span class="status-indicator status-error"></span>
+                        <strong>Individual Login Error:</strong> ${e.message}
+                    </div>
+                `;
+            }
+        };
+
+        // Email verification test
+        window.testEmailVerification = async function() {
+            const resultsDiv = document.getElementById('email-verification-results');
+            resultsDiv.innerHTML = '<p>Testing email verification system...</p>';
+            
+            try {
+                // Test email verification functions
+                const { data: canResend, error: resendError } = await supabaseClient.rpc('can_resend_verification', {
+                    p_user_id: 'test-user-id',
+                    p_verification_type: 'signup'
+                });
+                
+                if (resendError) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-error"></span>
+                            <strong>Email Verification Functions:</strong> ${resendError.message}
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-success"></span>
+                            <strong>Email Verification Functions:</strong> Working correctly
+                            <br><small>Can resend: ${canResend}</small>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                resultsDiv.innerHTML = `
+                    <div class="test-section">
+                        <span class="status-indicator status-error"></span>
+                        <strong>Email Verification Error:</strong> ${e.message}
+                    </div>
+                `;
+            }
+        };
+
+        // Password reset test
+        window.testPasswordReset = async function() {
+            const resultsDiv = document.getElementById('password-reset-results');
+            resultsDiv.innerHTML = '<p>Testing password reset...</p>';
+            
+            try {
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(TEST_CONFIG.testEmail, {
+                    redirectTo: `${window.location.origin}/reset-password`
+                });
+                
+                if (error) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-error"></span>
+                            <strong>Password Reset Failed:</strong> ${error.message}
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-success"></span>
+                            <strong>Password Reset Email Sent!</strong>
+                            <br><small>Check your inbox for the reset link</small>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                resultsDiv.innerHTML = `
+                    <div class="test-section">
+                        <span class="status-indicator status-error"></span>
+                        <strong>Password Reset Error:</strong> ${e.message}
+                    </div>
+                `;
+            }
+        };
+
+        // URL generation test
+        window.testUrlGeneration = async function() {
+            const resultsDiv = document.getElementById('url-generation-results');
+            
+            const isProduction = window.location.hostname.includes('oticbusiness.com');
+            const baseUrl = isProduction ? 'https://oticbusiness.com' : window.location.origin;
+            
+            const testUrls = [
+                { name: 'Base URL', url: baseUrl },
+                { name: 'Auth Callback (Business)', url: `${baseUrl}/auth/callback?user_type=business` },
+                { name: 'Auth Callback (Individual)', url: `${baseUrl}/auth/callback?user_type=individual` },
+                { name: 'Password Reset', url: `${baseUrl}/reset-password` },
+                { name: 'Business Dashboard', url: `${baseUrl}/dashboard` },
+                { name: 'Individual Dashboard', url: `${baseUrl}/individual-dashboard` }
+            ];
+            
+            resultsDiv.innerHTML = `
+                <div class="test-section">
+                    <span class="status-indicator status-success"></span>
+                    <strong>URL Generation Test:</strong> Working correctly
+                    <br><small>Environment: ${isProduction ? 'Production' : 'Development'}</small>
+                    <br><small>Base URL: ${baseUrl}</small>
+                    <br><br>
+                    <strong>Generated URLs:</strong>
+                    <pre>${testUrls.map(t => `${t.name}: ${t.url}`).join('\n')}</pre>
+                </div>
+            `;
+        };
+
+        // Production URL test
+        window.testProductionUrls = async function() {
+            const resultsDiv = document.getElementById('production-url-results');
+            
+            const isProduction = window.location.hostname.includes('oticbusiness.com');
+            
+            if (isProduction) {
+                resultsDiv.innerHTML = `
+                    <div class="test-section">
+                        <span class="status-indicator status-success"></span>
+                        <strong>Production Environment Detected!</strong>
+                        <br><small>All URLs will use https://oticbusiness.com</small>
+                        <br><small>Email redirects will work correctly in production</small>
+                    </div>
+                `;
+            } else {
+                resultsDiv.innerHTML = `
+                    <div class="test-section">
+                        <span class="status-indicator status-info"></span>
+                        <strong>Development Environment Detected</strong>
+                        <br><small>URLs will use ${window.location.origin}</small>
+                        <br><small>When deployed to production, URLs will automatically switch to oticbusiness.com</small>
+                    </div>
+                `;
+            }
+        };
+
+        // Email logs test
+        window.testEmailLogs = async function() {
+            const resultsDiv = document.getElementById('email-logs-results');
+            resultsDiv.innerHTML = '<p>Testing email verification logging...</p>';
+            
+            try {
+                // Test logging a verification attempt
+                const { data: logId, error: logError } = await supabaseClient.rpc('log_email_verification', {
+                    p_user_id: 'test-user-id',
+                    p_email: TEST_CONFIG.testEmail,
+                    p_verification_type: 'signup',
+                    p_ip_address: null,
+                    p_user_agent: navigator.userAgent
+                });
+                
+                if (logError) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-error"></span>
+                            <strong>Email Logging Failed:</strong> ${logError.message}
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-success"></span>
+                            <strong>Email Logging Working!</strong>
+                            <br><small>Log ID: ${logId}</small>
+                            <br><small>Verification attempts are being tracked</small>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                resultsDiv.innerHTML = `
+                    <div class="test-section">
+                        <span class="status-indicator status-error"></span>
+                        <strong>Email Logging Error:</strong> ${e.message}
+                    </div>
+                `;
+            }
+        };
+
+        // Rate limiting test
+        window.testRateLimiting = async function() {
+            const resultsDiv = document.getElementById('rate-limiting-results');
+            resultsDiv.innerHTML = '<p>Testing rate limiting...</p>';
+            
+            try {
+                // Test rate limiting function
+                const { data: canResend, error: rateError } = await supabaseClient.rpc('can_resend_verification', {
+                    p_user_id: 'test-user-id',
+                    p_verification_type: 'signup'
+                });
+                
+                if (rateError) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-error"></span>
+                            <strong>Rate Limiting Failed:</strong> ${rateError.message}
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-success"></span>
+                            <strong>Rate Limiting Working!</strong>
+                            <br><small>Can resend: ${canResend}</small>
+                            <br><small>5-minute cooldown enforced</small>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                resultsDiv.innerHTML = `
+                    <div class="test-section">
+                        <span class="status-indicator status-error"></span>
+                        <strong>Rate Limiting Error:</strong> ${e.message}
+                    </div>
+                `;
+            }
+        };
+
+        // Initialize tests
+        checkSystemStatus();
+    </script>
+</body>
+</html>

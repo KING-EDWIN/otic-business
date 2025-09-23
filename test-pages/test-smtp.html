@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMTP Email Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        button { background: #040458; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #030344; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>🔧 SMTP Email Test</h1>
+    
+    <div class="test-section">
+        <h3>Test 1: Send Test Email</h3>
+        <input type="email" id="testEmail" placeholder="Enter your email address" value="dylankats12@gmail.com">
+        <button onclick="sendTestEmail()">Send Test Email</button>
+        <div id="testResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Check Supabase Auth Settings</h3>
+        <button onclick="checkSupabaseConfig()">Check Configuration</button>
+        <div id="configResult"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: Manual Email Verification</h3>
+        <p>Try creating a new account and check your email for verification:</p>
+        <a href="http://localhost:8082/business-signup" target="_blank">
+            <button>Go to Business Signup</button>
+        </a>
+        <a href="http://localhost:8082/individual-signup" target="_blank">
+            <button>Go to Individual Signup</button>
+        </a>
+    </div>
+
+    <script>
+        // Test 1: Send test email using Supabase
+        async function sendTestEmail() {
+            const email = document.getElementById('testEmail').value;
+            const resultDiv = document.getElementById('testResult');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<div class="error">Please enter an email address</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div>🔄 Sending test email...</div>';
+
+            try {
+                // Import Supabase client
+                const { createClient } = supabase;
+                const supabaseUrl = 'https://jvgiyscchxxekcbdicco.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8';
+                
+                const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+                // Try to send a password reset email (this will test SMTP)
+                const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                    redirectTo: 'http://localhost:8082/reset-password'
+                });
+
+                if (error) {
+                    resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="success">✅ Test email sent successfully! Check your inbox at ${email}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Test 2: Check Supabase configuration
+        async function checkSupabaseConfig() {
+            const resultDiv = document.getElementById('configResult');
+            resultDiv.innerHTML = '<div>🔄 Checking configuration...</div>';
+
+            try {
+                const { createClient } = supabase;
+                const supabaseUrl = 'https://jvgiyscchxxekcbdicco.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8';
+                
+                const supabaseClient = createClient(supabaseUrl, supabaseKey);
+
+                // Test connection
+                const { data, error } = await supabaseClient.from('user_profiles').select('count').limit(1);
+
+                if (error) {
+                    resultDiv.innerHTML = `<div class="error">❌ Connection Error: ${error.message}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="success">✅ Supabase connection successful!<br>
+                        URL: ${supabaseUrl}<br>
+                        Key: ${supabaseKey.substring(0, 20)}...</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+
+    <!-- Load Supabase client -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</body>
+</html>

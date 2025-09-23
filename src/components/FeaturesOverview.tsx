@@ -21,7 +21,7 @@ const FeaturesOverview = () => {
   const features = [
     {
       title: "AI-Powered Sales",
-      description: "AI-Powered Visual POS Stop typing codes and start scanning. Our intelligent camera instantly recognizes any product, automatically adds it to the cart, and processes the sale in one seamless motion. Turn any device into a powerful, efficient, and error-free point of sale.",
+      description: "Stop typing codes and start scanning. Our intelligent camera instantly recognizes any product, automatically adds it to the cart, and processes the sale in one seamless motion. Turn any device into a powerful, efficient, and error-free point of sale.",
       icon: ShoppingCart,
       image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
       color: "from-blue-500 to-blue-600",
@@ -29,7 +29,7 @@ const FeaturesOverview = () => {
     },
     {
       title: "AI-Driven Inventory", 
-      description: "Effortless Visual Inventory Count Unpacking a shipment? Just point the camera. Our AI scans the entire scene, identifies every item, and logs them directly into your inventory system—automatically. What used to take hours now takes seconds.",
+      description: "Count Unpacking a shipment? Just point the camera. Our AI scans the entire scene, identifies every item, and logs them directly into your inventory system—automatically. What used to take hours now takes seconds.",
       icon: Package,
       image: inventoryImage,
       color: "from-green-500 to-green-600",

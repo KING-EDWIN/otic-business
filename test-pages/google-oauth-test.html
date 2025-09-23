@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth Test - OTIC Business</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #040458, #faa51a);
+            color: white;
+        }
+        .test-container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        .warning { color: #fbbf24; }
+        button {
+            background: #faa51a;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #e0941a; }
+        button:disabled { background: #666; cursor: not-allowed; }
+        .test-section {
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        pre { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background: #4ade80; }
+        .status-error { background: #f87171; }
+        .status-warning { background: #fbbf24; }
+        .status-info { background: #60a5fa; }
+        .google-button {
+            background: white;
+            color: #333;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 10px 0;
+        }
+        .google-button:hover {
+            background: #f8f9fa;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .google-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔐 Google OAuth Test - OTIC Business</h1>
+    
+    <div class="test-container">
+        <h2>📊 Google OAuth Configuration Status</h2>
+        <div id="oauth-status">
+            <p>Checking Google OAuth configuration...</p>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>🔐 Google OAuth Tests</h2>
+        
+        <div class="test-section">
+            <h3>Business Google Sign-In Test</h3>
+            <button onclick="testBusinessGoogleSignIn()">Test Business Google Sign-In</button>
+            <div id="business-google-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Individual Google Sign-In Test</h3>
+            <button onclick="testIndividualGoogleSignIn()">Test Individual Google Sign-In</button>
+            <div id="individual-google-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Google OAuth Configuration Test</h3>
+            <button onclick="testGoogleOAuthConfig()">Test OAuth Configuration</button>
+            <div id="oauth-config-results"></div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>🎯 Live Google Sign-In Buttons</h2>
+        <div class="test-section">
+            <h3>Business Account Google Sign-In</h3>
+            <div class="google-button" onclick="initiateBusinessGoogleSignIn()">
+                <svg class="google-icon" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google (Business)
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Individual Account Google Sign-In</h3>
+            <div class="google-button" onclick="initiateIndividualGoogleSignIn()">
+                <svg class="google-icon" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google (Individual)
+            </div>
+        </div>
+    </div>
+
+    <div class="test-container">
+        <h2>📋 Google OAuth Setup Checklist</h2>
+        <div class="test-section">
+            <h3>Supabase Configuration Required:</h3>
+            <ul>
+                <li>✅ Google OAuth provider enabled in Supabase Auth settings</li>
+                <li>✅ Google Client ID configured in Supabase</li>
+                <li>✅ Google Client Secret configured in Supabase</li>
+                <li>✅ Redirect URLs configured: <code>http://localhost:8082/auth/callback</code></li>
+                <li>✅ Production redirect URLs: <code>https://oticbusiness.com/auth/callback</code></li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h3>Google Cloud Console Setup:</h3>
+            <ul>
+                <li>✅ Google Cloud Project created</li>
+                <li>✅ OAuth 2.0 credentials created</li>
+                <li>✅ Authorized redirect URIs configured</li>
+                <li>✅ OAuth consent screen configured</li>
+                <li>✅ Scopes: openid, email, profile</li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        // Test configuration
+        const TEST_CONFIG = {
+            supabaseUrl: 'https://jvgiyscchxxekcbdicco.supabase.co',
+            supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8'
+        };
+
+        // Initialize Supabase client
+        const { createClient } = supabase;
+        const supabaseClient = createClient(TEST_CONFIG.supabaseUrl, TEST_CONFIG.supabaseKey);
+
+        // Check OAuth configuration
+        async function checkOAuthStatus() {
+            const statusDiv = document.getElementById('oauth-status');
+            const checks = [];
+
+            // Check Supabase connection
+            try {
+                const { data, error } = await supabaseClient.from('user_profiles').select('count').limit(1);
+                checks.push({
+                    name: 'Supabase Connection',
+                    status: error ? 'error' : 'success',
+                    message: error ? `Error: ${error.message}` : 'Connected successfully'
+                });
+            } catch (e) {
+                checks.push({
+                    name: 'Supabase Connection',
+                    status: 'error',
+                    message: `Connection failed: ${e.message}`
+                });
+            }
+
+            // Check if Google OAuth is configured (this would require admin access)
+            checks.push({
+                name: 'Google OAuth Provider',
+                status: 'info',
+                message: 'Check Supabase Auth settings to verify Google OAuth is enabled'
+            });
+
+            // Display results
+            statusDiv.innerHTML = checks.map(check => `
+                <div style="margin: 10px 0;">
+                    <span class="status-indicator status-${check.status}"></span>
+                    <strong>${check.name}:</strong> ${check.message}
+                </div>
+            `).join('');
+        }
+
+        // Test Business Google Sign-In
+        window.testBusinessGoogleSignIn = async function() {
+            const resultsDiv = document.getElementById('business-google-results');
+            resultsDiv.innerHTML = '<p>Testing Business Google Sign-In...</p>';
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${window.location.origin}/auth/callback?user_type=business`,
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        },
+                        scopes: 'openid email profile',
+                    },
+                });
+
+                if (error) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-error"></span>
+                            <strong>Business Google Sign-In Failed:</strong> ${error.message}
+                            <br><small>This might indicate Google OAuth is not properly configured in Supabase</small>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-success"></span>
+                            <strong>Business Google Sign-In Initiated!</strong>
+                            <br><small>User should be redirected to Google OAuth</small>
+                            <br><small>Provider URL: ${data?.url || 'N/A'}</small>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                resultsDiv.innerHTML = `
+                    <div class="test-section">
+                        <span class="status-indicator status-error"></span>
+                        <strong>Business Google Sign-In Error:</strong> ${e.message}
+                    </div>
+                `;
+            }
+        };
+
+        // Test Individual Google Sign-In
+        window.testIndividualGoogleSignIn = async function() {
+            const resultsDiv = document.getElementById('individual-google-results');
+            resultsDiv.innerHTML = '<p>Testing Individual Google Sign-In...</p>';
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${window.location.origin}/auth/callback?user_type=individual`,
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        },
+                        scopes: 'openid email profile',
+                    },
+                });
+
+                if (error) {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-error"></span>
+                            <strong>Individual Google Sign-In Failed:</strong> ${error.message}
+                            <br><small>This might indicate Google OAuth is not properly configured in Supabase</small>
+                        </div>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-success"></span>
+                            <strong>Individual Google Sign-In Initiated!</strong>
+                            <br><small>User should be redirected to Google OAuth</small>
+                            <br><small>Provider URL: ${data?.url || 'N/A'}</small>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                resultsDiv.innerHTML = `
+                    <div class="test-section">
+                        <span class="status-indicator status-error"></span>
+                        <strong>Individual Google Sign-In Error:</strong> ${e.message}
+                    </div>
+                `;
+            }
+        };
+
+        // Test OAuth Configuration
+        window.testGoogleOAuthConfig = async function() {
+            const resultsDiv = document.getElementById('oauth-config-results');
+            resultsDiv.innerHTML = '<p>Testing Google OAuth Configuration...</p>';
+            
+            try {
+                // Test if we can initiate OAuth (this will fail if not configured)
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${window.location.origin}/auth/callback`,
+                    },
+                });
+
+                if (error) {
+                    if (error.message.includes('not enabled') || error.message.includes('not configured')) {
+                        resultsDiv.innerHTML = `
+                            <div class="test-section">
+                                <span class="status-indicator status-warning"></span>
+                                <strong>Google OAuth Not Configured:</strong> ${error.message}
+                                <br><small>Please configure Google OAuth in Supabase Auth settings</small>
+                            </div>
+                        `;
+                    } else {
+                        resultsDiv.innerHTML = `
+                            <div class="test-section">
+                                <span class="status-indicator status-error"></span>
+                                <strong>OAuth Configuration Error:</strong> ${error.message}
+                            </div>
+                        `;
+                    }
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="test-section">
+                            <span class="status-indicator status-success"></span>
+                            <strong>Google OAuth Configuration Working!</strong>
+                            <br><small>Provider URL: ${data?.url || 'N/A'}</small>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                resultsDiv.innerHTML = `
+                    <div class="test-section">
+                        <span class="status-indicator status-error"></span>
+                        <strong>OAuth Configuration Error:</strong> ${e.message}
+                    </div>
+                `;
+            }
+        };
+
+        // Live Google Sign-In Functions
+        window.initiateBusinessGoogleSignIn = async function() {
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${window.location.origin}/auth/callback?user_type=business`,
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        },
+                        scopes: 'openid email profile',
+                    },
+                });
+
+                if (error) {
+                    alert(`Google Sign-In Failed: ${error.message}`);
+                } else {
+                    // Redirect to Google OAuth
+                    window.location.href = data.url;
+                }
+            } catch (e) {
+                alert(`Google Sign-In Error: ${e.message}`);
+            }
+        };
+
+        window.initiateIndividualGoogleSignIn = async function() {
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: `${window.location.origin}/auth/callback?user_type=individual`,
+                        queryParams: {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        },
+                        scopes: 'openid email profile',
+                    },
+                });
+
+                if (error) {
+                    alert(`Google Sign-In Failed: ${error.message}`);
+                } else {
+                    // Redirect to Google OAuth
+                    window.location.href = data.url;
+                }
+            } catch (e) {
+                alert(`Google Sign-In Error: ${e.message}`);
+            }
+        };
+
+        // Initialize tests
+        checkOAuthStatus();
+    </script>
+</body>
+</html>

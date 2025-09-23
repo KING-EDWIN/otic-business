@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Database Connection Test</h1>
+        <p>This page tests the Supabase database connection and payment tables.</p>
+        
+        <button onclick="testConnection()">Test Database Connection</button>
+        <button onclick="testPaymentTables()">Test Payment Tables</button>
+        <button onclick="testUserAuth()">Test User Authentication</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.skypack.dev/@supabase/supabase-js@2';
+        
+        // Replace with your actual Supabase credentials
+        const supabaseUrl = 'YOUR_SUPABASE_URL';
+        const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+        
+        const supabase = createClient(supabaseUrl, supabaseKey);
+        
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+        
+        window.testConnection = async function() {
+            addResult('Testing Supabase connection...', 'info');
+            
+            try {
+                const { data, error } = await supabase.from('user_profiles').select('count').limit(1);
+                
+                if (error) {
+                    addResult(`❌ Connection failed: ${error.message}`, 'error');
+                } else {
+                    addResult('✅ Supabase connection successful!', 'success');
+                }
+            } catch (err) {
+                addResult(`❌ Connection error: ${err.message}`, 'error');
+            }
+        };
+        
+        window.testPaymentTables = async function() {
+            addResult('Testing payment tables...', 'info');
+            
+            try {
+                // Test payment_requests table
+                const { data: requests, error: requestsError } = await supabase
+                    .from('payment_requests')
+                    .select('count')
+                    .limit(1);
+                
+                if (requestsError) {
+                    addResult(`❌ payment_requests table error: ${requestsError.message}`, 'error');
+                } else {
+                    addResult('✅ payment_requests table accessible', 'success');
+                }
+                
+                // Test payment_transactions table
+                const { data: transactions, error: transactionsError } = await supabase
+                    .from('payment_transactions')
+                    .select('count')
+                    .limit(1);
+                
+                if (transactionsError) {
+                    addResult(`❌ payment_transactions table error: ${transactionsError.message}`, 'error');
+                } else {
+                    addResult('✅ payment_transactions table accessible', 'success');
+                }
+                
+            } catch (err) {
+                addResult(`❌ Table test error: ${err.message}`, 'error');
+            }
+        };
+        
+        window.testUserAuth = async function() {
+            addResult('Testing user authentication...', 'info');
+            
+            try {
+                const { data: { user }, error } = await supabase.auth.getUser();
+                
+                if (error) {
+                    addResult(`❌ Auth error: ${error.message}`, 'error');
+                } else if (user) {
+                    addResult(`✅ User authenticated: ${user.email}`, 'success');
+                    
+                    // Test user-specific queries
+                    const { data: profile, error: profileError } = await supabase
+                        .from('user_profiles')
+                        .select('*')
+                        .eq('id', user.id)
+                        .single();
+                    
+                    if (profileError) {
+                        addResult(`❌ Profile query error: ${profileError.message}`, 'error');
+                    } else {
+                        addResult(`✅ User profile accessible: ${profile.full_name || 'No name'}`, 'success');
+                    }
+                } else {
+                    addResult('ℹ️ No user authenticated (this is normal)', 'info');
+                }
+            } catch (err) {
+                addResult(`❌ Auth test error: ${err.message}`, 'error');
+            }
+        };
+        
+        // Auto-run connection test on load
+        addResult('Page loaded. Click buttons to test different aspects.', 'info');
+    </script>
+</body>
+</html>
+
