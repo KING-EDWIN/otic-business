@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Variables Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        .code {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Environment Variables Debug</h1>
+        
+        <div class="test-section info">
+            <h3>Environment Check</h3>
+            <p><strong>Current Domain:</strong> <span id="currentDomain"></span></p>
+            <p><strong>Environment:</strong> <span id="environment"></span></p>
+        </div>
+
+        <div class="test-section">
+            <h3>Environment Variables</h3>
+            <button onclick="checkEnvironmentVariables()">Check Environment Variables</button>
+            <div id="envResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>API Service Tests</h3>
+            <button onclick="testOpenRouterService()">Test OpenRouter Service</button>
+            <button onclick="testFlutterwaveService()">Test Flutterwave Service</button>
+            <div id="serviceResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Vision API Manager Test</h3>
+            <button onclick="testVisionApiManager()">Test Vision API Manager</button>
+            <div id="visionResults"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Display current environment info
+        function displayEnvironmentInfo() {
+            document.getElementById('currentDomain').textContent = window.location.hostname;
+            document.getElementById('environment').textContent = window.location.hostname === 'localhost' ? 'Development' : 'Production';
+        }
+
+        // Check environment variables
+        window.checkEnvironmentVariables = function() {
+            const results = document.getElementById('envResults');
+            
+            const envVars = {
+                'VITE_OPENROUTER_API_KEY': import.meta.env.VITE_OPENROUTER_API_KEY,
+                'VITE_FLUTTERWAVE_PUBLIC_KEY': import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY,
+                'VITE_FLUTTERWAVE_SECRET_KEY': import.meta.env.VITE_FLUTTERWAVE_SECRET_KEY,
+                'VITE_FLUTTERWAVE_ENCRYPTION_KEY': import.meta.env.VITE_FLUTTERWAVE_ENCRYPTION_KEY,
+                'VITE_FLUTTERWAVE_MERCHANT_ID': import.meta.env.VITE_FLUTTERWAVE_MERCHANT_ID,
+                'NODE_ENV': import.meta.env.NODE_ENV,
+                'MODE': import.meta.env.MODE,
+                'PROD': import.meta.env.PROD,
+                'DEV': import.meta.env.DEV
+            };
+
+            let html = '<h4>Environment Variables:</h4>';
+            
+            Object.entries(envVars).forEach(([key, value]) => {
+                const status = value ? 'success' : 'error';
+                const displayValue = value ? 
+                    (value.length > 20 ? `${value.substring(0, 20)}...` : value) : 
+                    'NOT SET';
+                
+                html += `
+                    <div class="${status}" style="margin: 5px 0; padding: 10px;">
+                        <strong>${key}:</strong> ${displayValue}
+                    </div>
+                `;
+            });
+
+            results.innerHTML = html;
+        };
+
+        // Test OpenRouter Service
+        window.testOpenRouterService = async function() {
+            const results = document.getElementById('serviceResults');
+            results.innerHTML = '<p>Testing OpenRouter Service...</p>';
+            
+            try {
+                const { openRouterVisionService } = await import('/src/services/openRouterVisionService.ts');
+                
+                const isConfigured = openRouterVisionService.isConfigured();
+                const apiStatus = await openRouterVisionService.getApiStatus();
+                
+                results.innerHTML = `
+                    <div class="${isConfigured ? 'success' : 'error'}">
+                        <h4>OpenRouter Service Status:</h4>
+                        <p><strong>Configured:</strong> ${isConfigured ? 'Yes' : 'No'}</p>
+                        <p><strong>Status:</strong> ${apiStatus.status}</p>
+                        <p><strong>Message:</strong> ${apiStatus.message}</p>
+                    </div>
+                `;
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="error">
+                        <h4>OpenRouter Service Error:</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        };
+
+        // Test Flutterwave Service
+        window.testFlutterwaveService = async function() {
+            const results = document.getElementById('serviceResults');
+            results.innerHTML = '<p>Testing Flutterwave Service...</p>';
+            
+            try {
+                const { flutterwaveWebService } = await import('/src/services/flutterwaveWebService.ts');
+                
+                // Check if public key is configured
+                const publicKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY;
+                const secretKey = import.meta.env.VITE_FLUTTERWAVE_SECRET_KEY;
+                
+                results.innerHTML = `
+                    <div class="${publicKey ? 'success' : 'error'}">
+                        <h4>Flutterwave Service Status:</h4>
+                        <p><strong>Public Key:</strong> ${publicKey ? 'Present' : 'Missing'}</p>
+                        <p><strong>Secret Key:</strong> ${secretKey ? 'Present' : 'Missing'}</p>
+                        <p><strong>Public Key Value:</strong> ${publicKey ? publicKey.substring(0, 20) + '...' : 'Not set'}</p>
+                    </div>
+                `;
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="error">
+                        <h4>Flutterwave Service Error:</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        };
+
+        // Test Vision API Manager
+        window.testVisionApiManager = async function() {
+            const results = document.getElementById('visionResults');
+            results.innerHTML = '<p>Testing Vision API Manager...</p>';
+            
+            try {
+                const { visionApiManager } = await import('/src/services/visionApiManager.ts');
+                
+                const availableApis = visionApiManager.getAvailableApis();
+                const apiStatuses = await visionApiManager.getAllApiStatuses();
+                
+                let html = '<h4>Vision API Manager Status:</h4>';
+                html += `<p><strong>Available APIs:</strong> ${availableApis.join(', ')}</p>`;
+                
+                apiStatuses.forEach(status => {
+                    const statusClass = status.status === 'ready' ? 'success' : 
+                                      status.status === 'no-key' ? 'error' : 'info';
+                    html += `
+                        <div class="${statusClass}" style="margin: 5px 0; padding: 10px;">
+                            <strong>${status.name}:</strong> ${status.status} - ${status.message}
+                        </div>
+                    `;
+                });
+                
+                results.innerHTML = html;
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="error">
+                        <h4>Vision API Manager Error:</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        };
+
+        // Initialize
+        displayEnvironmentInfo();
+        checkEnvironmentVariables();
+    </script>
+</body>
+</html>

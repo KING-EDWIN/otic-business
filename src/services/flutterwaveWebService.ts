@@ -55,10 +55,34 @@ class FlutterwaveWebService {
   private publicKey: string
 
   constructor() {
-    this.publicKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || ''
+    this.publicKey = this.getPublicKey()
     
     console.log('🔧 Flutterwave Web Service Initialized:')
     console.log('Public Key:', this.publicKey ? `${this.publicKey.substring(0, 20)}...` : 'MISSING')
+    console.log('Environment check:', {
+      'import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY': !!import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY,
+      'process.env.VITE_FLUTTERWAVE_PUBLIC_KEY': !!process.env.VITE_FLUTTERWAVE_PUBLIC_KEY,
+      'window.location.hostname': window.location.hostname
+    })
+  }
+
+  private getPublicKey(): string {
+    // Try import.meta.env first (Vite)
+    if (import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY) {
+      return import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY
+    }
+    
+    // Try process.env (fallback)
+    if (process.env.VITE_FLUTTERWAVE_PUBLIC_KEY) {
+      return process.env.VITE_FLUTTERWAVE_PUBLIC_KEY
+    }
+    
+    // Try to get from window (if injected)
+    if ((window as any).VITE_FLUTTERWAVE_PUBLIC_KEY) {
+      return (window as any).VITE_FLUTTERWAVE_PUBLIC_KEY
+    }
+    
+    return ''
   }
 
   /**
@@ -171,10 +195,10 @@ class FlutterwaveWebService {
   }
 
   /**
-   * Format amount for Flutterwave (multiply by 100 for cents)
+   * Format amount for Flutterwave (amounts are already in correct currency units)
    */
   formatAmount(amount: number): number {
-    return Math.round(amount * 100)
+    return Math.round(amount)
   }
 
   /**

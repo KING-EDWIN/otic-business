@@ -271,9 +271,9 @@ const Payments: React.FC = () => {
 
       // Set tier-specific pricing following OTIC Business specification
       const tierPricing = {
-        basic: { amount: 50000, description: 'Start Smart Plan - Basic Features' },
-        standard: { amount: 150000, description: 'Grow with Intelligence Plan - Advanced Features' },
-        premium: { amount: 500000, description: 'Enterprise Advantage Plan - Premium Features' }
+        basic: { amount: 1000000, description: 'Start Smart Plan - Basic Features' },
+        standard: { amount: 3000000, description: 'Grow with Intelligence Plan - Advanced Features' },
+        premium: { amount: 5000000, description: 'Enterprise Advantage Plan - Premium Features' }
       }
 
       const pricing = tierPricing[tier]

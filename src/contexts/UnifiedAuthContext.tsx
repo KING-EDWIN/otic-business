@@ -75,7 +75,7 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
           return
         }
 
-        const { data: { session } } = await getSessionWithRetry()
+        const { data: { session } } = await supabase.auth.getSession()
         
         if (mounted) {
           setSession(session)
@@ -83,15 +83,24 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
           
           if (session?.user) {
             try {
-              // Use robust profile loading with retry
-              const profileData = await fetchProfileWithRetry(session.user.id)
+              // Simple profile loading - no retry to avoid complexity
+              const { data: profileData, error } = await supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single()
               
               if (mounted) {
-                setProfile(profileData)
+                if (error) {
+                  console.warn('Profile fetch error:', error)
+                  setProfile(null)
+                } else {
+                  setProfile(profileData)
+                }
                 setLoading(false)
               }
             } catch (error) {
-              console.warn('Profile fetch failed after retries:', error)
+              console.warn('Profile fetch failed:', error)
               if (mounted) {
                 setProfile(null)
                 setLoading(false)
@@ -135,11 +144,21 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         
         if (session?.user) {
           try {
-            // Use robust profile loading with retry
-            const profileData = await fetchProfileWithRetry(session.user.id)
-            setProfile(profileData)
+            // Simple profile loading - no retry to avoid complexity
+            const { data: profileData, error } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single()
+            
+            if (error) {
+              console.warn('Profile fetch error:', error)
+              setProfile(null)
+            } else {
+              setProfile(profileData)
+            }
           } catch (error) {
-            console.warn('Profile fetch failed after retries:', error)
+            console.warn('Profile fetch failed:', error)
             setProfile(null)
           }
         } else {
@@ -160,18 +179,11 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       console.log(`🔐 Starting sign in for ${email} as ${userType}`)
       
-      // Test network connectivity first
-      const isConnected = await testSupabaseConnectionWithRetry()
-      if (!isConnected) {
-        console.error('❌ Network connectivity test failed')
-        return { error: { message: 'Network connection failed. Please check your internet connection and try again.' } }
-      }
-      
-      // Clear any problematic sessions before attempting sign in
-      clearAuthStorage()
-      
-      // Use robust sign in with retry
-      const { data, error } = await signInWithRetry(email, password)
+      // Simple sign in - no complex retry logic
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
       if (error) {
         console.error('Sign in failed:', error)
@@ -192,16 +204,6 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return { error: null, data }
     } catch (error: any) {
       console.error('Sign in error:', error)
-      
-      // Handle network errors specifically
-      if (isNetworkError(error)) {
-        return { 
-          error: { 
-            message: 'Network connection failed. Please check your internet connection and try again.' 
-          } 
-        }
-      }
-      
       return { error: { message: error.message || 'Sign in failed' } }
     }
   }

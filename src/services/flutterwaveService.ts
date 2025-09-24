@@ -244,10 +244,10 @@ class FlutterwaveService {
   }
 
   /**
-   * Format amount for Flutterwave (multiply by 100 for kobo/cent)
+   * Format amount for Flutterwave (amounts are already in correct currency units)
    */
   formatAmount(amount: number): number {
-    return Math.round(amount * 100)
+    return Math.round(amount)
   }
 
   /**
