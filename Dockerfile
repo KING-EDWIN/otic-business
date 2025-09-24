@@ -1,5 +1,8 @@
-# Use Coolify helper image which has Node.js and npm
+# Use Coolify helper image as base
 FROM ghcr.io/coollabsio/coolify-helper:1.0.11
+
+# Install Node.js and npm
+RUN apk add --no-cache nodejs npm
 
 # Set working directory
 WORKDIR /app
