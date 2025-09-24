@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Environment Variables Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background-color: #040458;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #faa51a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Environment Variables Test</h1>
+        
+        <div class="test-section info">
+            <h3>Environment Info</h3>
+            <p><strong>Domain:</strong> <span id="domain"></span></p>
+            <p><strong>Environment:</strong> <span id="environment"></span></p>
+            <p><strong>User Agent:</strong> <span id="userAgent"></span></p>
+        </div>
+
+        <div class="test-section">
+            <h3>Environment Variables Check</h3>
+            <button onclick="checkEnvVars()">Check Environment Variables</button>
+            <div id="envResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>API Service Tests</h3>
+            <button onclick="testOpenRouter()">Test OpenRouter</button>
+            <button onclick="testFlutterwave()">Test Flutterwave</button>
+            <button onclick="testMistral()">Test Mistral</button>
+            <div id="apiResults"></div>
+        </div>
+    </div>
+
+    <script>
+        // Display environment info
+        function displayEnvironmentInfo() {
+            document.getElementById('domain').textContent = window.location.hostname;
+            document.getElementById('environment').textContent = window.location.hostname === 'localhost' ? 'Development' : 'Production';
+            document.getElementById('userAgent').textContent = navigator.userAgent.substring(0, 50) + '...';
+        }
+
+        // Check environment variables
+        window.checkEnvVars = function() {
+            const results = document.getElementById('envResults');
+            
+            // Check if we're in a Vite environment
+            const isVite = typeof import !== 'undefined' && typeof import.meta !== 'undefined';
+            
+            let html = '<h4>Environment Variables Status:</h4>';
+            html += `<p><strong>Vite Environment:</strong> ${isVite ? 'Yes' : 'No'}</p>`;
+            
+            if (isVite) {
+                try {
+                    const envVars = {
+                        'VITE_OPENROUTER_API_KEY': import.meta.env.VITE_OPENROUTER_API_KEY,
+                        'VITE_FLUTTERWAVE_PUBLIC_KEY': import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY,
+                        'VITE_FLUTTERWAVE_SECRET_KEY': import.meta.env.VITE_FLUTTERWAVE_SECRET_KEY,
+                        'VITE_FLUTTERWAVE_ENCRYPTION_KEY': import.meta.env.VITE_FLUTTERWAVE_ENCRYPTION_KEY,
+                        'VITE_FLUTTERWAVE_MERCHANT_ID': import.meta.env.VITE_FLUTTERWAVE_MERCHANT_ID,
+                        'VITE_MISTRAL_API_KEY': import.meta.env.VITE_MISTRAL_API_KEY,
+                        'NODE_ENV': import.meta.env.NODE_ENV,
+                        'MODE': import.meta.env.MODE,
+                        'PROD': import.meta.env.PROD,
+                        'DEV': import.meta.env.DEV
+                    };
+
+                    Object.entries(envVars).forEach(([key, value]) => {
+                        const status = value ? 'success' : 'error';
+                        const displayValue = value ? 
+                            (value.length > 20 ? `${value.substring(0, 20)}...` : value) : 
+                            'NOT SET';
+                        
+                        html += `
+                            <div class="${status}" style="margin: 5px 0; padding: 10px;">
+                                <strong>${key}:</strong> ${displayValue}
+                            </div>
+                        `;
+                    });
+                } catch (error) {
+                    html += `<div class="error">Error accessing import.meta.env: ${error.message}</div>`;
+                }
+            } else {
+                html += '<div class="error">Not in a Vite environment - cannot access import.meta.env</div>';
+            }
+
+            results.innerHTML = html;
+        };
+
+        // Test OpenRouter API
+        window.testOpenRouter = async function() {
+            const results = document.getElementById('apiResults');
+            results.innerHTML = '<p>Testing OpenRouter API...</p>';
+            
+            try {
+                const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+                if (!apiKey) {
+                    results.innerHTML = '<div class="error">OpenRouter API key not found</div>';
+                    return;
+                }
+
+                const response = await fetch('https://openrouter.ai/api/v1/models', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    results.innerHTML = `
+                        <div class="success">
+                            <h4>OpenRouter API Test:</h4>
+                            <p>✅ Connection successful!</p>
+                            <p>Status: ${response.status}</p>
+                            <p>Models available: ${data.data ? data.data.length : 'Unknown'}</p>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `
+                        <div class="error">
+                            <h4>OpenRouter API Test:</h4>
+                            <p>❌ Connection failed</p>
+                            <p>Status: ${response.status}</p>
+                            <p>Error: ${response.statusText}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="error">
+                        <h4>OpenRouter API Test:</h4>
+                        <p>❌ Network error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        };
+
+        // Test Flutterwave API
+        window.testFlutterwave = async function() {
+            const results = document.getElementById('apiResults');
+            results.innerHTML = '<p>Testing Flutterwave API...</p>';
+            
+            try {
+                const publicKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY;
+                if (!publicKey) {
+                    results.innerHTML = '<div class="error">Flutterwave Public Key not found</div>';
+                    return;
+                }
+
+                // Test Flutterwave API endpoint
+                const response = await fetch('https://api.flutterwave.com/v3/banks/NG', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${publicKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    results.innerHTML = `
+                        <div class="success">
+                            <h4>Flutterwave API Test:</h4>
+                            <p>✅ Connection successful!</p>
+                            <p>Status: ${response.status}</p>
+                            <p>Public Key: ${publicKey.substring(0, 20)}...</p>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `
+                        <div class="error">
+                            <h4>Flutterwave API Test:</h4>
+                            <p>❌ Connection failed</p>
+                            <p>Status: ${response.status}</p>
+                            <p>Error: ${response.statusText}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="error">
+                        <h4>Flutterwave API Test:</h4>
+                        <p>❌ Network error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        };
+
+        // Test Mistral API
+        window.testMistral = async function() {
+            const results = document.getElementById('apiResults');
+            results.innerHTML = '<p>Testing Mistral API...</p>';
+            
+            try {
+                const apiKey = import.meta.env.VITE_MISTRAL_API_KEY;
+                if (!apiKey) {
+                    results.innerHTML = '<div class="error">Mistral API key not found</div>';
+                    return;
+                }
+
+                const response = await fetch('https://api.mistral.ai/v1/models', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    results.innerHTML = `
+                        <div class="success">
+                            <h4>Mistral API Test:</h4>
+                            <p>✅ Connection successful!</p>
+                            <p>Status: ${response.status}</p>
+                            <p>Models available: ${data.data ? data.data.length : 'Unknown'}</p>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `
+                        <div class="error">
+                            <h4>Mistral API Test:</h4>
+                            <p>❌ Connection failed</p>
+                            <p>Status: ${response.status}</p>
+                            <p>Error: ${response.statusText}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="error">
+                        <h4>Mistral API Test:</h4>
+                        <p>❌ Network error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        };
+
+        // Initialize
+        displayEnvironmentInfo();
+        checkEnvVars();
+    </script>
+</body>
+</html>
