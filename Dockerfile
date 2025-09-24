@@ -1,5 +1,5 @@
-# Multi-stage build for production
-FROM node:18-alpine AS builder
+# Use Coolify helper image which has Node.js and npm
+FROM ghcr.io/coollabsio/coolify-helper:1.0.11
 
 # Set working directory
 WORKDIR /app
@@ -7,7 +7,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (include devDependencies for build tools like Vite)
+# Install dependencies
 RUN npm ci
 
 # Copy source code
@@ -16,11 +16,11 @@ COPY . .
 # Build the application
 RUN npm run build
 
-# Production stage
-FROM nginx:alpine
+# Install nginx for serving
+RUN apk add --no-cache nginx
 
-# Copy built assets from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Copy built assets to nginx directory
+RUN cp -r dist/* /var/www/html/
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
