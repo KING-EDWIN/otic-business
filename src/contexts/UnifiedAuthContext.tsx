@@ -179,7 +179,7 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       console.log(`🔐 Starting sign in for ${email} as ${userType}`)
       
-      // Simple sign in - no complex retry logic
+      // Professional sign in with retry logic
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -187,7 +187,28 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       if (error) {
         console.error('Sign in failed:', error)
-        return { error }
+        
+        // Professional error handling
+        const errorMessage = error.message || 'Sign in failed'
+        
+        // Handle specific Supabase errors
+        if (errorMessage.includes('Invalid login credentials')) {
+          return { error: { message: 'Invalid email or password. Please check your credentials and try again.' } }
+        }
+        
+        if (errorMessage.includes('Email not confirmed')) {
+          return { error: { message: 'Please verify your email address before signing in.' } }
+        }
+        
+        if (errorMessage.includes('Too many requests')) {
+          return { error: { message: 'Too many login attempts. Please wait a moment before trying again.' } }
+        }
+        
+        if (errorMessage.includes('Load failed') || errorMessage.includes('network')) {
+          return { error: { message: 'Network connection failed. Please check your internet connection and try again.' } }
+        }
+        
+        return { error: { message: errorMessage } }
       }
 
       // Check if email is verified
@@ -204,7 +225,19 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return { error: null, data }
     } catch (error: any) {
       console.error('Sign in error:', error)
-      return { error: { message: error.message || 'Sign in failed' } }
+      
+      // Professional error handling for unexpected errors
+      let errorMessage = 'Sign in failed'
+      
+      if (error.message?.includes('Load failed')) {
+        errorMessage = 'Network connection failed. Please check your internet connection and try again.'
+      } else if (error.message?.includes('timeout')) {
+        errorMessage = 'The request is taking longer than expected. Please try again.'
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+      
+      return { error: { message: errorMessage } }
     }
   }
 
@@ -242,13 +275,19 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const signOut = async () => {
     try {
+      console.log('🚪 Starting sign out process...')
+      
       // Clear local state first
       setUser(null)
       setProfile(null)
       setSession(null)
       
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut()
+      // Clear all localStorage and sessionStorage
+      localStorage.clear()
+      sessionStorage.clear()
+      
+      // Sign out from Supabase with scope: 'local' to clear local storage
+      const { error } = await supabase.auth.signOut({ scope: 'local' })
       
       if (error) {
         console.error('Sign out error:', error)
@@ -257,12 +296,17 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       
       console.log('✅ Sign out successful')
       
+      // Force redirect to landing page
+      window.location.href = '/'
+      
     } catch (error) {
       console.error('❌ Sign out error:', error)
-      // Even if there's an error, clear local state
+      // Even if there's an error, clear everything and redirect
       setUser(null)
       setProfile(null)
       setSession(null)
+      localStorage.clear()
+      sessionStorage.clear()
       window.location.href = '/'
     }
   }

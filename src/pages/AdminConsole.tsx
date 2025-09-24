@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import TierUpgradeRequests from '@/components/TierUpgradeRequests'
 import EmailVerificationManager from '@/components/EmailVerificationManager'
 import AdminFAQManagement from '@/components/AdminFAQManagement'
-import AdminUserDeletion from '@/components/AdminUserDeletion'
+import AdminAccountDeletion from '@/components/AdminAccountDeletion'
 import ContactManagement from './ContactManagement'
 import { Crown, Mail, HelpCircle, Trash2, MessageSquare } from 'lucide-react'
 
@@ -147,6 +147,22 @@ const AdminConsole = () => {
 
         <Card>
           <CardHeader>
+            <CardTitle>Account Deletion Management</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-gray-600">Manage user account deletions, view deleted accounts, and handle account recovery requests. Deleted accounts are kept for 30 days before permanent deletion.</p>
+            <Button 
+              className="bg-[#040458] hover:bg-[#030345] text-white"
+              onClick={() => setShowUserDeletion(true)}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Manage Account Deletions
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Payment Proofs Verification</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -199,7 +215,7 @@ const AdminConsole = () => {
                   Close
                 </Button>
               </div>
-              <AdminUserDeletion />
+              <AdminAccountDeletion />
             </div>
           </div>
         </div>

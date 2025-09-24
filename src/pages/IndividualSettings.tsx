@@ -185,21 +185,21 @@ const IndividualSettings = () => {
 
     setDeleting(true)
     try {
-      // First, delete all related data
-      const { error: profileError } = await supabase
-        .from('user_profiles')
-        .delete()
-        .eq('id', user?.id)
+      // Use soft delete service for 30-day recovery
+      const { AccountDeletionService } = await import('@/services/accountDeletionService')
+      const result = await AccountDeletionService.softDeleteAccount(
+        user?.id || '',
+        'User requested account deletion'
+      )
 
-      if (profileError) throw profileError
-
-      // Then delete the auth user
-      const { error: authError } = await supabase.auth.admin.deleteUser(user?.id || '')
-
-      if (authError) throw authError
-
-      toast.success('Account deleted successfully')
-      navigate('/')
+      if (result.success) {
+        toast.success('Account deleted successfully. You can recover it within 30 days.')
+        // Sign out and redirect
+        await signOut()
+        navigate('/')
+      } else {
+        toast.error(result.error || 'Failed to delete account')
+      }
     } catch (error: any) {
       console.error('Error deleting account:', error)
       toast.error(error.message || 'Failed to delete account')

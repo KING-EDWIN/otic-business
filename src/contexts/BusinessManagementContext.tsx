@@ -38,43 +38,22 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
   const [loading, setLoading] = useState(true)
   const [canCreateBusiness, setCanCreateBusiness] = useState(false)
   const loadedBusinessMembersRef = useRef<string | null>(null)
-  const isLoadingBusinessesRef = useRef(false)
-  const loadBusinessesTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Load businesses when user changes
   useEffect(() => {
-    console.log('BusinessManagementContext - useEffect triggered:', { user: !!user, profile: !!profile })
+    console.log('BusinessManagementContext - useEffect triggered:', { user: !!user })
     
-    // Clear any existing timeout
-    if (loadBusinessesTimeoutRef.current) {
-      clearTimeout(loadBusinessesTimeoutRef.current)
-    }
-    
-    if (user && !isLoadingBusinessesRef.current) {
-      // User exists - load businesses immediately
+    if (user) {
       console.log('User available, loading businesses')
-      isLoadingBusinessesRef.current = true
-      
-      // Add a small debounce to prevent rapid re-loading
-      loadBusinessesTimeoutRef.current = setTimeout(() => {
-        loadBusinesses()
-      }, 50)
-    } else if (!user) {
-      // Only clear businesses if user is completely gone
+      loadBusinesses()
+    } else {
       console.log('User not available, clearing businesses...')
       setBusinesses([])
       setCurrentBusiness(null)
       setBusinessMembers([])
       setLoading(false)
-      isLoadingBusinessesRef.current = false
     }
-    
-    return () => {
-      if (loadBusinessesTimeoutRef.current) {
-        clearTimeout(loadBusinessesTimeoutRef.current)
-      }
-    }
-  }, [user?.id]) // Only depend on user ID, not profile
+  }, [user?.id])
 
   // Set current business from localStorage on mount
   useEffect(() => {
@@ -102,79 +81,55 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
   }, [businesses.length]) // Remove user and profile dependencies to prevent double loading
 
   const loadBusinesses = async () => {
-    // Prevent multiple simultaneous loads
-    if (isLoadingBusinessesRef.current) {
-      console.log('Businesses already loading, skipping...')
-      return
-    }
-    
     try {
-      isLoadingBusinessesRef.current = true
       setLoading(true)
-      
       console.log('Loading businesses for user:', user?.id)
       
-      // Wait a bit for auth to be fully established
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // Simple timeout - no retry logic for now
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Business loading timeout')), 10000)
+      )
       
-      // Double-check authentication before making the call
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      if (!currentUser) {
-        console.error('No authenticated user when loading businesses')
-        setBusinesses([])
-        return
-      }
-      
-      console.log('Confirmed authenticated user:', currentUser.id)
-      
-      // Get user businesses (which includes sub-businesses)
-      const userBusinesses = await Promise.race([
-        businessManagementService.getUserBusinesses(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Business loading timeout')), 15000)
-        )
-      ]) as Business[]
-      
-      console.log('Loaded businesses:', userBusinesses.length, userBusinesses)
-      
-      // If user has no businesses, create a default one
-      if (userBusinesses.length === 0 && user) {
-        console.log('No businesses found, creating default business')
-        await createDefaultBusiness()
-        // Reload businesses after creating default
-        const updatedBusinesses = await businessManagementService.getUserBusinesses()
-        console.log('Updated businesses after creation:', updatedBusinesses.length, updatedBusinesses)
-        setBusinesses(updatedBusinesses)
-      } else {
-        setBusinesses(userBusinesses)
-      }
-      
-      // Check if user can create more businesses
-      const { data: { user: authUser } } = await supabase.auth.getUser()
-      if (authUser) {
-        try {
-          const { data: canCreate } = await supabase.rpc('can_create_business', {
-            user_id_param: authUser.id
-          })
-          setCanCreateBusiness(canCreate || false)
-        } catch (rpcError) {
-          console.error('RPC can_create_business failed:', rpcError)
-          throw new Error(`Failed to check business creation permissions: ${rpcError.message}`)
+      const loadPromise = async () => {
+        // Get user businesses directly with professional error handling
+        const userBusinesses = await businessManagementService.getUserBusinesses()
+        console.log('Loaded businesses:', userBusinesses.length, userBusinesses)
+        
+        // If user has no businesses, create a default one
+        if (userBusinesses.length === 0 && user) {
+          console.log('No businesses found, creating default business')
+          await createDefaultBusiness()
+          // Reload businesses after creating default
+          const updatedBusinesses = await businessManagementService.getUserBusinesses()
+          console.log('Updated businesses after creation:', updatedBusinesses.length, updatedBusinesses)
+          setBusinesses(updatedBusinesses)
+        } else {
+          setBusinesses(userBusinesses)
+        }
+        
+        // Check if user can create more businesses (with timeout)
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+        if (authUser) {
+          try {
+            const { data: canCreate } = await supabase.rpc('can_create_business', {
+              user_id_param: authUser.id
+            })
+            setCanCreateBusiness(canCreate || false)
+          } catch (rpcError) {
+            console.error('RPC can_create_business failed:', rpcError)
+            setCanCreateBusiness(false)
+          }
         }
       }
+      
+      await Promise.race([loadPromise(), timeoutPromise])
+      
     } catch (error) {
       console.error('Error loading businesses:', error)
-      
-      // Handle timeout errors gracefully
-      if (error instanceof Error && error.message.includes('timeout')) {
-        console.log('Business loading timed out, using empty array')
-      }
-      
-      // Set empty businesses array on error to prevent infinite loops
       setBusinesses([])
+      setCanCreateBusiness(false)
     } finally {
       setLoading(false)
-      isLoadingBusinessesRef.current = false
     }
   }
 

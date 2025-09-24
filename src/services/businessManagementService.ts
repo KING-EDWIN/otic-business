@@ -144,10 +144,14 @@ export class BusinessManagementService {
         throw new Error('User not authenticated')
       }
 
-      console.log('getUserBusinesses: Calling get_user_businesses RPC for user:', user.id)
+      console.log('getUserBusinesses: User authenticated:', user.id)
       
-      // Use direct query with proper RLS to ensure user only sees their own businesses
-      const { data: directData, error: directError } = await supabase
+          // Simple timeout
+          const timeoutPromise = new Promise<never>((_, reject) => 
+            setTimeout(() => reject(new Error('Business query timeout')), 10000)
+          )
+      
+      const queryPromise = supabase
         .from('business_memberships')
         .select(`
           business_id,
@@ -168,6 +172,11 @@ export class BusinessManagementService {
         .eq('user_id', user.id)
         .eq('status', 'active')
         .order('joined_at', { ascending: false })
+
+      const { data: directData, error: directError } = await Promise.race([
+        queryPromise,
+        timeoutPromise
+      ])
 
       if (directError) {
         console.error('getUserBusinesses: Direct query failed:', directError)

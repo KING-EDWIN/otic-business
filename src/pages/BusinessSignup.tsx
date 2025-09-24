@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { InputValidator } from '@/utils/inputValidation';
 import { countries } from '@/data/countries';
+import { supabase } from '@/lib/supabaseClient';
 
 const BusinessSignup = () => {
   const navigate = useNavigate();
@@ -90,9 +91,33 @@ const BusinessSignup = () => {
 
       if (error) {
         throw error;
-        }
+      }
 
-        toast.success('Business account created successfully! Please check your email to verify your account.');
+      // Create notification for profile completion
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { NotificationService } = await import('@/services/notificationService');
+          await NotificationService.createNotification(
+            'system', // businessId - using 'system' for new business users
+            user.id, // userId
+            'Complete Your Profile', // title
+            'Please complete your business profile to access all features.', // message
+            'info', // type
+            'high', // priority
+            '/complete-profile', // actionUrl
+            { // metadata
+              user_type: 'business',
+              source: 'email_signup'
+            }
+          );
+        }
+      } catch (notificationError) {
+        console.error('Failed to create notification:', notificationError);
+        // Don't throw - notification failure shouldn't break signup
+      }
+
+      toast.success('Business account created successfully! Please check your email to verify your account.');
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Signup error:', error);

@@ -147,7 +147,7 @@ export class GoogleAuthService {
       const isNewUser = !existingProfile
 
       if (isNewUser) {
-        // New user - create profile
+        // New user - create profile with upsert to handle conflicts
         const profileData = {
           id: user.id,
           email: userEmail,
@@ -161,9 +161,13 @@ export class GoogleAuthService {
           updated_at: new Date().toISOString()
         }
 
+        // Use upsert to handle potential conflicts gracefully
         const { data: newProfile, error: createError } = await supabase
           .from('user_profiles')
-          .insert([profileData])
+          .upsert([profileData], {
+            onConflict: 'id',
+            ignoreDuplicates: false
+          })
           .select()
           .single()
 
@@ -172,9 +176,12 @@ export class GoogleAuthService {
           return {
             success: false,
             isNewUser: true,
-            error: 'Failed to create user profile'
+            error: 'Failed to create user profile: ' + createError.message
           }
         }
+
+        // Create notification for profile completion
+        await this.createProfileCompletionNotification(user.id, pendingUserType || 'business')
 
         // Clean up session storage
         sessionStorage.removeItem('google_auth_context')
@@ -291,6 +298,35 @@ export class GoogleAuthService {
       toast.success('Welcome! Your account has been created successfully.')
     } else {
       toast.success('Welcome back! You\'ve been signed in successfully.')
+    }
+  }
+
+  /**
+   * Create notification for profile completion
+   */
+  private static async createProfileCompletionNotification(userId: string, userType: string) {
+    try {
+      // Import notification service dynamically to avoid circular dependencies
+      const { NotificationService } = await import('./notificationService')
+      
+      await NotificationService.createNotification(
+        'system', // businessId - using 'system' for new users
+        userId, // userId
+        'Complete Your Profile', // title
+        userType === 'individual' 
+          ? 'Please complete your individual profile to access all features.'
+          : 'Please complete your business profile to access all features.', // message
+        'info', // type
+        'high', // priority
+        '/complete-profile', // actionUrl
+        { // metadata
+          user_type: userType,
+          source: 'google_oauth_signup'
+        }
+      )
+    } catch (error) {
+      console.error('Failed to create profile completion notification:', error)
+      // Don't throw error - notification failure shouldn't break signup
     }
   }
 }

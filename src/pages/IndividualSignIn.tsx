@@ -13,7 +13,7 @@ import { getPasswordResetUrl, getUrl } from '@/services/environmentService'
 
 const IndividualSignIn = () => {
   const navigate = useNavigate()
-  const { signIn, user, profile } = useAuth()
+  const { signIn, user, profile, loading: authLoading } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -24,14 +24,26 @@ const IndividualSignIn = () => {
 
   // Optimized redirect check with useCallback
   const checkRedirect = useCallback(() => {
-    if (user && profile && profile.user_type === 'individual') {
+    if (!authLoading && user && profile && profile.user_type === 'individual') {
       navigate('/individual-dashboard')
     }
-  }, [user, profile, navigate])
+  }, [user, profile, navigate, authLoading])
 
   useEffect(() => {
     checkRedirect()
   }, [checkRedirect])
+
+  // Show loading while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#040458] to-[#faa51a]">
+        <div className="flex items-center space-x-2 text-white">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    )
+  }
 
   // Optimized sign-in handler with debounced error handling
   const handleSubmit = async (e: React.FormEvent) => {

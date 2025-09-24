@@ -13,7 +13,7 @@ import { getPasswordResetUrl, getUrl } from '@/services/environmentService';
 
 const BusinessSignIn = () => {
   const navigate = useNavigate();
-  const { signIn, user, profile } = useAuth();
+  const { signIn, user, profile, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -23,10 +23,22 @@ const BusinessSignIn = () => {
 
   // Optimized redirect check - only run once when component mounts
   useEffect(() => {
-    if (user && profile && profile.user_type === 'business') {
+    if (!authLoading && user && profile && profile.user_type === 'business') {
       navigate('/dashboard');
     }
-  }, [user?.id, profile?.user_type, navigate]); // Only depend on stable values
+  }, [user?.id, profile?.user_type, navigate, authLoading]); // Only depend on stable values
+
+  // Show loading while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#040458] to-[#faa51a]">
+        <div className="flex items-center space-x-2 text-white">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   // Optimized sign-in handler with better error handling
   const handleSubmit = useCallback(async (e: React.FormEvent) => {

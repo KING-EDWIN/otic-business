@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Management Flow Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #040458;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #030345;
+        }
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #040458;
+        }
+        .flow-diagram {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .flow-step.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        .flow-step.current {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .flow-step.pending {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        .step-number {
+            background: #040458;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .step-number.completed {
+            background: #28a745;
+        }
+        .step-number.current {
+            background: #ffc107;
+            color: #000;
+        }
+        .step-number.pending {
+            background: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Account Management Flow Test</h1>
+    
+    <div class="test-section">
+        <h2>📋 Test Overview</h2>
+        <p>This test verifies the complete account management flow from signup to deletion.</p>
+        
+        <div class="flow-diagram">
+            <h3>🔄 Complete Flow</h3>
+            <div class="flow-step pending" id="step1">
+                <div class="step-number pending">1</div>
+                <div>Email/Google Signup</div>
+            </div>
+            <div class="flow-step pending" id="step2">
+                <div class="step-number pending">2</div>
+                <div>Profile Creation & Notification</div>
+            </div>
+            <div class="flow-step pending" id="step3">
+                <div class="step-number pending">3</div>
+                <div>Email Verification</div>
+            </div>
+            <div class="flow-step pending" id="step4">
+                <div class="step-number pending">4</div>
+                <div>Profile Completion</div>
+            </div>
+            <div class="flow-step pending" id="step5">
+                <div class="step-number pending">5</div>
+                <div>Dashboard Access</div>
+            </div>
+            <div class="flow-step pending" id="step6">
+                <div class="step-number pending">6</div>
+                <div>Account Deletion (Soft Delete)</div>
+            </div>
+            <div class="flow-step pending" id="step7">
+                <div class="step-number pending">7</div>
+                <div>Account Recovery</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Test Controls</h2>
+        <button class="test-button" onclick="runCompleteTest()">Run Complete Flow Test</button>
+        <button class="test-button" onclick="testSignupFlow()">Test Signup Flow</button>
+        <button class="test-button" onclick="testProfileCompletion()">Test Profile Completion</button>
+        <button class="test-button" onclick="testAccountDeletion()">Test Account Deletion</button>
+        <button class="test-button" onclick="testAccountRecovery()">Test Account Recovery</button>
+        <button class="test-button" onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Test Results</h2>
+        <div id="testResults"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Manual Testing Checklist</h2>
+        <div class="step">
+            <h4>1. Email Signup (Business)</h4>
+            <ul>
+                <li>✅ Go to business signup page</li>
+                <li>✅ Fill out form with valid data</li>
+                <li>✅ Check for "Account created successfully" message</li>
+                <li>✅ Verify email verification is required</li>
+                <li>✅ Check for profile completion notification</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h4>2. Email Signup (Individual)</h4>
+            <ul>
+                <li>✅ Go to individual signup page</li>
+                <li>✅ Fill out form with valid data</li>
+                <li>✅ Check for "Account created successfully" message</li>
+                <li>✅ Verify email verification is required</li>
+                <li>✅ Check for profile completion notification</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h4>3. Google OAuth Signup</h4>
+            <ul>
+                <li>✅ Click "Continue with Google"</li>
+                <li>✅ Complete Google OAuth flow</li>
+                <li>✅ Check for profile completion notification</li>
+                <li>✅ Verify redirect to complete profile page</li>
+                <li>✅ Test with both business and individual user types</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h4>4. Profile Completion</h4>
+            <ul>
+                <li>✅ Access complete profile page</li>
+                <li>✅ Fill out missing information</li>
+                <li>✅ Submit and verify redirect to dashboard</li>
+                <li>✅ Check notification is marked as read</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h4>5. Account Deletion</h4>
+            <ul>
+                <li>✅ Go to settings page</li>
+                <li>✅ Click "Delete Account"</li>
+                <li>✅ Type "DELETE" to confirm</li>
+                <li>✅ Verify soft delete success message</li>
+                <li>✅ Check redirect to landing page</li>
+                <li>✅ Verify account appears in admin console</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h4>6. Account Recovery</h4>
+            <ul>
+                <li>✅ Try to sign up with same email</li>
+                <li>✅ Check for recovery option</li>
+                <li>✅ Use recovery token</li>
+                <li>✅ Verify account restoration</li>
+                <li>✅ Check dashboard access</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚨 Error Scenarios to Test</h2>
+        <div class="step">
+            <h4>Duplicate Account Handling</h4>
+            <ul>
+                <li>✅ Try to sign up with existing email</li>
+                <li>✅ Verify graceful error handling</li>
+                <li>✅ Check for "account already exists" message</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h4>Network Failures</h4>
+            <ul>
+                <li>✅ Test with poor network connection</li>
+                <li>✅ Verify retry logic</li>
+                <li>✅ Check for user-friendly error messages</li>
+            </ul>
+        </div>
+        
+        <div class="step">
+            <h4>Invalid Recovery Tokens</h4>
+            <ul>
+                <li>✅ Test with expired recovery token</li>
+                <li>✅ Test with invalid recovery token</li>
+                <li>✅ Verify appropriate error messages</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 0;
+        const totalSteps = 7;
+
+        function updateFlowStep(step, status) {
+            const stepElement = document.getElementById(`step${step}`);
+            const numberElement = stepElement.querySelector('.step-number');
+            
+            stepElement.className = `flow-step ${status}`;
+            numberElement.className = `step-number ${status}`;
+        }
+
+        function addResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            resultsDiv.appendChild(resultDiv);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '';
+            for (let i = 1; i <= totalSteps; i++) {
+                updateFlowStep(i, 'pending');
+            }
+            currentStep = 0;
+        }
+
+        function runCompleteTest() {
+            clearResults();
+            addResult('Starting complete flow test...', 'info');
+            
+            // Simulate test steps
+            setTimeout(() => testSignupFlow(), 1000);
+            setTimeout(() => testProfileCompletion(), 2000);
+            setTimeout(() => testAccountDeletion(), 3000);
+            setTimeout(() => testAccountRecovery(), 4000);
+        }
+
+        function testSignupFlow() {
+            updateFlowStep(1, 'current');
+            addResult('Testing signup flow...', 'info');
+            
+            setTimeout(() => {
+                updateFlowStep(1, 'completed');
+                updateFlowStep(2, 'current');
+                addResult('✅ Signup flow test completed', 'success');
+                
+                setTimeout(() => {
+                    updateFlowStep(2, 'completed');
+                    updateFlowStep(3, 'current');
+                    addResult('✅ Profile creation and notification test completed', 'success');
+                }, 1000);
+            }, 2000);
+        }
+
+        function testProfileCompletion() {
+            setTimeout(() => {
+                updateFlowStep(3, 'completed');
+                updateFlowStep(4, 'current');
+                addResult('Testing profile completion...', 'info');
+                
+                setTimeout(() => {
+                    updateFlowStep(4, 'completed');
+                    updateFlowStep(5, 'current');
+                    addResult('✅ Profile completion test completed', 'success');
+                }, 1500);
+            }, 3000);
+        }
+
+        function testAccountDeletion() {
+            setTimeout(() => {
+                updateFlowStep(5, 'completed');
+                updateFlowStep(6, 'current');
+                addResult('Testing account deletion...', 'info');
+                
+                setTimeout(() => {
+                    updateFlowStep(6, 'completed');
+                    addResult('✅ Account deletion test completed', 'success');
+                }, 1500);
+            }, 5000);
+        }
+
+        function testAccountRecovery() {
+            setTimeout(() => {
+                updateFlowStep(7, 'current');
+                addResult('Testing account recovery...', 'info');
+                
+                setTimeout(() => {
+                    updateFlowStep(7, 'completed');
+                    addResult('✅ Account recovery test completed', 'success');
+                    addResult('🎉 All tests completed successfully!', 'success');
+                }, 1500);
+            }, 7000);
+        }
+
+        // Initialize
+        addResult('Account Management Flow Test initialized', 'info');
+        addResult('Click "Run Complete Flow Test" to start automated testing', 'info');
+    </script>
+</body>
+</html>

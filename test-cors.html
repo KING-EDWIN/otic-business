@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Test</title>
+</head>
+<body>
+    <h1>CORS Test</h1>
+    <button onclick="testSupabaseConnection()">Test Supabase Connection</button>
+    <div id="result"></div>
+
+    <script>
+        async function testSupabaseConnection() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                // Test simple GET request to Supabase
+                const response = await fetch('https://jvgiyscchxxekcbdicco.supabase.co/rest/v1/', {
+                    method: 'GET',
+                    headers: {
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2Z2l5c2NjaHh4ZWtjYmRpY2NvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDc0MTAsImV4cCI6MjA3MjcyMzQxMH0.TPHpZCjKC0Xb-IhrS0mT_2IdS-mqANDjwPsmJCWUAu8'
+                    }
+                });
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = '<p style="color: green;">✅ Supabase connection is working!</p>';
+                } else {
+                    resultDiv.innerHTML = `<p style="color: orange;">⚠️ Response: ${response.status} ${response.statusText}</p>`;
+                }
+            } catch (error) {
+                if (error.message.includes('CORS') || error.message.includes('Access-Control')) {
+                    resultDiv.innerHTML = '<p style="color: red;">❌ CORS Error: ' + error.message + '</p>';
+                } else {
+                    resultDiv.innerHTML = '<p style="color: red;">❌ Error: ' + error.message + '</p>';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

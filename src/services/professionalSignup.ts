@@ -103,9 +103,13 @@ export class ProfessionalSignupService {
         profileData.country_code = data.countryCode || ''
       }
 
+      // Use upsert to handle potential conflicts gracefully
       const { error: profileError } = await supabase
         .from('user_profiles')
-        .insert(profileData)
+        .upsert([profileData], {
+          onConflict: 'id',
+          ignoreDuplicates: false
+        })
 
       if (profileError) {
         console.error('Profile creation error:', profileError)
@@ -120,6 +124,29 @@ export class ProfessionalSignupService {
           success: false,
           error: `Profile creation failed: ${profileError.message}`
         }
+      }
+
+      // Create notification for profile completion
+      try {
+        const { NotificationService } = await import('./notificationService');
+        await NotificationService.createNotification(
+          'system', // businessId - using 'system' for new users
+          authData.user.id, // userId
+          'Complete Your Profile', // title
+          data.userType === 'individual' 
+            ? 'Please complete your individual profile to access all features.'
+            : 'Please complete your business profile to access all features.', // message
+          'info', // type
+          'high', // priority
+          '/complete-profile', // actionUrl
+          { // metadata
+            user_type: data.userType,
+            source: 'email_signup'
+          }
+        );
+      } catch (notificationError) {
+        console.error('Failed to create notification:', notificationError);
+        // Don't throw - notification failure shouldn't break signup
       }
 
       console.log('✅ User profile created successfully')

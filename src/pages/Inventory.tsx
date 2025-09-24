@@ -685,36 +685,36 @@ const Inventory = () => {
                 </div>
               </div>
             </div>
-            {/* Desktop buttons */}
-            <div className="hidden md:flex items-center gap-2 lg:gap-3">
+            {/* Desktop buttons - hidden on mobile */}
+            <div className="hidden lg:flex items-center gap-3">
               <Button
                 onClick={() => navigate('/commodity-registration')}
-                className="bg-[#040458] hover:bg-[#040458]/90 text-white text-xs lg:text-sm"
+                className="bg-[#040458] hover:bg-[#040458]/90 text-white text-sm"
                 size="sm"
               >
-                <Barcode className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+                <Barcode className="h-4 w-4 mr-2" />
                 Register Commodity
               </Button>
               <Button
                 onClick={() => setIsDialogOpen(true)}
-                className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white text-xs lg:text-sm"
+                className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white text-sm"
                 size="sm"
               >
-                <Plus className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+                <Plus className="h-4 w-4 mr-2" />
                 Quick Add
               </Button>
               <Button
                 onClick={() => setShowOTICVisionRegistration(true)}
-                className="bg-[#040458] hover:bg-[#040458]/90 text-white text-xs lg:text-sm"
+                className="bg-[#040458] hover:bg-[#040458]/90 text-white text-sm"
                 size="sm"
               >
-                <Camera className="h-3 w-3 lg:h-4 lg:w-4 mr-1 lg:mr-2" />
+                <Camera className="h-4 w-4 mr-2" />
                 Use Camera
               </Button>
             </div>
 
             {/* Mobile dropdown */}
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="text-xs">

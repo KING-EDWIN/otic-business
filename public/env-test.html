@@ -39,6 +39,14 @@
         button:hover {
             background-color: #faa51a;
         }
+        .code {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -53,17 +61,26 @@
         </div>
 
         <div class="test-section">
-            <h3>Environment Variables Check</h3>
-            <button onclick="checkEnvVars()">Check Environment Variables</button>
-            <div id="envResults"></div>
+            <h3>API Connection Tests</h3>
+            <p>These tests will check if the APIs are accessible and if the environment variables are working in the actual application.</p>
+            <button onclick="testOpenRouter()">Test OpenRouter API</button>
+            <button onclick="testFlutterwave()">Test Flutterwave API</button>
+            <button onclick="testMistral()">Test Mistral API</button>
+            <div id="apiResults"></div>
         </div>
 
         <div class="test-section">
-            <h3>API Service Tests</h3>
-            <button onclick="testOpenRouter()">Test OpenRouter</button>
-            <button onclick="testFlutterwave()">Test Flutterwave</button>
-            <button onclick="testMistral()">Test Mistral</button>
-            <div id="apiResults"></div>
+            <h3>Application Environment Check</h3>
+            <p>This will test the actual application's environment variable loading:</p>
+            <button onclick="testAppEnvironment()">Test App Environment</button>
+            <div id="appResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Manual API Key Test</h3>
+            <p>Test with known working API keys to verify connectivity:</p>
+            <button onclick="testWithKnownKeys()">Test with Known Keys</button>
+            <div id="manualResults"></div>
         </div>
     </div>
 
@@ -75,101 +92,50 @@
             document.getElementById('userAgent').textContent = navigator.userAgent.substring(0, 50) + '...';
         }
 
-        // Check environment variables
-        function checkEnvVars() {
-            const results = document.getElementById('envResults');
-            
-            // Check if we're in a Vite environment
-            const isVite = typeof import !== 'undefined' && typeof import.meta !== 'undefined';
-            
-            let html = '<h4>Environment Variables Status:</h4>';
-            html += '<p><strong>Vite Environment:</strong> ' + (isVite ? 'Yes' : 'No') + '</p>';
-            
-            if (isVite) {
-                try {
-                    const envVars = {
-                        'VITE_OPENROUTER_API_KEY': import.meta.env.VITE_OPENROUTER_API_KEY,
-                        'VITE_FLUTTERWAVE_PUBLIC_KEY': import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY,
-                        'VITE_FLUTTERWAVE_SECRET_KEY': import.meta.env.VITE_FLUTTERWAVE_SECRET_KEY,
-                        'VITE_FLUTTERWAVE_ENCRYPTION_KEY': import.meta.env.VITE_FLUTTERWAVE_ENCRYPTION_KEY,
-                        'VITE_FLUTTERWAVE_MERCHANT_ID': import.meta.env.VITE_FLUTTERWAVE_MERCHANT_ID,
-                        'VITE_MISTRAL_API_KEY': import.meta.env.VITE_MISTRAL_API_KEY,
-                        'NODE_ENV': import.meta.env.NODE_ENV,
-                        'MODE': import.meta.env.MODE,
-                        'PROD': import.meta.env.PROD,
-                        'DEV': import.meta.env.DEV
-                    };
-
-                    Object.entries(envVars).forEach(function([key, value]) {
-                        const status = value ? 'success' : 'error';
-                        const displayValue = value ? 
-                            (value.length > 20 ? value.substring(0, 20) + '...' : value) : 
-                            'NOT SET';
-                        
-                        html += '<div class="' + status + '" style="margin: 5px 0; padding: 10px;">' +
-                               '<strong>' + key + ':</strong> ' + displayValue +
-                               '</div>';
-                    });
-                } catch (error) {
-                    html += '<div class="error">Error accessing import.meta.env: ' + error.message + '</div>';
-                }
-            } else {
-                html += '<div class="error">Not in a Vite environment - cannot access import.meta.env</div>';
-            }
-
-            results.innerHTML = html;
-        }
-
         // Test OpenRouter API
         function testOpenRouter() {
             const results = document.getElementById('apiResults');
             results.innerHTML = '<p>Testing OpenRouter API...</p>';
             
-            try {
-                const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-                if (!apiKey) {
-                    results.innerHTML = '<div class="error">OpenRouter API key not found</div>';
-                    return;
+            // Test with a generic API key format to see if the endpoint is accessible
+            fetch('https://openrouter.ai/api/v1/models', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer sk-or-v1-test-key',
+                    'Content-Type': 'application/json'
                 }
-
-                fetch('https://openrouter.ai/api/v1/models', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + apiKey,
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(function(response) {
-                    if (response.ok) {
-                        return response.json().then(function(data) {
-                            results.innerHTML = '<div class="success">' +
-                                '<h4>OpenRouter API Test:</h4>' +
-                                '<p>✅ Connection successful!</p>' +
-                                '<p>Status: ' + response.status + '</p>' +
-                                '<p>Models available: ' + (data.data ? data.data.length : 'Unknown') + '</p>' +
-                                '</div>';
-                        });
-                    } else {
-                        results.innerHTML = '<div class="error">' +
-                            '<h4>OpenRouter API Test:</h4>' +
-                            '<p>❌ Connection failed</p>' +
-                            '<p>Status: ' + response.status + '</p>' +
-                            '<p>Error: ' + response.statusText + '</p>' +
-                            '</div>';
-                    }
-                })
-                .catch(function(error) {
+            })
+            .then(function(response) {
+                if (response.status === 401) {
+                    results.innerHTML = '<div class="success">' +
+                        '<h4>OpenRouter API Test:</h4>' +
+                        '<p>✅ API endpoint is accessible!</p>' +
+                        '<p>Status: ' + response.status + ' (Unauthorized - expected with test key)</p>' +
+                        '<p>This means the API is reachable, but needs a valid API key.</p>' +
+                        '</div>';
+                } else if (response.status === 200) {
+                    results.innerHTML = '<div class="success">' +
+                        '<h4>OpenRouter API Test:</h4>' +
+                        '<p>✅ API endpoint is accessible!</p>' +
+                        '<p>Status: ' + response.status + '</p>' +
+                        '<p>API is working correctly.</p>' +
+                        '</div>';
+                } else {
                     results.innerHTML = '<div class="error">' +
                         '<h4>OpenRouter API Test:</h4>' +
-                        '<p>❌ Network error: ' + error.message + '</p>' +
+                        '<p>❌ Unexpected response</p>' +
+                        '<p>Status: ' + response.status + '</p>' +
+                        '<p>Error: ' + response.statusText + '</p>' +
                         '</div>';
-                });
-            } catch (error) {
+                }
+            })
+            .catch(function(error) {
                 results.innerHTML = '<div class="error">' +
                     '<h4>OpenRouter API Test:</h4>' +
-                    '<p>❌ Error: ' + error.message + '</p>' +
+                    '<p>❌ Network error: ' + error.message + '</p>' +
+                    '<p>This could indicate a network issue or CORS problem.</p>' +
                     '</div>';
-            }
+            });
         }
 
         // Test Flutterwave API
@@ -177,50 +143,45 @@
             const results = document.getElementById('apiResults');
             results.innerHTML = '<p>Testing Flutterwave API...</p>';
             
-            try {
-                const publicKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY;
-                if (!publicKey) {
-                    results.innerHTML = '<div class="error">Flutterwave Public Key not found</div>';
-                    return;
+            // Test with a generic public key format
+            fetch('https://api.flutterwave.com/v3/banks/NG', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer FLWPUBK_TEST-test-key',
+                    'Content-Type': 'application/json'
                 }
-
-                // Test Flutterwave API endpoint
-                fetch('https://api.flutterwave.com/v3/banks/NG', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + publicKey,
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(function(response) {
-                    if (response.ok) {
-                        results.innerHTML = '<div class="success">' +
-                            '<h4>Flutterwave API Test:</h4>' +
-                            '<p>✅ Connection successful!</p>' +
-                            '<p>Status: ' + response.status + '</p>' +
-                            '<p>Public Key: ' + publicKey.substring(0, 20) + '...</p>' +
-                            '</div>';
-                    } else {
-                        results.innerHTML = '<div class="error">' +
-                            '<h4>Flutterwave API Test:</h4>' +
-                            '<p>❌ Connection failed</p>' +
-                            '<p>Status: ' + response.status + '</p>' +
-                            '<p>Error: ' + response.statusText + '</p>' +
-                            '</div>';
-                    }
-                })
-                .catch(function(error) {
+            })
+            .then(function(response) {
+                if (response.status === 401 || response.status === 403) {
+                    results.innerHTML = '<div class="success">' +
+                        '<h4>Flutterwave API Test:</h4>' +
+                        '<p>✅ API endpoint is accessible!</p>' +
+                        '<p>Status: ' + response.status + ' (Unauthorized - expected with test key)</p>' +
+                        '<p>This means the API is reachable, but needs a valid API key.</p>' +
+                        '</div>';
+                } else if (response.status === 200) {
+                    results.innerHTML = '<div class="success">' +
+                        '<h4>Flutterwave API Test:</h4>' +
+                        '<p>✅ API endpoint is accessible!</p>' +
+                        '<p>Status: ' + response.status + '</p>' +
+                        '<p>API is working correctly.</p>' +
+                        '</div>';
+                } else {
                     results.innerHTML = '<div class="error">' +
                         '<h4>Flutterwave API Test:</h4>' +
-                        '<p>❌ Network error: ' + error.message + '</p>' +
+                        '<p>❌ Unexpected response</p>' +
+                        '<p>Status: ' + response.status + '</p>' +
+                        '<p>Error: ' + response.statusText + '</p>' +
                         '</div>';
-                });
-            } catch (error) {
+                }
+            })
+            .catch(function(error) {
                 results.innerHTML = '<div class="error">' +
                     '<h4>Flutterwave API Test:</h4>' +
-                    '<p>❌ Error: ' + error.message + '</p>' +
+                    '<p>❌ Network error: ' + error.message + '</p>' +
+                    '<p>This could indicate a network issue or CORS problem.</p>' +
                     '</div>';
-            }
+            });
         }
 
         // Test Mistral API
@@ -228,56 +189,120 @@
             const results = document.getElementById('apiResults');
             results.innerHTML = '<p>Testing Mistral API...</p>';
             
-            try {
-                const apiKey = import.meta.env.VITE_MISTRAL_API_KEY;
-                if (!apiKey) {
-                    results.innerHTML = '<div class="error">Mistral API key not found</div>';
-                    return;
+            // Test with a generic API key format
+            fetch('https://api.mistral.ai/v1/models', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer test-key',
+                    'Content-Type': 'application/json'
                 }
-
-                fetch('https://api.mistral.ai/v1/models', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': 'Bearer ' + apiKey,
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(function(response) {
-                    if (response.ok) {
-                        return response.json().then(function(data) {
-                            results.innerHTML = '<div class="success">' +
-                                '<h4>Mistral API Test:</h4>' +
-                                '<p>✅ Connection successful!</p>' +
-                                '<p>Status: ' + response.status + '</p>' +
-                                '<p>Models available: ' + (data.data ? data.data.length : 'Unknown') + '</p>' +
-                                '</div>';
-                        });
-                    } else {
-                        results.innerHTML = '<div class="error">' +
-                            '<h4>Mistral API Test:</h4>' +
-                            '<p>❌ Connection failed</p>' +
-                            '<p>Status: ' + response.status + '</p>' +
-                            '<p>Error: ' + response.statusText + '</p>' +
-                            '</div>';
-                    }
-                })
-                .catch(function(error) {
+            })
+            .then(function(response) {
+                if (response.status === 401 || response.status === 403) {
+                    results.innerHTML = '<div class="success">' +
+                        '<h4>Mistral API Test:</h4>' +
+                        '<p>✅ API endpoint is accessible!</p>' +
+                        '<p>Status: ' + response.status + ' (Unauthorized - expected with test key)</p>' +
+                        '<p>This means the API is reachable, but needs a valid API key.</p>' +
+                        '</div>';
+                } else if (response.status === 200) {
+                    results.innerHTML = '<div class="success">' +
+                        '<h4>Mistral API Test:</h4>' +
+                        '<p>✅ API endpoint is accessible!</p>' +
+                        '<p>Status: ' + response.status + '</p>' +
+                        '<p>API is working correctly.</p>' +
+                        '</div>';
+                } else {
                     results.innerHTML = '<div class="error">' +
                         '<h4>Mistral API Test:</h4>' +
-                        '<p>❌ Network error: ' + error.message + '</p>' +
+                        '<p>❌ Unexpected response</p>' +
+                        '<p>Status: ' + response.status + '</p>' +
+                        '<p>Error: ' + response.statusText + '</p>' +
                         '</div>';
-                });
-            } catch (error) {
+                }
+            })
+            .catch(function(error) {
                 results.innerHTML = '<div class="error">' +
                     '<h4>Mistral API Test:</h4>' +
-                    '<p>❌ Error: ' + error.message + '</p>' +
+                    '<p>❌ Network error: ' + error.message + '</p>' +
+                    '<p>This could indicate a network issue or CORS problem.</p>' +
                     '</div>';
-            }
+            });
+        }
+
+        // Test application environment
+        function testAppEnvironment() {
+            const results = document.getElementById('appResults');
+            results.innerHTML = '<p>Testing application environment...</p>';
+            
+            // Try to load the main application bundle to see if environment variables are included
+            fetch('/assets/index.js')
+            .then(function(response) {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    throw new Error('Could not load main application bundle');
+                }
+            })
+            .then(function(bundleText) {
+                // Check if environment variables are embedded in the bundle
+                const hasOpenRouter = bundleText.includes('VITE_OPENROUTER_API_KEY');
+                const hasFlutterwave = bundleText.includes('VITE_FLUTTERWAVE_PUBLIC_KEY');
+                const hasMistral = bundleText.includes('VITE_MISTRAL_API_KEY');
+                
+                let html = '<div class="info">' +
+                    '<h4>Application Bundle Analysis:</h4>' +
+                    '<p>✅ Main application bundle loaded successfully</p>' +
+                    '<p><strong>Environment Variables in Bundle:</strong></p>' +
+                    '<p>OpenRouter API Key: ' + (hasOpenRouter ? '✅ Found' : '❌ Missing') + '</p>' +
+                    '<p>Flutterwave Public Key: ' + (hasFlutterwave ? '✅ Found' : '❌ Missing') + '</p>' +
+                    '<p>Mistral API Key: ' + (hasMistral ? '✅ Found' : '❌ Missing') + '</p>';
+                
+                if (!hasOpenRouter || !hasFlutterwave || !hasMistral) {
+                    html += '<div class="error" style="margin-top: 10px;">' +
+                        '<p><strong>Issue Found:</strong> Some environment variables are missing from the build!</p>' +
+                        '<p>This suggests the environment variables are not being loaded during the build process.</p>' +
+                        '</div>';
+                }
+                
+                html += '</div>';
+                results.innerHTML = html;
+            })
+            .catch(function(error) {
+                results.innerHTML = '<div class="error">' +
+                    '<h4>Application Environment Test:</h4>' +
+                    '<p>❌ Error: ' + error.message + '</p>' +
+                    '<p>Could not analyze the application bundle.</p>' +
+                    '</div>';
+            });
+        }
+
+        // Test with known working keys (if available)
+        function testWithKnownKeys() {
+            const results = document.getElementById('manualResults');
+            results.innerHTML = '<p>Testing with known working keys...</p>';
+            
+            // This would require you to provide actual working API keys
+            // For now, just show instructions
+            results.innerHTML = '<div class="info">' +
+                '<h4>Manual API Key Test:</h4>' +
+                '<p>To test with actual API keys, you would need to:</p>' +
+                '<ol>' +
+                '<li>Get your actual API keys from Coolify environment</li>' +
+                '<li>Test them manually using curl or Postman</li>' +
+                '<li>Verify they work outside the application</li>' +
+                '</ol>' +
+                '<p><strong>Next Steps:</strong></p>' +
+                '<ul>' +
+                '<li>Check if the API keys are correctly set in Coolify</li>' +
+                '<li>Verify the build process includes environment variables</li>' +
+                '<li>Check if there are any CORS or network restrictions</li>' +
+                '</ul>' +
+                '</div>';
         }
 
         // Initialize
         displayEnvironmentInfo();
-        checkEnvVars();
     </script>
 </body>
 </html>

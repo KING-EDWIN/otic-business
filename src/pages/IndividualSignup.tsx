@@ -106,6 +106,28 @@ const IndividualSignup = () => {
           throw profileError;
         }
 
+        // Create notification for profile completion
+        try {
+          const { NotificationService } = await import('@/services/notificationService');
+          // For individual users, we'll use a default business ID or create a system notification
+          await NotificationService.createNotification(
+            'system', // businessId - using 'system' for individual users
+            authData.user.id, // userId
+            'Complete Your Profile', // title
+            'Please complete your individual profile to access all features.', // message
+            'info', // type
+            'high', // priority
+            '/complete-profile', // actionUrl
+            { // metadata
+              user_type: 'individual',
+              source: 'email_signup'
+            }
+          );
+        } catch (notificationError) {
+          console.error('Failed to create notification:', notificationError);
+          // Don't throw - notification failure shouldn't break signup
+        }
+
         toast.success('Individual account created successfully! Please check your email to verify your account.');
         navigate('/individual-dashboard');
       }

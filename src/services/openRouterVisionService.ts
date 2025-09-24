@@ -43,15 +43,49 @@ class OpenRouterVisionService {
       'import.meta.env.VITE_OPENROUTER_API_KEY': !!import.meta.env.VITE_OPENROUTER_API_KEY,
       'window.location.hostname': window.location.hostname
     })
+    
+    // Test API key validity if present
+    if (this.API_KEY) {
+      this.testAPIKey()
+    }
   }
   
-  // Available models for vision tasks - STANDARDIZED ON GROK FREE ONLY
+  /**
+   * Test API key validity
+   */
+  private async testAPIKey() {
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/models', {
+        headers: {
+          'Authorization': `Bearer ${this.API_KEY}`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'OTIC Vision'
+        }
+      })
+      
+      if (response.ok) {
+        console.log('✅ OpenRouter API key is valid')
+      } else {
+        console.error('❌ OpenRouter API key validation failed:', response.status, response.statusText)
+      }
+    } catch (error) {
+      console.error('❌ Failed to test OpenRouter API key:', error)
+    }
+  }
+  
+  // Available models for vision tasks - WITH FALLBACK
   private readonly VISION_MODELS = [
     {
       id: 'x-ai/grok-4-fast:free',
       name: 'Grok 4 Fast (FREE)',
       description: 'Consistent object detection - PRIMARY CHOICE',
       cost: 'free'
+    },
+    {
+      id: 'openai/gpt-4o-mini',
+      name: 'GPT-4o Mini',
+      description: 'OpenAI GPT-4o Mini for vision tasks',
+      cost: 'paid'
     }
     // COMMENTED OUT OTHER MODELS FOR CONSISTENCY
     // {
@@ -131,7 +165,18 @@ class OpenRouterVisionService {
             modelUsed: modelId
           }
         } else {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+          const errorText = await response.text()
+          console.error(`❌ API Error ${response.status}:`, errorText)
+          
+          if (response.status === 401) {
+            throw new Error(`HTTP 401: Invalid API key or insufficient permissions. Please check your OpenRouter API key.`)
+          } else if (response.status === 403) {
+            throw new Error(`HTTP 403: Access forbidden. The model '${modelId}' may not be available or accessible.`)
+          } else if (response.status === 429) {
+            throw new Error(`HTTP 429: Rate limit exceeded. Please try again later.`)
+          } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`)
+          }
         }
       } catch (error) {
         console.error(`❌ Model ${modelId} failed:`, error)
