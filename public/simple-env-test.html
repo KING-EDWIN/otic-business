@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Environment Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button {
+            background-color: #040458;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #faa51a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Simple Environment Test</h1>
+        
+        <div class="test-section info">
+            <h3>Environment Info</h3>
+            <p><strong>Domain:</strong> <span id="domain"></span></p>
+            <p><strong>Environment:</strong> <span id="environment"></span></p>
+            <p><strong>User Agent:</strong> <span id="userAgent"></span></p>
+        </div>
+
+        <div class="test-section">
+            <h3>API Connectivity Tests</h3>
+            <p>Test if the API endpoints are reachable (without using environment variables):</p>
+            <button onclick="testOpenRouter()">Test OpenRouter</button>
+            <button onclick="testFlutterwave()">Test Flutterwave</button>
+            <button onclick="testMistral()">Test Mistral</button>
+            <div id="apiResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Instructions</h3>
+            <div class="info">
+                <h4>To check environment variables in the actual app:</h4>
+                <ol>
+                    <li>Go to <a href="/" target="_blank">https://oticbusiness.com</a></li>
+                    <li>Open browser console (F12)</li>
+                    <li>Look for these log messages:</li>
+                    <ul>
+                        <li>"🔧 OpenRouter Vision Service Initialized"</li>
+                        <li>"🔧 Flutterwave Web Service Initialized"</li>
+                        <li>"🔧 Mistral AI Service Initialized"</li>
+                    </ul>
+                    <li>Check if API keys show as "MISSING" or have actual values</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Display environment info
+        function displayEnvironmentInfo() {
+            document.getElementById('domain').textContent = window.location.hostname;
+            document.getElementById('environment').textContent = window.location.hostname === 'localhost' ? 'Development' : 'Production';
+            document.getElementById('userAgent').textContent = navigator.userAgent.substring(0, 50) + '...';
+        }
+
+        // Test OpenRouter API
+        function testOpenRouter() {
+            const results = document.getElementById('apiResults');
+            results.innerHTML = '<p>Testing OpenRouter API...</p>';
+            
+            fetch('https://openrouter.ai/api/v1/models', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer sk-or-v1-test-key',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(function(response) {
+                if (response.status === 401) {
+                    results.innerHTML = '<div class="success">' +
+                        '<h4>OpenRouter API Test:</h4>' +
+                        '<p>✅ API endpoint is accessible!</p>' +
+                        '<p>Status: ' + response.status + ' (Unauthorized - expected with test key)</p>' +
+                        '<p>This means the API is reachable, but needs a valid API key.</p>' +
+                        '</div>';
+                } else if (response.status === 200) {
+                    results.innerHTML = '<div class="success">' +
+                        '<h4>OpenRouter API Test:</h4>' +
+                        '<p>✅ API endpoint is accessible!</p>' +
+                        '<p>Status: ' + response.status + '</p>' +
+                        '<p>API is working correctly.</p>' +
+                        '</div>';
+                } else {
+                    results.innerHTML = '<div class="error">' +
+                        '<h4>OpenRouter API Test:</h4>' +
+                        '<p>❌ Unexpected response</p>' +
+                        '<p>Status: ' + response.status + '</p>' +
+                        '<p>Error: ' + response.statusText + '</p>' +
+                        '</div>';
+                }
+            })
+            .catch(function(error) {
+                results.innerHTML = '<div class="error">' +
+                    '<h4>OpenRouter API Test:</h4>' +
+                    '<p>❌ Network error: ' + error.message + '</p>' +
+                    '<p>This could indicate a network issue or CORS problem.</p>' +
+                    '</div>';
+            });
+        }
+
+        // Test Flutterwave API
+        function testFlutterwave() {
+            const results = document.getElementById('apiResults');
+            results.innerHTML = '<p>Testing Flutterwave API...</p>';
+            
+            fetch('https://api.flutterwave.com/v3/banks/NG', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer FLWPUBK_TEST-test-key',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(function(response) {
+                if (response.status === 401 || response.status === 403) {
+                    results.innerHTML = '<div class="success">' +
+                        '<h4>Flutterwave API Test:</h4>' +
+                        '<p>✅ API endpoint is accessible!</p>' +
+                        '<p>Status: ' + response.status + ' (Unauthorized - expected with test key)</p>' +
+                        '<p>This means the API is reachable, but needs a valid API key.</p>' +
+                        '</div>';
+                } else if (response.status === 200) {
+                    results.innerHTML = '<div class="success">' +
+                        '<h4>Flutterwave API Test:</h4>' +
+                        '<p>✅ API endpoint is accessible!</p>' +
+                        '<p>Status: ' + response.status + '</p>' +
+                        '<p>API is working correctly.</p>' +
+                        '</div>';
+                } else {
+                    results.innerHTML = '<div class="error">' +
+                        '<h4>Flutterwave API Test:</h4>' +
+                        '<p>❌ Unexpected response</p>' +
+                        '<p>Status: ' + response.status + '</p>' +
+                        '<p>Error: ' + response.statusText + '</p>' +
+                        '</div>';
+                }
+            })
+            .catch(function(error) {
+                results.innerHTML = '<div class="error">' +
+                    '<h4>Flutterwave API Test:</h4>' +
+                    '<p>❌ Network error: ' + error.message + '</p>' +
+                    '<p>This could indicate a network issue or CORS problem.</p>' +
+                    '</div>';
+            });
+        }
+
+        // Test Mistral API
+        function testMistral() {
+            const results = document.getElementById('apiResults');
+            results.innerHTML = '<p>Testing Mistral API...</p>';
+            
+            fetch('https://api.mistral.ai/v1/models', {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer test-key',
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(function(response) {
+                if (response.status === 401) {
+                    results.innerHTML = '<div class="success">' +
+                        '<h4>Mistral API Test:</h4>' +
+                        '<p>✅ API endpoint is accessible!</p>' +
+                        '<p>Status: ' + response.status + ' (Unauthorized - expected with test key)</p>' +
+                        '<p>This means the API is reachable, but needs a valid API key.</p>' +
+                        '</div>';
+                } else if (response.status === 200) {
+                    results.innerHTML = '<div class="success">' +
+                        '<h4>Mistral API Test:</h4>' +
+                        '<p>✅ API endpoint is accessible!</p>' +
+                        '<p>Status: ' + response.status + '</p>' +
+                        '<p>API is working correctly.</p>' +
+                        '</div>';
+                } else {
+                    results.innerHTML = '<div class="error">' +
+                        '<h4>Mistral API Test:</h4>' +
+                        '<p>❌ Unexpected response</p>' +
+                        '<p>Status: ' + response.status + '</p>' +
+                        '<p>Error: ' + response.statusText + '</p>' +
+                        '</div>';
+                }
+            })
+            .catch(function(error) {
+                results.innerHTML = '<div class="error">' +
+                    '<h4>Mistral API Test:</h4>' +
+                    '<p>❌ Network error: ' + error.message + '</p>' +
+                    '<p>This could indicate a network issue or CORS problem.</p>' +
+                    '</div>';
+            });
+        }
+
+        // Initialize
+        displayEnvironmentInfo();
+    </script>
+</body>
+</html>
