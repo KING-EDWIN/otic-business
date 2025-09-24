@@ -22,8 +22,8 @@ RUN npm run build
 # Install nginx for serving
 RUN apk add --no-cache nginx
 
-# Copy built assets to nginx directory
-RUN cp -r dist/* /var/www/html/
+# Create nginx directory and copy built assets
+RUN mkdir -p /var/www/html && cp -r dist/* /var/www/html/
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
