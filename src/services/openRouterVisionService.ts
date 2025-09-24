@@ -33,36 +33,16 @@ class OpenRouterVisionService {
   private readonly API_KEY: string
   
   constructor() {
-    // Try multiple ways to get the API key
-    this.API_KEY = this.getApiKey()
+    // Get the API key from Vite environment
+    this.API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY || ''
     
     // Debug logging
     console.log('🔧 OpenRouter Vision Service Initialized:')
     console.log('API Key:', this.API_KEY ? `${this.API_KEY.substring(0, 20)}...` : 'MISSING')
     console.log('Environment check:', {
       'import.meta.env.VITE_OPENROUTER_API_KEY': !!import.meta.env.VITE_OPENROUTER_API_KEY,
-      'process.env.VITE_OPENROUTER_API_KEY': !!process.env.VITE_OPENROUTER_API_KEY,
       'window.location.hostname': window.location.hostname
     })
-  }
-
-  private getApiKey(): string {
-    // Try import.meta.env first (Vite)
-    if (import.meta.env.VITE_OPENROUTER_API_KEY) {
-      return import.meta.env.VITE_OPENROUTER_API_KEY
-    }
-    
-    // Try process.env (fallback)
-    if (process.env.VITE_OPENROUTER_API_KEY) {
-      return process.env.VITE_OPENROUTER_API_KEY
-    }
-    
-    // Try to get from window (if injected)
-    if ((window as any).VITE_OPENROUTER_API_KEY) {
-      return (window as any).VITE_OPENROUTER_API_KEY
-    }
-    
-    return ''
   }
   
   // Available models for vision tasks - STANDARDIZED ON GROK FREE ONLY

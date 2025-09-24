@@ -55,34 +55,14 @@ class FlutterwaveWebService {
   private publicKey: string
 
   constructor() {
-    this.publicKey = this.getPublicKey()
+    this.publicKey = import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY || ''
     
     console.log('🔧 Flutterwave Web Service Initialized:')
     console.log('Public Key:', this.publicKey ? `${this.publicKey.substring(0, 20)}...` : 'MISSING')
     console.log('Environment check:', {
       'import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY': !!import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY,
-      'process.env.VITE_FLUTTERWAVE_PUBLIC_KEY': !!process.env.VITE_FLUTTERWAVE_PUBLIC_KEY,
       'window.location.hostname': window.location.hostname
     })
-  }
-
-  private getPublicKey(): string {
-    // Try import.meta.env first (Vite)
-    if (import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY) {
-      return import.meta.env.VITE_FLUTTERWAVE_PUBLIC_KEY
-    }
-    
-    // Try process.env (fallback)
-    if (process.env.VITE_FLUTTERWAVE_PUBLIC_KEY) {
-      return process.env.VITE_FLUTTERWAVE_PUBLIC_KEY
-    }
-    
-    // Try to get from window (if injected)
-    if ((window as any).VITE_FLUTTERWAVE_PUBLIC_KEY) {
-      return (window as any).VITE_FLUTTERWAVE_PUBLIC_KEY
-    }
-    
-    return ''
   }
 
   /**

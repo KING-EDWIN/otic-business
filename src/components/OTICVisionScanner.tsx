@@ -40,6 +40,7 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
   const [detectedObjects, setDetectedObjects] = useState<DetectedObject[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
   const [showInstructions, setShowInstructions] = useState(false)
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment')
 
   // Handle video element when stream changes
   useEffect(() => {
@@ -86,6 +87,17 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
       setStream(null)
       setIsCameraOpen(false)
     }
+  }
+
+  const switchCamera = async () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop())
+    }
+    setFacingMode(prev => prev === 'user' ? 'environment' : 'user')
+    // Reopen camera with new facing mode
+    setTimeout(() => {
+      startCamera()
+    }, 100)
   }
 
   const captureImage = async () => {
@@ -316,7 +328,7 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
     <div className="space-y-4">
       {/* Instructions Toggle */}
       <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-gray-900">OTIC Vision Scanner</h3>
+        <h3 className="text-lg font-semibold text-gray-900">otic Vision Scanner</h3>
         <Button
           variant="outline"
           size="sm"
@@ -384,7 +396,7 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
                   ref={videoRef}
                   autoPlay
                   playsInline
-                  className="w-full rounded-lg"
+                  className="w-full max-w-sm mx-auto rounded-lg"
                 />
                 <canvas ref={canvasRef} className="hidden" />
               </div>
@@ -396,6 +408,14 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
                 >
                   <Target className="h-4 w-4 mr-2" />
                   Capture & Analyze
+                </Button>
+                <Button
+                  onClick={switchCamera}
+                  variant="outline"
+                  size="sm"
+                  className="px-2"
+                >
+                  <Camera className="h-4 w-4" />
                 </Button>
                 <Button
                   onClick={stopCamera}
@@ -438,7 +458,7 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
 
       {/* Footer */}
       <div className="text-center text-xs text-gray-500 pt-2">
-        Powered by OTIC Vision
+        Powered by otic Vision
       </div>
 
       {/* Close Button */}
