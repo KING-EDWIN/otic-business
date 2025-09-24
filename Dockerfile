@@ -23,7 +23,7 @@ RUN npm run build
 RUN apk add --no-cache nginx
 
 # Create nginx directory and copy built assets
-RUN mkdir -p /var/www/html && cp -r dist/* /var/www/html/
+RUN mkdir -p /usr/share/nginx/html && cp -r dist/* /usr/share/nginx/html/
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
