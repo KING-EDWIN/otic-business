@@ -54,7 +54,7 @@ const BusinessSignIn = () => {
         if (signInError.accountType && signInError.accountType !== 'business') {
           setError(`This account is registered as an ${signInError.accountType} account. Please use the Individual Sign In form.`);
         } else {
-        setError(signInError.message || 'Failed to sign in. Please check your credentials.');
+          setError(signInError.message || 'Failed to sign in. Please check your credentials.');
         }
         return;
       }

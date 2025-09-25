@@ -1,18 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabaseClient'
-import { clearProblematicSession, checkForProblematicSession } from '@/utils/sessionCleanup'
-import { ProfessionalSignupService } from '@/services/professionalSignup'
-import { EnhancedEmailVerificationService } from '@/services/enhancedEmailVerificationWithDB'
-import { 
-  testSupabaseConnectionWithRetry, 
-  clearAuthStorage, 
-  fetchProfileWithRetry,
-  signInWithRetry,
-  getSessionWithRetry,
-  isNetworkError,
-  isOnline,
-  waitForOnline
-} from '@/utils/networkResilience'
 import { toast } from 'sonner'
 
 interface UnifiedUser {
@@ -61,25 +48,17 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     const getInitialSession = async () => {
       try {
-        // Check for problematic session first
-        const isProblematic = await checkForProblematicSession()
-        if (isProblematic) {
-          console.log('🚨 Clearing problematic session...')
-          await clearProblematicSession()
-          if (mounted) {
-            setUser(null)
-            setProfile(null)
-            setSession(null)
-            setLoading(false)
-          }
-          return
-        }
 
         const { data: { session } } = await supabase.auth.getSession()
         
         if (mounted) {
           setSession(session)
-          setUser(session?.user ?? null)
+          setUser(session?.user ? {
+            id: session.user.id,
+            email: session.user.email || '',
+            email_confirmed_at: session.user.email_confirmed_at,
+            created_at: session.user.created_at
+          } : null)
           
           if (session?.user) {
             try {
@@ -140,7 +119,12 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
         
         setSession(session)
-        setUser(session?.user ?? null)
+        setUser(session?.user ? {
+          id: session.user.id,
+          email: session.user.email || '',
+          email_confirmed_at: session.user.email_confirmed_at,
+          created_at: session.user.created_at
+        } : null)
         
         if (session?.user) {
           try {
@@ -177,9 +161,6 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const signIn = async (email: string, password: string, userType: 'business' | 'individual' = 'business') => {
     try {
-      console.log(`🔐 Starting sign in for ${email} as ${userType}`)
-      
-      // Professional sign in with retry logic
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -187,33 +168,11 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       if (error) {
         console.error('Sign in failed:', error)
-        
-        // Professional error handling
-        const errorMessage = error.message || 'Sign in failed'
-        
-        // Handle specific Supabase errors
-        if (errorMessage.includes('Invalid login credentials')) {
-          return { error: { message: 'Invalid email or password. Please check your credentials and try again.' } }
-        }
-        
-        if (errorMessage.includes('Email not confirmed')) {
-          return { error: { message: 'Please verify your email address before signing in.' } }
-        }
-        
-        if (errorMessage.includes('Too many requests')) {
-          return { error: { message: 'Too many login attempts. Please wait a moment before trying again.' } }
-        }
-        
-        if (errorMessage.includes('Load failed') || errorMessage.includes('network')) {
-          return { error: { message: 'Network connection failed. Please check your internet connection and try again.' } }
-        }
-        
-        return { error: { message: errorMessage } }
+        return { error: { message: error.message || 'Sign in failed' } }
       }
 
       // Check if email is verified
       if (data.user && !data.user.email_confirmed_at) {
-        console.log('⚠️ Email not verified, preventing login')
         return { 
           error: { 
             message: 'Please verify your email before signing in. Check your inbox for a verification link.' 
@@ -221,44 +180,57 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
       }
 
-      console.log('✅ Sign in successful')
+      // Check account type - fetch profile to verify user type
+      try {
+        const { data: profileData, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('user_type')
+          .eq('id', data.user.id)
+          .single()
+
+        if (profileError) {
+          console.warn('Profile fetch error during sign in:', profileError)
+          // Continue with sign in if profile fetch fails
+        } else if (profileData && profileData.user_type !== userType) {
+          // Wrong account type
+          return {
+            error: {
+              message: `This account is registered as a ${profileData.user_type} account. Please use the ${profileData.user_type === 'business' ? 'Business' : 'Individual'} Sign In form.`,
+              accountType: profileData.user_type
+            }
+          }
+        }
+      } catch (profileError) {
+        console.warn('Profile validation error during sign in:', profileError)
+        // Continue with sign in if profile validation fails
+      }
+
       return { error: null, data }
     } catch (error: any) {
       console.error('Sign in error:', error)
-      
-      // Professional error handling for unexpected errors
-      let errorMessage = 'Sign in failed'
-      
-      if (error.message?.includes('Load failed')) {
-        errorMessage = 'Network connection failed. Please check your internet connection and try again.'
-      } else if (error.message?.includes('timeout')) {
-        errorMessage = 'The request is taking longer than expected. Please try again.'
-      } else if (error.message) {
-        errorMessage = error.message
-      }
-      
-      return { error: { message: errorMessage } }
+      return { error: { message: error.message || 'Sign in failed' } }
     }
   }
 
   const signUp = async (email: string, password: string, businessName: string, userType: 'business' | 'individual' = 'business') => {
     try {
-      console.log(`🚀 Starting professional signup for ${email} (${userType})`)
-      
-      // Use the professional signup service
-      const result = await ProfessionalSignupService.signup({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        businessName,
-        userType,
-        fullName: businessName // Use business name as full name for now
+        options: {
+          data: {
+            business_name: businessName,
+            user_type: userType,
+            full_name: businessName
+          }
+        }
       })
 
-      if (!result.success) {
-        return { error: { message: result.error } }
+      if (error) {
+        return { error: { message: error.message || 'Signup failed' } }
       }
 
-      if (result.needsEmailVerification) {
+      if (data.user && !data.user.email_confirmed_at) {
         toast.success('Account created! Please check your email to verify your account.')
         return { 
           error: null,
@@ -275,39 +247,26 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const signOut = async () => {
     try {
-      console.log('🚪 Starting sign out process...')
-      
-      // Clear local state first
+      // Clear local state
       setUser(null)
       setProfile(null)
       setSession(null)
       
-      // Clear all localStorage and sessionStorage
+      // Sign out from Supabase
+      await supabase.auth.signOut()
+      
+      // Clear storage
       localStorage.clear()
       sessionStorage.clear()
-      
-      // Sign out from Supabase with scope: 'local' to clear local storage
-      const { error } = await supabase.auth.signOut({ scope: 'local' })
-      
-      if (error) {
-        console.error('Sign out error:', error)
-        throw error
-      }
-      
-      console.log('✅ Sign out successful')
-      
-      // Force redirect to landing page
-      window.location.href = '/'
       
     } catch (error) {
-      console.error('❌ Sign out error:', error)
-      // Even if there's an error, clear everything and redirect
+      console.error('Sign out error:', error)
+      // Clear everything even if there's an error
       setUser(null)
       setProfile(null)
       setSession(null)
       localStorage.clear()
       sessionStorage.clear()
-      window.location.href = '/'
     }
   }
 

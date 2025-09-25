@@ -6,10 +6,23 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
+
+  const handleDashboardClick = () => {
+    if (user && profile) {
+      // Redirect to appropriate dashboard based on user type
+      if (profile.user_type === 'individual') {
+        navigate('/individual-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    } else {
+      navigate('/user-type');
+    }
+  };
 
   const userInitial = (user?.email || "").trim().charAt(0).toUpperCase() || "U";
 
@@ -59,7 +72,7 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
               <>
-                <Button variant="ghost" onClick={() => navigate('/dashboard')} className="text-[#040458] hover:text-[#faa51a]">
+                <Button variant="ghost" onClick={handleDashboardClick} className="text-[#040458] hover:text-[#faa51a]">
                   Dashboard
                 </Button>
                 <div className="relative" ref={userMenuRef}>
@@ -79,7 +92,7 @@ const Navbar = () => {
                       <div className="h-px bg-gray-200 my-2" />
                       <button
                         className="w-full text-left px-4 py-2 text-sm text-[#040458] hover:bg-gray-50"
-                        onClick={() => { setIsUserMenuOpen(false); navigate('/dashboard'); }}
+                        onClick={() => { setIsUserMenuOpen(false); handleDashboardClick(); }}
                       >
                         Dashboard
                       </button>
@@ -140,7 +153,7 @@ const Navbar = () => {
               <div className="flex flex-col space-y-2 px-4 pt-4 border-t border-border">
                 {user ? (
                   <>
-                    <Button variant="ghost" className="justify-start text-[#040458] hover:text-[#faa51a]" onClick={() => navigate('/dashboard')}>
+                    <Button variant="ghost" className="justify-start text-[#040458] hover:text-[#faa51a]" onClick={handleDashboardClick}>
                       Dashboard
                     </Button>
                     <div className="flex items-center space-x-3 py-2">

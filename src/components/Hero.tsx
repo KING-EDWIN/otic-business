@@ -10,8 +10,13 @@ const Hero = () => {
   const { user, profile } = useAuth();
 
   const handleGetStarted = () => {
-    if (user) {
-      navigate('/dashboard');
+    if (user && profile) {
+      // Redirect to appropriate dashboard based on user type
+      if (profile.user_type === 'individual') {
+        navigate('/individual-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     } else {
       navigate('/user-type');
     }
