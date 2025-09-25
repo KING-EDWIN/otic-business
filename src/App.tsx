@@ -64,6 +64,7 @@ import BranchSales from "./pages/BranchSales";
 import BranchStaff from "./pages/BranchStaff";
 import BranchInventory from "./pages/BranchInventory";
 import BranchAIInsights from "./pages/BranchAIInsights";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -171,6 +172,7 @@ const App = () => {
                 <Route path="/customers" element={<BusinessProtectedRoute><Customers /></BusinessProtectedRoute>} />
                 <Route path="/reports" element={<BusinessProtectedRoute><Reports /></BusinessProtectedRoute>} />
                 <Route path="/settings" element={<BusinessProtectedRoute><Settings /></BusinessProtectedRoute>} />
+                <Route path="/notifications" element={<BusinessProtectedRoute><Notifications /></BusinessProtectedRoute>} />
                 <Route path="/business-management" element={<BusinessProtectedRoute><BusinessManagement /></BusinessProtectedRoute>} />
                 <Route path="/invoices" element={<BusinessProtectedRoute><Invoices /></BusinessProtectedRoute>} />
                 {/* Email Verification and Password Reset Routes */}
