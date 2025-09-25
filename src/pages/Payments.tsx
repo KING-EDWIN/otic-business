@@ -497,36 +497,38 @@ const Payments: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md border-b border-white/20 shadow-lg">
-        <div className="container mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
+        <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-6">
               <Button 
                 variant="ghost" 
-                size="sm" 
+                size="sm"
                 onClick={() => navigate('/dashboard')}
-                className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10 transition-all duration-200 rounded-lg px-4 py-2"
+                className="flex items-center space-x-2 text-[#040458] hover:text-[#faa51a] hover:bg-[#faa51a]/10 transition-all duration-200 rounded-lg px-3 py-2 w-fit"
               >
                 <ArrowLeft className="h-4 w-4" />
-                <span>Back to Dashboard</span>
+                <span className="hidden sm:inline">Back to Dashboard</span>
+                <span className="sm:hidden">Back</span>
               </Button>
               <div className="flex items-center space-x-3">
-                <div className="p-3 bg-gradient-to-r from-[#faa51a] to-[#ff6b35] rounded-xl shadow-lg">
-                  <CreditCard className="h-8 w-8 text-white" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-[#faa51a] to-[#ff6b35] rounded-xl shadow-lg">
+                  <CreditCard className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold bg-gradient-to-r from-[#040458] to-[#1e40af] bg-clip-text text-transparent">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-[#040458] to-[#1e40af] bg-clip-text text-transparent">
                     Payments & Subscriptions
                   </h1>
-                  <p className="text-sm text-gray-600 font-medium">
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium">
                     Manage your payments, subscriptions, and billing
                   </p>
                 </div>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <Badge className="bg-gradient-to-r from-[#faa51a] to-[#ff6b35] text-white border-0 shadow-lg px-4 py-2">
-                <Crown className="h-4 w-4 mr-2" />
-                {profile?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan
+              <Badge className="bg-gradient-to-r from-[#faa51a] to-[#ff6b35] text-white border-0 shadow-lg px-3 py-1 sm:px-4 sm:py-2 text-xs sm:text-sm">
+                <Crown className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">{profile?.tier?.toUpperCase() || 'FREE_TRIAL'} Plan</span>
+                <span className="sm:hidden">{profile?.tier?.toUpperCase() || 'FREE_TRIAL'}</span>
               </Badge>
             </div>
           </div>
@@ -534,7 +536,7 @@ const Payments: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {loading && (
           <div className="text-center py-8">
             <div className="inline-flex items-center space-x-2">
@@ -545,81 +547,86 @@ const Payments: React.FC = () => {
         )}
         
         {/* Payment Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
           <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">Total Revenue</p>
-                  <p className="text-3xl font-bold text-[#040458]">UGX {paymentStats.totalRevenue.toLocaleString()}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-700">Total Revenue</p>
+                  <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-[#040458] truncate">UGX {paymentStats.totalRevenue.toLocaleString()}</p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-md">
-                  <DollarSign className="h-6 w-6 text-white" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg shadow-md flex-shrink-0">
+                  <DollarSign className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">This Month</p>
-                  <p className="text-3xl font-bold text-green-600">UGX {paymentStats.monthlyRevenue.toLocaleString()}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-700">This Month</p>
+                  <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-green-600 truncate">UGX {paymentStats.monthlyRevenue.toLocaleString()}</p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md">
-                  <TrendingUp className="h-6 w-6 text-white" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md flex-shrink-0">
+                  <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">Total Payments</p>
-                  <p className="text-3xl font-bold text-purple-600">{paymentStats.totalPayments}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-700">Total Payments</p>
+                  <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-purple-600">{paymentStats.totalPayments}</p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-md">
-                  <CreditCard className="h-6 w-6 text-white" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow-md flex-shrink-0">
+                  <CreditCard className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-gray-700">Pending</p>
-                  <p className="text-3xl font-bold text-yellow-600">{paymentStats.pendingPayments}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-semibold text-gray-700">Pending</p>
+                  <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-yellow-600">{paymentStats.pendingPayments}</p>
                 </div>
-                <div className="p-3 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg shadow-md">
-                  <Clock className="h-6 w-6 text-white" />
+                <div className="p-2 sm:p-3 bg-gradient-to-r from-yellow-500 to-orange-600 rounded-lg shadow-md flex-shrink-0">
+                  <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-2 shadow-lg">
-            <TabsList className="bg-transparent border-0">
-              <TabsTrigger value="subscription" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
-                Subscription
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-1 sm:p-2 shadow-lg">
+            <TabsList className="bg-transparent border-0 grid grid-cols-2 sm:grid-cols-5 gap-1 sm:gap-0">
+              <TabsTrigger value="subscription" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458] text-xs sm:text-sm px-2 sm:px-4">
+                <span className="hidden sm:inline">Subscription</span>
+                <span className="sm:hidden">Sub</span>
               </TabsTrigger>
-              <TabsTrigger value="upgrade" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
-                Upgrade Plan
+              <TabsTrigger value="upgrade" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458] text-xs sm:text-sm px-2 sm:px-4">
+                <span className="hidden sm:inline">Upgrade Plan</span>
+                <span className="sm:hidden">Upgrade</span>
               </TabsTrigger>
-              <TabsTrigger value="history" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
-                Payment History
+              <TabsTrigger value="history" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458] text-xs sm:text-sm px-2 sm:px-4">
+                <span className="hidden sm:inline">Payment History</span>
+                <span className="sm:hidden">History</span>
               </TabsTrigger>
-              <TabsTrigger value="methods" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
-                Payment Methods
+              <TabsTrigger value="methods" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458] text-xs sm:text-sm px-2 sm:px-4">
+                <span className="hidden sm:inline">Payment Methods</span>
+                <span className="sm:hidden">Methods</span>
               </TabsTrigger>
-              <TabsTrigger value="flutterwave" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458]">
-                Flutterwave
+              <TabsTrigger value="flutterwave" className="data-[state=active]:bg-[#040458] data-[state=active]:text-white text-[#040458] text-xs sm:text-sm px-2 sm:px-4">
+                <span className="hidden sm:inline">Flutterwave</span>
+                <span className="sm:hidden">Flutter</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -646,33 +653,33 @@ const Payments: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     <Button
                       onClick={() => handleUpgrade('basic')}
-                      className="h-auto p-4 flex flex-col items-center space-y-2"
+                      className="h-auto p-3 sm:p-4 flex flex-col items-center space-y-2"
                       variant="outline"
                     >
-                      <Star className="h-6 w-6 text-green-500" />
-                      <span className="font-medium">Start Smart</span>
-                      <span className="text-sm text-gray-600">UGX 1,000,000/month</span>
+                      <Star className="h-5 w-5 sm:h-6 sm:w-6 text-green-500" />
+                      <span className="font-medium text-sm sm:text-base">Start Smart</span>
+                      <span className="text-xs sm:text-sm text-gray-600">UGX 1,000,000/month</span>
                     </Button>
                     <Button
                       onClick={() => handleUpgrade('standard')}
-                      className="h-auto p-4 flex flex-col items-center space-y-2"
+                      className="h-auto p-3 sm:p-4 flex flex-col items-center space-y-2"
                       variant="outline"
                     >
-                      <Crown className="h-6 w-6 text-purple-500" />
-                      <span className="font-medium">Grow with Intelligence</span>
-                      <span className="text-sm text-gray-600">UGX 3,000,000/month</span>
+                      <Crown className="h-5 w-5 sm:h-6 sm:w-6 text-purple-500" />
+                      <span className="font-medium text-sm sm:text-base">Grow with Intelligence</span>
+                      <span className="text-xs sm:text-sm text-gray-600">UGX 3,000,000/month</span>
                     </Button>
                     <Button
                       onClick={() => handleUpgrade('premium')}
-                      className="h-auto p-4 flex flex-col items-center space-y-2"
+                      className="h-auto p-3 sm:p-4 flex flex-col items-center space-y-2 sm:col-span-2 lg:col-span-1"
                       variant="outline"
                     >
-                      <Crown className="h-6 w-6 text-orange-500" />
-                      <span className="font-medium">Enterprise Advantage</span>
-                      <span className="text-sm text-gray-600">UGX 5,000,000/month</span>
+                      <Crown className="h-5 w-5 sm:h-6 sm:w-6 text-orange-500" />
+                      <span className="font-medium text-sm sm:text-base">Enterprise Advantage</span>
+                      <span className="text-xs sm:text-sm text-gray-600">UGX 5,000,000/month</span>
                     </Button>
                   </div>
                 </div>

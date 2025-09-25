@@ -6,22 +6,14 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, getDashboardRoute } = useAuth();
   const navigate = useNavigate();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   const handleDashboardClick = () => {
-    if (user && profile) {
-      // Redirect to appropriate dashboard based on user type
-      if (profile.user_type === 'individual') {
-        navigate('/individual-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
-    } else {
-      navigate('/user-type');
-    }
+    const dashboardRoute = getDashboardRoute();
+    navigate(dashboardRoute);
   };
 
   const userInitial = (user?.email || "").trim().charAt(0).toUpperCase() || "U";
