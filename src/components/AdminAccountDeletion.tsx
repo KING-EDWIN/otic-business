@@ -20,6 +20,7 @@ import {
   Shield
 } from 'lucide-react'
 import { AccountDeletionService } from '@/services/accountDeletionService'
+import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'sonner'
 
 interface DeletedAccount {
@@ -47,6 +48,8 @@ const AdminAccountDeletion: React.FC = () => {
   const [showPermanentDeleteDialog, setShowPermanentDeleteDialog] = useState(false)
   const [selectedAccount, setSelectedAccount] = useState<DeletedAccount | null>(null)
   const [deleteReason, setDeleteReason] = useState('')
+  const [accountsNeedingManualDeletion, setAccountsNeedingManualDeletion] = useState<any[]>([])
+  const [showManualDeletionSection, setShowManualDeletionSection] = useState(false)
 
   const limit = 20
 
@@ -69,6 +72,38 @@ const AdminAccountDeletion: React.FC = () => {
       toast.error('Failed to load deleted accounts')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadAccountsNeedingManualDeletion = async () => {
+    try {
+      // Add timeout to prevent infinite loading
+      const queryPromise = supabase
+        .from('accounts_needing_manual_deletion')
+        .select('*')
+        .order('deleted_at', { ascending: true })
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout')), 10000)
+      )
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any
+
+      if (error) {
+        console.error('Error loading accounts needing manual deletion:', error)
+        toast.error('Failed to load accounts needing manual deletion')
+        return
+      }
+
+      return data || []
+    } catch (error: any) {
+      console.error('Error loading accounts needing manual deletion:', error)
+      if (error.message === 'Query timeout') {
+        toast.error('Request timed out. Please try again.')
+      } else {
+        toast.error('Failed to load accounts needing manual deletion')
+      }
+      return []
     }
   }
 
@@ -149,6 +184,50 @@ const AdminAccountDeletion: React.FC = () => {
             <Shield className="h-4 w-4 mr-2" />
             Cleanup Expired
           </Button>
+        <Button
+          onClick={async () => {
+            if (confirm('⚠️ WARNING: This will permanently delete ALL accounts from the ENTIRE database (user_profiles, auth.users, and all related tables), even those within the 30-day recovery period. This action cannot be undone. Are you sure?')) {
+              try {
+                const result = await AccountDeletionService.permanentDeleteAllAccounts()
+                if (result.success) {
+                  toast.success(`Permanently deleted ${result.deletedCount} accounts`)
+                  loadDeletedAccounts()
+                } else {
+                  toast.error(result.error || 'Failed to permanently delete accounts')
+                }
+              } catch (error) {
+                console.error('Error permanently deleting all accounts:', error)
+                toast.error('Failed to permanently delete accounts')
+              }
+            }
+          }}
+          variant="outline"
+          size="sm"
+          className="text-red-600 border-red-600 hover:bg-red-50"
+        >
+          <AlertTriangle className="h-4 w-4 mr-2" />
+          Delete All Permanently
+        </Button>
+        
+        <Button
+          onClick={async () => {
+            try {
+              const accounts = await loadAccountsNeedingManualDeletion()
+              setAccountsNeedingManualDeletion(accounts)
+              setShowManualDeletionSection(true)
+              toast.success(`Found ${accounts.length} accounts needing manual deletion`)
+            } catch (error) {
+              console.error('Error loading accounts needing manual deletion:', error)
+              toast.error('Failed to load accounts needing manual deletion')
+            }
+          }}
+          variant="outline"
+          size="sm"
+          className="text-orange-600 border-orange-600 hover:bg-orange-50"
+        >
+          <Shield className="h-4 w-4 mr-2" />
+          Check Manual Deletion
+        </Button>
           <Button
             onClick={loadDeletedAccounts}
             variant="outline"
@@ -156,6 +235,23 @@ const AdminAccountDeletion: React.FC = () => {
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
+          </Button>
+          <Button
+            onClick={async () => {
+              const result = await AccountDeletionService.createTestDeletedAccount()
+              if (result.success) {
+                toast.success('Test deleted account created')
+                loadDeletedAccounts()
+              } else {
+                toast.error(result.error || 'Failed to create test account')
+              }
+            }}
+            variant="outline"
+            size="sm"
+            className="bg-blue-50 text-blue-600 border-blue-200"
+          >
+            <User className="h-4 w-4 mr-2" />
+            Create Test Account
           </Button>
         </div>
       </div>
@@ -336,6 +432,82 @@ const AdminAccountDeletion: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Manual Deletion Section */}
+      {showManualDeletionSection && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex items-center text-orange-600">
+              <Shield className="h-5 w-5 mr-2" />
+              Accounts Needing Manual Deletion
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {accountsNeedingManualDeletion.length === 0 ? (
+              <Alert>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  No accounts currently need manual deletion. All expired accounts have been processed.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div>
+                <Alert className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    These accounts have been cleaned of all data but still exist in the auth.users table. 
+                    They need to be manually deleted through the Supabase dashboard.
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="space-y-2">
+                  {accountsNeedingManualDeletion.map((account, index) => (
+                    <div key={account.user_id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                          <span className="text-orange-600 font-semibold text-sm">{index + 1}</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{account.email}</p>
+                          <p className="text-sm text-gray-600">{account.full_name}</p>
+                          <p className="text-xs text-gray-500">
+                            Expired {account.days_expired} days ago
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="outline" className="text-orange-600 border-orange-600">
+                          Manual Deletion Required
+                        </Badge>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(account.email)
+                            toast.success('Email copied to clipboard')
+                          }}
+                        >
+                          Copy Email
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Instructions for Manual Deletion:</h4>
+                  <ol className="text-sm text-blue-800 space-y-1">
+                    <li>1. Go to Supabase Dashboard → Authentication → Users</li>
+                    <li>2. Search for each email listed above</li>
+                    <li>3. Select and delete each user</li>
+                    <li>4. Or run the cleanup script: <code className="bg-blue-100 px-1 rounded">node scripts/30-day-cleanup.js</code></li>
+                  </ol>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Pagination */}
       {totalAccounts > limit && (

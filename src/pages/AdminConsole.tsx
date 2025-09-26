@@ -1,16 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
-import { adminService, AdminUser } from '@/services/adminService'
+import { useEffect, useMemo, useState, lazy, Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import TierUpgradeRequests from '@/components/TierUpgradeRequests'
-import EmailVerificationManager from '@/components/EmailVerificationManager'
-import AdminFAQManagement from '@/components/AdminFAQManagement'
-import AdminAccountDeletion from '@/components/AdminAccountDeletion'
-import ContactManagement from './ContactManagement'
-import { Crown, Mail, HelpCircle, Trash2, MessageSquare } from 'lucide-react'
+import { Crown, Mail, HelpCircle, Trash2, MessageSquare, Users, Loader2 } from 'lucide-react'
+
+// Lazy load heavy components
+const TierUpgradeRequests = lazy(() => import('@/components/TierUpgradeRequests'))
+const EmailVerificationManager = lazy(() => import('@/components/EmailVerificationManager'))
+const AdminFAQManagement = lazy(() => import('@/components/AdminFAQManagement'))
+const AdminAccountDeletion = lazy(() => import('@/components/AdminAccountDeletion'))
+const ContactManagement = lazy(() => import('./ContactManagement'))
+const UserManagement = lazy(() => import('@/components/UserManagement'))
 
 const isDesktop = () => {
   if (typeof window === 'undefined') return true
@@ -25,6 +27,7 @@ const AdminConsole = () => {
   const [showFAQManagement, setShowFAQManagement] = useState(false)
   const [showUserDeletion, setShowUserDeletion] = useState(false)
   const [showContactManagement, setShowContactManagement] = useState(false)
+  const [showUserManagement, setShowUserManagement] = useState(false)
 
   const desktopOnly = useMemo(() => isDesktop(), [])
 
@@ -147,6 +150,22 @@ const AdminConsole = () => {
 
         <Card>
           <CardHeader>
+            <CardTitle>User Management</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-gray-600">View all active users, search by email/name, and manually delete development accounts. Use this to clean out test accounts and manage user data.</p>
+            <Button 
+              className="bg-[#040458] hover:bg-[#030345] text-white"
+              onClick={() => setShowUserManagement(true)}
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Manage Active Users
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Account Deletion Management</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -171,15 +190,37 @@ const AdminConsole = () => {
         </Card>
       </div>
 
-      <TierUpgradeRequests 
-        isOpen={showTierManagement} 
-        onClose={() => setShowTierManagement(false)} 
-      />
+      <Suspense fallback={
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-8">
+            <div className="flex items-center">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>Loading Tier Management...</span>
+            </div>
+          </div>
+        </div>
+      }>
+        <TierUpgradeRequests 
+          isOpen={showTierManagement} 
+          onClose={() => setShowTierManagement(false)} 
+        />
+      </Suspense>
 
-      <EmailVerificationManager 
-        isOpen={showEmailVerification} 
-        onClose={() => setShowEmailVerification(false)} 
-      />
+      <Suspense fallback={
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-8">
+            <div className="flex items-center">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>Loading Email Verification...</span>
+            </div>
+          </div>
+        </div>
+      }>
+        <EmailVerificationManager 
+          isOpen={showEmailVerification} 
+          onClose={() => setShowEmailVerification(false)} 
+        />
+      </Suspense>
 
       {/* FAQ Management Modal */}
       {showFAQManagement && (
@@ -195,7 +236,14 @@ const AdminConsole = () => {
                   Close
                 </Button>
               </div>
-              <AdminFAQManagement />
+              <Suspense fallback={
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span>Loading FAQ Management...</span>
+                </div>
+              }>
+                <AdminFAQManagement />
+              </Suspense>
             </div>
           </div>
         </div>
@@ -215,7 +263,41 @@ const AdminConsole = () => {
                   Close
                 </Button>
               </div>
-              <AdminAccountDeletion />
+              <Suspense fallback={
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span>Loading Account Deletion...</span>
+                </div>
+              }>
+                <AdminAccountDeletion />
+              </Suspense>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* User Management Modal */}
+      {showUserManagement && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-7xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-[#040458]">User Management</h2>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowUserManagement(false)}
+                >
+                  Close
+                </Button>
+              </div>
+              <Suspense fallback={
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span>Loading User Management...</span>
+                </div>
+              }>
+                <UserManagement />
+              </Suspense>
             </div>
           </div>
         </div>
@@ -235,7 +317,14 @@ const AdminConsole = () => {
                   Close
                 </Button>
               </div>
-              <ContactManagement />
+              <Suspense fallback={
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span>Loading Contact Management...</span>
+                </div>
+              }>
+                <ContactManagement />
+              </Suspense>
             </div>
           </div>
         </div>

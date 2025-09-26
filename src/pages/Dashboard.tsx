@@ -19,6 +19,8 @@ import BusinessSwitcher from '@/components/BusinessSwitcher'
 import BusinessDropdown from '@/components/BusinessDropdown'
 import AnalyticsReportsDropdown from '@/components/AnalyticsReportsDropdown'
 import MyExtrasDropdown from '@/components/MyExtrasDropdown'
+import VerificationBanner from '@/components/VerificationBanner'
+import DisabledWrapper from '@/components/DisabledWrapper'
 import { useDateRange } from '@/hooks/useDateRange'
 import DateRangePicker from '@/components/DateRangePicker'
 import { 
@@ -296,6 +298,11 @@ const Dashboard = () => {
         </div>
       )}
       
+      {/* Email Verification Banner */}
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-4">
+        <VerificationBanner />
+      </div>
+      
       {/* Header */}
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
@@ -312,56 +319,68 @@ const Dashboard = () => {
             {/* Centered Navigation Menu */}
             <div className="hidden lg:flex items-center space-x-1">
               <MyExtrasDropdown />
+              <DisabledWrapper tooltipText="Verify your email to access POS">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigate('/pos')}
-                className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
+                  className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
                 >
                   POS
                 </Button>
+              </DisabledWrapper>
+              <DisabledWrapper tooltipText="Verify your email to access Inventory">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigate('/inventory')}
-                className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
+                  className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
                 >
                   Inventory
                 </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/accounting')}
-                className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
-              >
-                Accounting
+              </DisabledWrapper>
+              <DisabledWrapper tooltipText="Verify your email to access Accounting">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/accounting')}
+                  className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
+                >
+                  Accounting
                 </Button>
+              </DisabledWrapper>
               <AnalyticsReportsDropdown />
               <BusinessDropdown />
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/customers')}
-                className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
-              >
-                Customers
+              <DisabledWrapper tooltipText="Verify your email to access Customers">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/customers')}
+                  className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
+                >
+                  Customers
                 </Button>
+              </DisabledWrapper>
+              <DisabledWrapper tooltipText="Verify your email to access Payments">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigate('/payments')}
-                className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
+                  className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
                 >
                   Payments
                 </Button>
+              </DisabledWrapper>
+              <DisabledWrapper tooltipText="Verify your email to access Settings">
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => navigate('/settings')}
-                className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
+                  className="text-gray-700 hover:text-white hover:bg-gradient-to-r hover:from-[#040458] hover:to-[#faa51a] transition-all duration-300 rounded-lg px-3 py-2 font-medium"
                 >
                   Settings
                 </Button>
+              </DisabledWrapper>
               </div>
 
             {/* Right side - Profile */}
@@ -630,43 +649,51 @@ const Dashboard = () => {
               <p className="text-xs lg:text-sm text-gray-600 lg:ml-4">Common tasks to get you started.</p>
             </div>
             <div className="grid grid-cols-2 lg:grid-cols-2 gap-3 lg:gap-4">
-                  <Button 
-                    onClick={() => navigate('/pos')}
-                className="h-16 lg:h-20 md:h-24 bg-gradient-to-r from-[#040458] to-[#faa51a] text-white hover:opacity-90 transition-all duration-200 shadow-lg rounded-xl"
-              >
-                <div className="flex flex-col items-center space-y-1 lg:space-y-2">
-                  <ShoppingCart className="h-5 w-5 lg:h-8 lg:w-8" />
-                  <span className="text-xs lg:text-sm font-medium">Start New Sale</span>
-                </div>
-                  </Button>
-                  <Button 
-                    onClick={() => navigate('/inventory')}
-                className="h-16 lg:h-20 md:h-24 bg-green-500 text-white hover:bg-green-600 transition-all duration-200 shadow-lg rounded-xl"
-              >
-                <div className="flex flex-col items-center space-y-1 lg:space-y-2">
-                  <Plus className="h-5 w-5 lg:h-8 lg:w-8" />
-                  <span className="text-xs lg:text-sm font-medium">Add New Product</span>
-                </div>
-                  </Button>
-                  <Button 
-                    onClick={() => navigate('/analytics')}
-                className="h-16 lg:h-20 md:h-24 bg-blue-500 text-white hover:bg-blue-600 transition-all duration-200 shadow-lg rounded-xl"
-              >
-                <div className="flex flex-col items-center space-y-1 lg:space-y-2">
-                  <BarChart3 className="h-5 w-5 lg:h-8 lg:w-8" />
-                  <span className="text-xs lg:text-sm font-medium">View Reports</span>
-                </div>
-                  </Button>
-                    <Button
-                onClick={() => navigate('/accounting')}
-                className="h-16 lg:h-20 md:h-24 bg-purple-500 text-white hover:bg-purple-600 transition-all duration-200 shadow-lg rounded-xl"
-              >
-                <div className="flex flex-col items-center space-y-1 lg:space-y-2">
-                  <FileText className="h-5 w-5 lg:h-8 lg:w-8" />
-                  <span className="text-xs lg:text-sm font-medium">Accounting</span>
-                </div>
-                    </Button>
+              <DisabledWrapper tooltipText="Verify your email to access POS">
+                <Button 
+                  onClick={() => navigate('/pos')}
+                  className="h-16 lg:h-20 md:h-24 bg-gradient-to-r from-[#040458] to-[#faa51a] text-white hover:opacity-90 transition-all duration-200 shadow-lg rounded-xl"
+                >
+                  <div className="flex flex-col items-center space-y-1 lg:space-y-2">
+                    <ShoppingCart className="h-5 w-5 lg:h-8 lg:w-8" />
+                    <span className="text-xs lg:text-sm font-medium">Start New Sale</span>
                   </div>
+                </Button>
+              </DisabledWrapper>
+              <DisabledWrapper tooltipText="Verify your email to access Inventory">
+                <Button 
+                  onClick={() => navigate('/inventory')}
+                  className="h-16 lg:h-20 md:h-24 bg-green-500 text-white hover:bg-green-600 transition-all duration-200 shadow-lg rounded-xl"
+                >
+                  <div className="flex flex-col items-center space-y-1 lg:space-y-2">
+                    <Plus className="h-5 w-5 lg:h-8 lg:w-8" />
+                    <span className="text-xs lg:text-sm font-medium">Add New Product</span>
+                  </div>
+                </Button>
+              </DisabledWrapper>
+              <DisabledWrapper tooltipText="Verify your email to access Analytics">
+                <Button 
+                  onClick={() => navigate('/analytics')}
+                  className="h-16 lg:h-20 md:h-24 bg-blue-500 text-white hover:bg-blue-600 transition-all duration-200 shadow-lg rounded-xl"
+                >
+                  <div className="flex flex-col items-center space-y-1 lg:space-y-2">
+                    <BarChart3 className="h-5 w-5 lg:h-8 lg:w-8" />
+                    <span className="text-xs lg:text-sm font-medium">View Reports</span>
+                  </div>
+                </Button>
+              </DisabledWrapper>
+              <DisabledWrapper tooltipText="Verify your email to access Accounting">
+                <Button
+                  onClick={() => navigate('/accounting')}
+                  className="h-16 lg:h-20 md:h-24 bg-purple-500 text-white hover:bg-purple-600 transition-all duration-200 shadow-lg rounded-xl"
+                >
+                  <div className="flex flex-col items-center space-y-1 lg:space-y-2">
+                    <FileText className="h-5 w-5 lg:h-8 lg:w-8" />
+                    <span className="text-xs lg:text-sm font-medium">Accounting</span>
+                  </div>
+                </Button>
+              </DisabledWrapper>
+            </div>
                     </div>
 
           {/* Right Column - Enhanced Sales Performance */}

@@ -40,7 +40,8 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
   const [detectedObjects, setDetectedObjects] = useState<DetectedObject[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
   const [showInstructions, setShowInstructions] = useState(false)
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment')
+  const [foundProducts, setFoundProducts] = useState<any[]>([])
+  const [detectedVFTName, setDetectedVFTName] = useState<string>('')
 
   // Handle video element when stream changes
   useEffect(() => {
@@ -150,7 +151,9 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
       const result = await visionApiManager.detectObjects(imageFile)
 
       if (result.success && result.objects.length > 0) {
-        // Don't show detected objects to user - implement smart flow
+        // Show detected objects to user
+        setDetectedObjects(result.objects)
+        // Process detected objects for smart matching
         await processDetectedObjects(result.objects)
         toast.success('Products found! Check the suggestions below.')
       } else {
@@ -272,6 +275,10 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
         
         if (topProducts.length > 0) {
           console.log('Calling onProductDetected with:', vft.tag_name, topProducts)
+          // Store found products for display in scanner
+          setFoundProducts(topProducts)
+          setDetectedVFTName(vft.tag_name)
+          // Also call the callback for POS integration
           onProductDetected?.(vft.tag_name, topProducts)
           toast.success(`Found ${topProducts.length} products for "${vft.tag_name}"`)
         } else {
@@ -319,6 +326,8 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
     setSelectedImage(null)
     setImagePreview(null)
     setDetectedObjects([])
+    setFoundProducts([])
+    setDetectedVFTName('')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -445,8 +454,39 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
         </Card>
       )}
 
-      {/* Smart Detection Results - Hidden from user */}
-      {/* The system now automatically processes detections and shows relevant products */}
+      {/* Found Products */}
+      {foundProducts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center">
+              <Target className="h-4 w-4 mr-2 text-[#faa51a]" />
+              Found Products ({detectedVFTName})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {foundProducts.map((product, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">
+                      {product.brand_name} {product.product_name}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Price: ${product.price} | Stock: {product.stock_quantity}
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {product.barcode || 'No Barcode'}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 text-xs text-gray-500 text-center">
+              Products will be added to POS automatically
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Processing Indicator */}
       {isProcessing && (

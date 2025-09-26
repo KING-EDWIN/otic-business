@@ -45,10 +45,18 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     let mounted = true
+    let timeoutId: NodeJS.Timeout
+
+    // Add timeout to prevent infinite loading
+    timeoutId = setTimeout(() => {
+      if (mounted) {
+        console.warn('Auth initialization timeout - forcing loading to false')
+        setLoading(false)
+      }
+    }, 5000) // 5 second timeout
 
     const getInitialSession = async () => {
       try {
-
         const { data: { session } } = await supabase.auth.getSession()
         
         if (mounted) {
@@ -62,7 +70,7 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
           
           if (session?.user) {
             try {
-              // Simple profile loading - no retry to avoid complexity
+              // Simple profile loading with proper error handling
               const { data: profileData, error } = await supabase
                 .from('user_profiles')
                 .select('*')
@@ -77,39 +85,41 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
                   setProfile(profileData)
                 }
                 setLoading(false)
+                clearTimeout(timeoutId)
               }
             } catch (error) {
               console.warn('Profile fetch failed:', error)
               if (mounted) {
                 setProfile(null)
                 setLoading(false)
+                clearTimeout(timeoutId)
               }
             }
           } else {
             setProfile(null)
             setLoading(false)
+            clearTimeout(timeoutId)
           }
         }
       } catch (error) {
         console.error('Error getting initial session:', error)
         if (mounted) {
           setLoading(false)
+          clearTimeout(timeoutId)
         }
       }
     }
 
     getInitialSession()
 
-    // Listen for auth changes
+    // Listen for auth changes - only handle state changes, not initial loading
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return
-        // Simplified logging
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-          console.log('Auth state change:', event, session?.user?.id)
-        }
         
-        // Prevent rapid state changes during sign-out
+        console.log('Auth state change:', event, session?.user?.id)
+        
+        // Handle sign out
         if (event === 'SIGNED_OUT') {
           setSession(null)
           setUser(null)
@@ -118,38 +128,42 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
           return
         }
         
-        setSession(session)
-        setUser(session?.user ? {
-          id: session.user.id,
-          email: session.user.email || '',
-          email_confirmed_at: session.user.email_confirmed_at,
-          created_at: session.user.created_at
-        } : null)
-        
-        if (session?.user) {
+        // Handle sign in - load profile
+        if (event === 'SIGNED_IN' && session?.user) {
+          setSession(session)
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            email_confirmed_at: session.user.email_confirmed_at,
+            created_at: session.user.created_at
+          })
+          
+          // Load profile
           try {
-            // Simple profile loading - no retry to avoid complexity
-            const { data: profileData, error } = await supabase
+            const { data: profileData, error: profileError } = await supabase
               .from('user_profiles')
               .select('*')
               .eq('id', session.user.id)
               .single()
             
-            if (error) {
-              console.warn('Profile fetch error:', error)
+            if (profileError) {
+              console.warn('Profile fetch error in state change:', profileError)
               setProfile(null)
             } else {
               setProfile(profileData)
             }
           } catch (error) {
-            console.warn('Profile fetch failed:', error)
+            console.warn('Profile fetch failed in state change:', error)
             setProfile(null)
           }
-        } else {
-          setProfile(null)
+          
+          setLoading(false)
         }
         
-        setLoading(false)
+        // Handle token refresh - just update session
+        if (event === 'TOKEN_REFRESHED' && session) {
+          setSession(session)
+        }
       }
     )
 
@@ -161,6 +175,8 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const signIn = async (email: string, password: string, userType: 'business' | 'individual' = 'business') => {
     try {
+      console.log(`🔐 Signing in ${email} as ${userType}`)
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -171,7 +187,7 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return { error: { message: error.message || 'Sign in failed' } }
       }
 
-      // Check if email is verified
+      // Simple email verification check
       if (data.user && !data.user.email_confirmed_at) {
         return { 
           error: { 
@@ -180,31 +196,7 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
       }
 
-      // Check account type - fetch profile to verify user type
-      try {
-        const { data: profileData, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('user_type')
-          .eq('id', data.user.id)
-          .single()
-
-        if (profileError) {
-          console.warn('Profile fetch error during sign in:', profileError)
-          // Continue with sign in if profile fetch fails
-        } else if (profileData && profileData.user_type !== userType) {
-          // Wrong account type
-          return {
-            error: {
-              message: `This account is registered as a ${profileData.user_type} account. Please use the ${profileData.user_type === 'business' ? 'Business' : 'Individual'} Sign In form.`,
-              accountType: profileData.user_type
-            }
-          }
-        }
-      } catch (profileError) {
-        console.warn('Profile validation error during sign in:', profileError)
-        // Continue with sign in if profile validation fails
-      }
-
+      console.log('✅ Sign in successful')
       return { error: null, data }
     } catch (error: any) {
       console.error('Sign in error:', error)
@@ -212,12 +204,18 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }
 
-  const signUp = async (email: string, password: string, businessName: string, userType: 'business' | 'individual' = 'business') => {
+  const signUp = async (email: string, password: string, businessName: string, userType: 'business' | 'individual' = 'business'): Promise<{ error: any; needsEmailVerification?: boolean }> => {
     try {
+      console.log(`🚀 Starting signup for ${email} (${userType})`)
+      
+      // Import environment service for URL generation
+      const { getUrl } = await import('@/services/environmentService')
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: getUrl('/verify-email'),
           data: {
             business_name: businessName,
             user_type: userType,
@@ -227,41 +225,79 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
       })
 
       if (error) {
-        return { error: { message: error.message || 'Signup failed' } }
+        console.error('Auth signup error:', error)
+        return { error: { message: error.message || 'Signup failed' }, needsEmailVerification: false }
       }
 
-      if (data.user && !data.user.email_confirmed_at) {
-        toast.success('Account created! Please check your email to verify your account.')
+      if (!data.user) {
+        return { error: { message: 'No user data returned from signup' }, needsEmailVerification: false }
+      }
+
+      console.log('✅ Auth user created:', data.user.id)
+
+      // Create user profile
+      const profileData = {
+        id: data.user.id,
+        email: email,
+        full_name: businessName,
+        business_name: businessName,
+        user_type: userType,
+        tier: 'free_trial' as const,
+        email_verified: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .upsert(profileData, {
+          onConflict: 'id'
+        })
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError)
+        return { error: { message: 'Failed to create user profile' }, needsEmailVerification: false }
+      }
+
+      console.log('✅ User profile created successfully')
+
+      // Check if email verification is needed
+      if (!data.user.email_confirmed_at) {
+        console.log('📧 Email verification required')
         return { 
           error: null,
           needsEmailVerification: true 
         }
       }
 
-      return { error: null }
+      console.log('🎉 Signup completed successfully')
+      return { error: null, needsEmailVerification: false }
     } catch (error: any) {
       console.error('Error in signup process:', error)
-      return { error: { message: error.message || 'Signup failed' } }
+      return { error: { message: error.message || 'Signup failed' }, needsEmailVerification: false }
     }
   }
 
   const signOut = async () => {
     try {
-      // Clear local state
+      console.log('🚪 Signing out...')
+      
+      // Clear local state immediately
       setUser(null)
       setProfile(null)
       setSession(null)
-      
-      // Sign out from Supabase
-      await supabase.auth.signOut()
       
       // Clear storage
       localStorage.clear()
       sessionStorage.clear()
       
+      // Sign out from Supabase
+      await supabase.auth.signOut({ scope: 'local' })
+      
+      console.log('✅ Sign out successful')
     } catch (error) {
       console.error('Sign out error:', error)
-      // Clear everything even if there's an error
+      // Force clear everything even if there's an error
       setUser(null)
       setProfile(null)
       setSession(null)
@@ -300,12 +336,24 @@ export const UnifiedAuthProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }
 
   const getDashboardRoute = () => {
-    if (!profile) return '/'
+    console.log('🔍 getDashboardRoute called:', { user: !!user, profile: !!profile, userType: profile?.user_type });
+    
+    if (!user) {
+      console.log('🔍 No user, redirecting to login-type');
+      return '/login-type';
+    }
+    
+    if (!profile) {
+      console.log('🔍 No profile, redirecting to login-type');
+      return '/login-type';
+    }
     
     if (profile.user_type === 'business') {
-      return '/dashboard'
+      console.log('🔍 Business user, redirecting to dashboard');
+      return '/dashboard';
     } else {
-      return '/individual-dashboard'
+      console.log('🔍 Individual user, redirecting to individual-dashboard');
+      return '/individual-dashboard';
     }
   }
 

@@ -63,6 +63,7 @@ const FAQ = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [questionsPerPage] = useState(10);
   const [totalQuestions, setTotalQuestions] = useState(0);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Load FAQ data
   useEffect(() => {
@@ -76,37 +77,84 @@ const FAQ = () => {
 
   const loadFAQData = async (page = 1) => {
     try {
+      console.log('🔍 FAQ: Starting to load FAQ data...');
       setLoading(true);
       
-      // Load categories (cache these as they don't change often)
-      const { data: categoriesData, error: categoriesError } = await supabase
+      // Load categories with timeout to prevent hanging
+      console.log('🔍 FAQ: Loading categories...');
+      const categoriesPromise = supabase
         .from('faq_categories')
         .select('*')
         .order('sort_order');
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Categories query timeout')), 10000)
+      );
+      
+      const { data: categoriesData, error: categoriesError } = await Promise.race([
+        categoriesPromise,
+        timeoutPromise
+      ]) as any;
 
       if (categoriesError) {
         console.error('Error loading categories:', categoriesError);
+        // Show user-friendly error for network issues
+        if (categoriesError.message.includes('Invalid API key') || categoriesError.message.includes('Failed to fetch')) {
+          toast.error('Poor network connection. Please check your internet and try again.');
+        } else if (categoriesError.message.includes('timeout')) {
+          if (retryCount < 2) {
+            toast.error(`Categories loading timeout. Retrying... (${retryCount + 1}/3)`);
+            setRetryCount(prev => prev + 1);
+            setTimeout(() => loadFAQData(page), 2000); // Retry after 2 seconds
+            return;
+          } else {
+            toast.error('Categories loading timeout. Please refresh the page or try again.');
+          }
+        } else {
+          toast.error('Failed to load FAQ categories. Please try again.');
+        }
         setCategories([]);
       } else {
+        console.log('🔍 FAQ: Categories loaded successfully:', categoriesData?.length || 0);
         setCategories(categoriesData || []);
+        setRetryCount(0); // Reset retry count on success
       }
 
-      // Load questions with pagination
+      // Load questions with pagination and timeout
+      console.log('🔍 FAQ: Loading questions...');
       const from = (page - 1) * questionsPerPage;
       const to = from + questionsPerPage - 1;
 
-      const { data: questionsData, error: questionsError, count } = await supabase
+      const questionsPromise = supabase
         .from('faq_questions')
         .select('*', { count: 'exact' })
         .eq('is_active', true)
         .order('view_count', { ascending: false }) // Show most viewed first
         .range(from, to);
+      
+      const questionsTimeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Questions query timeout')), 10000)
+      );
+      
+      const { data: questionsData, error: questionsError, count } = await Promise.race([
+        questionsPromise,
+        questionsTimeoutPromise
+      ]) as any;
 
       if (questionsError) {
         console.error('Error loading questions:', questionsError);
+        // Show user-friendly error for network issues
+        if (questionsError.message.includes('Invalid API key') || questionsError.message.includes('Failed to fetch')) {
+          toast.error('Poor network connection. Please check your internet and try again.');
+        } else if (questionsError.message.includes('timeout')) {
+          toast.error('Questions loading timeout. Please refresh the page or try again.');
+        } else {
+          toast.error('Failed to load FAQ questions. Please try again.');
+        }
         setQuestions([]);
         setTotalQuestions(0);
       } else {
+        console.log('🔍 FAQ: Questions loaded successfully:', questionsData?.length || 0);
         setQuestions(questionsData || []);
         setTotalQuestions(count || 0);
       }
@@ -117,6 +165,7 @@ const FAQ = () => {
       setQuestions([]);
       setTotalQuestions(0);
     } finally {
+      console.log('🔍 FAQ: Setting loading to false');
       setLoading(false);
     }
   };

@@ -7,10 +7,25 @@ import heroImage from "@/assets/female-african-store-attendant-smiling-600nw-189
 
 const Hero = () => {
   const navigate = useNavigate();
-  const { getDashboardRoute } = useAuth();
+  const { getDashboardRoute, user, profile, loading } = useAuth();
 
   const handleGetStarted = () => {
+    console.log('🔍 Hero: Dashboard button clicked');
+    console.log('🔍 Hero: Auth state:', { user: !!user, profile: !!profile, loading });
+    
+    // If still loading, wait a bit
+    if (loading) {
+      console.log('🔍 Hero: Still loading, waiting...');
+      setTimeout(() => {
+        const dashboardRoute = getDashboardRoute();
+        console.log('🔍 Hero: Navigating to:', dashboardRoute);
+        navigate(dashboardRoute);
+      }, 500);
+      return;
+    }
+    
     const dashboardRoute = getDashboardRoute();
+    console.log('🔍 Hero: Navigating to:', dashboardRoute);
     navigate(dashboardRoute);
   };
 

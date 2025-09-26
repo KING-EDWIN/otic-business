@@ -21,24 +21,17 @@ const BusinessSignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
 
-  // Optimized redirect check - only run once when component mounts
+  // Redirect check with user type validation
   useEffect(() => {
-    if (!authLoading && user && profile && profile.user_type === 'business') {
+    if (!authLoading && user && profile) {
+      if (profile.user_type !== 'business') {
+        setError(`This account is registered as an ${profile.user_type} account. Please use the Individual Sign In form.`);
+        return;
+      }
+      console.log('🔄 Redirecting to dashboard...');
       navigate('/dashboard');
     }
-  }, [user?.id, profile?.user_type, navigate, authLoading]); // Only depend on stable values
-
-  // Show loading while auth is being checked
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#040458] to-[#faa51a]">
-        <div className="flex items-center space-x-2 text-white">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading...</span>
-        </div>
-      </div>
-    );
-  }
+  }, [user?.id, profile?.user_type, navigate, authLoading]);
 
   // Optimized sign-in handler with better error handling
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
@@ -60,7 +53,7 @@ const BusinessSignIn = () => {
       }
 
       toast.success('Welcome back to your business dashboard!');
-      navigate('/dashboard');
+      // Redirect will be handled by useEffect when profile loads
       
     } catch (error: any) {
       setError('An unexpected error occurred. Please try again.');
@@ -126,6 +119,18 @@ const BusinessSignIn = () => {
       setLoading(false);
     }
   }, []);
+
+  // Show loading while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#040458] to-[#faa51a]">
+        <div className="flex items-center space-x-2 text-white">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
 
 

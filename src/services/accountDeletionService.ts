@@ -191,25 +191,179 @@ export class AccountDeletionService {
     try {
       const offset = (page - 1) * limit
 
-      const { data, error, count } = await supabase
-        .from('admin_deleted_accounts')
+      console.log('🔍 Fetching deleted accounts from deleted_users table...')
+      
+      // Add timeout to prevent infinite loading
+      const queryPromise = supabase
+        .from('deleted_users')
         .select('*', { count: 'exact' })
         .order('deleted_at', { ascending: false })
         .range(offset, offset + limit - 1)
+
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout')), 10000)
+      )
+
+      const { data, error, count } = await Promise.race([queryPromise, timeoutPromise]) as any
 
       if (error) {
         console.error('Error fetching deleted accounts:', error)
         return { success: false, error: error.message }
       }
 
+      console.log('📊 Raw data from deleted_users:', { data, count, error })
+      console.log('📊 Number of accounts found:', data?.length || 0)
+
+      // Transform the data to include computed fields
+      const transformedData = (data || []).map(account => {
+        const deletedAt = new Date(account.deleted_at)
+        const recoveryExpiresAt = new Date(account.recovery_expires_at)
+        const now = new Date()
+        
+        let status: 'EXPIRED' | 'RECOVERED' | 'ACTIVE'
+        let daysRemaining = 0
+        
+        if (account.is_recovered) {
+          status = 'RECOVERED'
+        } else if (now > recoveryExpiresAt) {
+          status = 'EXPIRED'
+        } else {
+          status = 'ACTIVE'
+          daysRemaining = Math.ceil((recoveryExpiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+        }
+        
+        return {
+          ...account,
+          status,
+          days_remaining: daysRemaining
+        }
+      })
+
       return {
         success: true,
-        data: data || [],
+        data: transformedData,
         total: count || 0
       }
     } catch (error: any) {
       console.error('Error getting deleted accounts:', error)
+      if (error.message === 'Query timeout') {
+        return { success: false, error: 'Request timed out. Please try again.' }
+      }
       return { success: false, error: error.message || 'Failed to fetch deleted accounts' }
+    }
+  }
+
+  /**
+   * Create a test deleted account for debugging
+   */
+  static async createTestDeletedAccount(): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('🧪 Creating test deleted account...')
+      
+      const { data, error } = await supabase
+        .from('deleted_users')
+        .insert([{
+          original_user_id: '00000000-0000-0000-0000-000000000000', // Test UUID
+          email: 'test@example.com',
+          full_name: 'Test User',
+          business_name: 'Test Business',
+          user_type: 'business',
+          tier: 'free_trial',
+          phone: '+256700000000',
+          deletion_reason: 'Test deletion for debugging',
+          deleted_by: '00000000-0000-0000-0000-000000000000',
+          deleted_at: new Date().toISOString(),
+          recovery_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+          is_recovered: false
+        }])
+        .select()
+
+      if (error) {
+        console.error('Error creating test deleted account:', error)
+        return { success: false, error: error.message }
+      }
+
+      console.log('✅ Test deleted account created:', data)
+      return { success: true }
+    } catch (error: any) {
+      console.error('Error creating test deleted account:', error)
+      return { success: false, error: error.message || 'Failed to create test deleted account' }
+    }
+  }
+
+  /**
+   * Permanently delete ALL deleted accounts (bypass 30-day recovery period)
+   */
+  static async permanentDeleteAllAccounts(): Promise<{ success: boolean; deletedCount?: number; error?: string }> {
+    try {
+      console.log('🗑️ Permanently deleting ALL deleted accounts...')
+
+      // First, get all deleted accounts to delete them completely
+      const { data: deletedAccounts, error: fetchError } = await supabase
+        .from('deleted_users')
+        .select('email, original_user_id')
+
+      if (fetchError) {
+        console.error('Error fetching deleted accounts:', fetchError)
+        return { success: false, error: fetchError.message }
+      }
+
+      const deletedCount = deletedAccounts?.length || 0
+      console.log(`Found ${deletedCount} deleted accounts to permanently remove`)
+
+      // Delete each account completely using the complete deletion function
+      let successCount = 0
+      let errorCount = 0
+      const errors: string[] = []
+
+      for (const account of deletedAccounts || []) {
+        try {
+          const { data, error } = await supabase.rpc('delete_user_completely', {
+            user_email: account.email
+          })
+
+          if (error) {
+            console.error(`Error deleting ${account.email}:`, error)
+            errors.push(`${account.email}: ${error.message}`)
+            errorCount++
+          } else {
+            console.log(`✅ Completely deleted: ${account.email}`)
+            successCount++
+          }
+        } catch (error: any) {
+          console.error(`Exception deleting ${account.email}:`, error)
+          errors.push(`${account.email}: ${error.message}`)
+          errorCount++
+        }
+      }
+
+      // Now delete all records from deleted_users table
+      const { error: deleteError } = await supabase
+        .from('deleted_users')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all records
+
+      if (deleteError) {
+        console.error('Error cleaning deleted_users table:', deleteError)
+        errors.push(`Failed to clean deleted_users table: ${deleteError.message}`)
+      }
+
+      if (errorCount > 0) {
+        return { 
+          success: false, 
+          error: `Failed to delete ${errorCount} accounts. Errors: ${errors.join('; ')}`,
+          deletedCount: successCount
+        }
+      }
+
+      console.log(`✅ Permanently deleted ${successCount} accounts completely`)
+      return { 
+        success: true, 
+        deletedCount: successCount
+      }
+    } catch (error: any) {
+      console.error('Error in permanent delete all:', error)
+      return { success: false, error: error.message || 'Failed to permanently delete all accounts' }
     }
   }
 

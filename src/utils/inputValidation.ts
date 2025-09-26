@@ -250,6 +250,70 @@ export class InputValidator {
   }
 
   /**
+   * Validate individual signup form
+   */
+  static validateIndividualSignup(formData: any): { isValid: boolean; errors: Record<string, string>; sanitizedData: any } {
+    const errors: Record<string, string> = {}
+    
+    // Validate required fields
+    if (!formData.fullName?.trim()) {
+      errors.fullName = 'Full name is required'
+    }
+    
+    if (!formData.email?.trim()) {
+      errors.email = 'Email is required'
+    } else {
+      const emailResult = this.validateEmail(formData.email)
+      if (!emailResult.isValid) {
+        errors.email = emailResult.errors[0]
+      }
+    }
+    
+    if (!formData.profession?.trim()) {
+      errors.profession = 'Profession is required'
+    }
+    
+    if (!formData.country?.trim()) {
+      errors.country = 'Country is required'
+    }
+    
+    if (!formData.phoneNumber?.trim()) {
+      errors.phoneNumber = 'Phone number is required'
+    }
+    
+    if (!formData.password?.trim()) {
+      errors.password = 'Password is required'
+    } else {
+      const passwordResult = this.validatePassword(formData.password, formData.confirmPassword)
+      if (!passwordResult.isValid) {
+        errors.password = passwordResult.errors[0]
+      }
+    }
+    
+    if (!formData.confirmPassword?.trim()) {
+      errors.confirmPassword = 'Please confirm your password'
+    } else if (formData.password !== formData.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match'
+    }
+    
+    // Sanitize data
+    const sanitizedData = {
+      fullName: formData.fullName?.trim() || '',
+      email: formData.email?.trim().toLowerCase() || '',
+      profession: formData.profession?.trim() || '',
+      country: formData.country?.trim() || '',
+      phoneNumber: formData.phoneNumber?.trim() || '',
+      password: formData.password || ''
+    }
+    
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors,
+      sanitizedData
+    }
+  }
+
+  /**
    * Validate and sanitize all form data
    */
   static validateFormData(formData: any, fields: string[]): { isValid: boolean; errors: string[]; sanitizedData: any } {

@@ -6,13 +6,27 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, profile, signOut, getDashboardRoute } = useAuth();
+  const { user, profile, signOut, getDashboardRoute, loading } = useAuth();
   const navigate = useNavigate();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   const handleDashboardClick = () => {
+    console.log('🔍 Navbar: Dashboard clicked, auth state:', { user: !!user, profile: !!profile, loading });
+    
+    // If still loading, wait a bit
+    if (loading) {
+      console.log('🔍 Navbar: Still loading, waiting...');
+      setTimeout(() => {
+        const dashboardRoute = getDashboardRoute();
+        console.log('🔍 Navbar: Navigating to:', dashboardRoute);
+        navigate(dashboardRoute);
+      }, 500);
+      return;
+    }
+    
     const dashboardRoute = getDashboardRoute();
+    console.log('🔍 Navbar: Navigating to:', dashboardRoute);
     navigate(dashboardRoute);
   };
 

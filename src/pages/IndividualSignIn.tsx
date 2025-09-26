@@ -22,16 +22,49 @@ const IndividualSignIn = () => {
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false)
   const [lastErrorTime, setLastErrorTime] = useState(0)
 
-  // Optimized redirect check with useCallback
-  const checkRedirect = useCallback(() => {
-    if (!authLoading && user && profile && profile.user_type === 'individual') {
-      navigate('/individual-dashboard')
-    }
-  }, [user, profile, navigate, authLoading])
-
+  // Redirect check with user type validation
   useEffect(() => {
-    checkRedirect()
-  }, [checkRedirect])
+    if (!authLoading && user && profile) {
+      if (profile.user_type !== 'individual') {
+        setError(`This account is registered as a ${profile.user_type} account. Please use the Business Sign In form.`);
+        return;
+      }
+      console.log('🔄 Redirecting to individual dashboard...');
+      navigate('/individual-dashboard');
+    }
+  }, [user?.id, profile?.user_type, navigate, authLoading]);
+
+  // Google sign-in handler with proper OAuth flow
+  const handleGoogleSignIn = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Use Supabase's built-in OAuth with proper configuration
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: getUrl(`/auth/callback?user_type=individual`),
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+          scopes: 'openid email profile',
+        },
+      });
+
+      if (error) {
+        console.error('Google OAuth error:', error);
+        toast.error('Google sign-in failed. Please try again.');
+        setLoading(false);
+      }
+      // If successful, user will be redirected to Google OAuth
+      // The callback will handle the rest
+    } catch (error: any) {
+      console.error('Google OAuth error:', error);
+      toast.error('Google sign-in failed. Please try again.');
+      setLoading(false);
+    }
+  }, []);
 
   // Show loading while auth is being checked
   if (authLoading) {
@@ -78,7 +111,7 @@ const IndividualSignIn = () => {
 
       console.log('IndividualSignIn: Auth successful, redirecting to individual dashboard')
       toast.success('Welcome back, professional!')
-      navigate('/individual-dashboard')
+      // Redirect will be handled by useEffect when profile loads
       
     } catch (error: any) {
       console.error('IndividualSignIn: Sign in error:', error)
@@ -112,39 +145,6 @@ const IndividualSignIn = () => {
       setForgotPasswordLoading(false)
     }
   }
-
-  // Google sign-in handler with proper OAuth flow
-  const handleGoogleSignIn = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Use Supabase's built-in OAuth with proper configuration
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: getUrl(`/auth/callback?user_type=individual`),
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-          scopes: 'openid email profile',
-        },
-      });
-
-      if (error) {
-        console.error('Google OAuth error:', error);
-        toast.error('Google sign-in failed. Please try again.');
-        setLoading(false);
-      }
-      // If successful, user will be redirected to Google OAuth
-      // The callback will handle the rest
-    } catch (error: any) {
-      console.error('Google OAuth error:', error);
-      toast.error('Google sign-in failed. Please try again.');
-      setLoading(false);
-    }
-  }, []);
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">

@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { BusinessManagementProvider } from "@/contexts/BusinessManagementContext";
+import { VerificationProvider } from "@/contexts/VerificationContext";
+import VerifiedRoute from "@/components/VerifiedRoute";
 import Index from "./pages/Index";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
@@ -16,6 +18,7 @@ import Dashboard from "./pages/Dashboard";
 import MainDashboard from "./pages/MainDashboard";
 import POS from "./pages/POS";
 import Inventory from "./pages/Inventory";
+import CommodityRegistration from "./pages/CommodityRegistration";
 import Analytics from "./pages/Analytics";
 import Accounting from "./pages/AccountingNew";
 import QuickBooksCallback from "./pages/QuickBooksCallback";
@@ -37,6 +40,7 @@ import BusinessManagement from "./pages/BusinessManagement";
 import Invoices from "./pages/Invoices";
 import EmailVerification from "./pages/EmailVerification";
 import PasswordReset from "./pages/PasswordReset";
+import EmailTest from "./pages/EmailTest";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import UserTypeSelection from "./pages/UserTypeSelection";
@@ -65,6 +69,9 @@ import BranchStaff from "./pages/BranchStaff";
 import BranchInventory from "./pages/BranchInventory";
 import BranchAIInsights from "./pages/BranchAIInsights";
 import Notifications from "./pages/Notifications";
+import OTICVision from "./pages/OTICVision";
+import Restock from "./pages/Restock";
+import StorageTest from "./pages/StorageTest";
 
 const queryClient = new QueryClient();
 
@@ -91,7 +98,7 @@ const IndividualProtectedRoute = ({ children }: { children: React.ReactNode }) =
 // Business Protected Route
 const BusinessProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading, profile } = useAuth();
-
+  
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -99,7 +106,7 @@ const BusinessProtectedRoute = ({ children }: { children: React.ReactNode }) => 
       </div>
     );
   }
-
+  
   if (!user || !profile || profile.user_type !== 'business') {
     return <Navigate to="/business-signin" />;
   }
@@ -131,7 +138,8 @@ const App = () => {
         >
           <AuthProvider>
             <BusinessManagementProvider>
-              <Routes>
+              <VerificationProvider>
+            <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/features" element={<Features />} />
                 <Route path="/pricing" element={<Pricing />} />
@@ -162,22 +170,27 @@ const App = () => {
                 <Route path="/dashboard" element={<BusinessProtectedRoute><Dashboard /></BusinessProtectedRoute>} />
                 <Route path="/my-extras" element={<BusinessProtectedRoute><MyExtras /></BusinessProtectedRoute>} />
                 <Route path="/simple-dashboard" element={<BusinessProtectedRoute><Dashboard /></BusinessProtectedRoute>} />
-                <Route path="/pos" element={<BusinessProtectedRoute><POS /></BusinessProtectedRoute>} />
-                <Route path="/inventory" element={<BusinessProtectedRoute><Inventory /></BusinessProtectedRoute>} />
-                <Route path="/analytics" element={<BusinessProtectedRoute><Analytics /></BusinessProtectedRoute>} />
-                <Route path="/accounting" element={<BusinessProtectedRoute><Accounting /></BusinessProtectedRoute>} />
+                <Route path="/pos" element={<BusinessProtectedRoute><VerifiedRoute><POS /></VerifiedRoute></BusinessProtectedRoute>} />
+                <Route path="/inventory" element={<BusinessProtectedRoute><VerifiedRoute><Inventory /></VerifiedRoute></BusinessProtectedRoute>} />
+                <Route path="/commodity-registration" element={<BusinessProtectedRoute><VerifiedRoute><CommodityRegistration /></VerifiedRoute></BusinessProtectedRoute>} />
+                <Route path="/analytics" element={<BusinessProtectedRoute><VerifiedRoute><Analytics /></VerifiedRoute></BusinessProtectedRoute>} />
+                <Route path="/accounting" element={<BusinessProtectedRoute><VerifiedRoute><Accounting /></VerifiedRoute></BusinessProtectedRoute>} />
                 <Route path="/quickbooks/callback" element={<QuickBooksCallback />} />
                 <Route path="/auth/google-callback" element={<GoogleCallback />} />
-                <Route path="/payments" element={<BusinessProtectedRoute><Payments /></BusinessProtectedRoute>} />
-                <Route path="/customers" element={<BusinessProtectedRoute><Customers /></BusinessProtectedRoute>} />
-                <Route path="/reports" element={<BusinessProtectedRoute><Reports /></BusinessProtectedRoute>} />
-                <Route path="/settings" element={<BusinessProtectedRoute><Settings /></BusinessProtectedRoute>} />
+                <Route path="/payments" element={<BusinessProtectedRoute><VerifiedRoute><Payments /></VerifiedRoute></BusinessProtectedRoute>} />
+                <Route path="/customers" element={<BusinessProtectedRoute><VerifiedRoute><Customers /></VerifiedRoute></BusinessProtectedRoute>} />
+                <Route path="/reports" element={<BusinessProtectedRoute><VerifiedRoute><Reports /></VerifiedRoute></BusinessProtectedRoute>} />
+                <Route path="/settings" element={<BusinessProtectedRoute><VerifiedRoute><Settings /></VerifiedRoute></BusinessProtectedRoute>} />
                 <Route path="/notifications" element={<BusinessProtectedRoute><Notifications /></BusinessProtectedRoute>} />
+                <Route path="/otic-vision" element={<BusinessProtectedRoute><OTICVision /></BusinessProtectedRoute>} />
+                <Route path="/restock" element={<BusinessProtectedRoute><Restock /></BusinessProtectedRoute>} />
+                <Route path="/storage-test" element={<StorageTest />} />
                 <Route path="/business-management" element={<BusinessProtectedRoute><BusinessManagement /></BusinessProtectedRoute>} />
                 <Route path="/invoices" element={<BusinessProtectedRoute><Invoices /></BusinessProtectedRoute>} />
                 {/* Email Verification and Password Reset Routes */}
                 <Route path="/verify-email" element={<EmailVerification />} />
                 <Route path="/reset-password" element={<PasswordReset />} />
+                <Route path="/email-test" element={<EmailTest />} />
                 {/* Branch Management Routes */}
                 <Route path="/multi-branch-management" element={<BusinessProtectedRoute><MultiBranchManagement /></BusinessProtectedRoute>} />
                 <Route path="/branch/:branchId/analytics" element={<BusinessProtectedRoute><BranchAnalytics /></BusinessProtectedRoute>} />
@@ -193,6 +206,7 @@ const App = () => {
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </VerificationProvider>
             </BusinessManagementProvider>
           </AuthProvider>
         </BrowserRouter>

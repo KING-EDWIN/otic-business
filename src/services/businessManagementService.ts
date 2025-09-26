@@ -146,11 +146,7 @@ export class BusinessManagementService {
 
       console.log('getUserBusinesses: User authenticated:', user.id)
       
-          // Simple timeout
-          const timeoutPromise = new Promise<never>((_, reject) => 
-            setTimeout(() => reject(new Error('Business query timeout')), 10000)
-          )
-      
+      // Direct query without timeout complexity
       const queryPromise = supabase
         .from('business_memberships')
         .select(`
@@ -173,13 +169,14 @@ export class BusinessManagementService {
         .eq('status', 'active')
         .order('joined_at', { ascending: false })
 
-      const { data: directData, error: directError } = await Promise.race([
-        queryPromise,
-        timeoutPromise
-      ])
+      const { data: directData, error: directError } = await queryPromise
 
       if (directError) {
         console.error('getUserBusinesses: Direct query failed:', directError)
+        // Show user-friendly error for network issues
+        if (directError.message.includes('Invalid API key') || directError.message.includes('Failed to fetch')) {
+          console.error('Poor network connection - business query failed')
+        }
         return []
       }
 

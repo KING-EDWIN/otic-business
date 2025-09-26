@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
-import { useAuth } from './UnifiedAuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { businessManagementService, Business, BusinessMember } from '@/services/businessManagementService'
 import { supabase } from '@/lib/supabaseClient'
 
@@ -85,44 +85,40 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
       setLoading(true)
       console.log('Loading businesses for user:', user?.id)
       
-      // Simple timeout - no retry logic for now
-      const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Business loading timeout')), 10000)
-      )
+      // Get user businesses directly - no timeout complexity
+      const userBusinesses = await businessManagementService.getUserBusinesses()
+      console.log('Loaded businesses:', userBusinesses.length, userBusinesses)
       
-      const loadPromise = async () => {
-        // Get user businesses directly with professional error handling
-        const userBusinesses = await businessManagementService.getUserBusinesses()
-        console.log('Loaded businesses:', userBusinesses.length, userBusinesses)
-        
-        // If user has no businesses, create a default one
-        if (userBusinesses.length === 0 && user) {
-          console.log('No businesses found, creating default business')
-          await createDefaultBusiness()
-          // Reload businesses after creating default
-          const updatedBusinesses = await businessManagementService.getUserBusinesses()
-          console.log('Updated businesses after creation:', updatedBusinesses.length, updatedBusinesses)
-          setBusinesses(updatedBusinesses)
-        } else {
-          setBusinesses(userBusinesses)
-        }
-        
-        // Check if user can create more businesses (with timeout)
-        const { data: { user: authUser } } = await supabase.auth.getUser()
-        if (authUser) {
-          try {
-            const { data: canCreate } = await supabase.rpc('can_create_business', {
-              user_id_param: authUser.id
-            })
-            setCanCreateBusiness(canCreate || false)
-          } catch (rpcError) {
-            console.error('RPC can_create_business failed:', rpcError)
-            setCanCreateBusiness(false)
-          }
+      // If user has no businesses, create a default one
+      if (userBusinesses.length === 0 && user) {
+        console.log('No businesses found, creating default business')
+        await createDefaultBusiness()
+        // Reload businesses after creating default
+        const updatedBusinesses = await businessManagementService.getUserBusinesses()
+        console.log('Updated businesses after creation:', updatedBusinesses.length, updatedBusinesses)
+        setBusinesses(updatedBusinesses)
+      } else {
+        setBusinesses(userBusinesses)
+      }
+      
+      // Check if user can create more businesses
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+      if (authUser) {
+        try {
+          const { data: canCreate } = await supabase.rpc('can_create_business', {
+            user_id_param: authUser.id
+          })
+          setCanCreateBusiness(canCreate || false)
+        } catch (rpcError) {
+          console.error('RPC can_create_business failed:', rpcError)
+          setCanCreateBusiness(false)
         }
       }
       
-      await Promise.race([loadPromise(), timeoutPromise])
+      // Set current business if none selected
+      if (userBusinesses.length > 0 && !currentBusiness) {
+        setCurrentBusiness(userBusinesses[0])
+      }
       
     } catch (error) {
       console.error('Error loading businesses:', error)

@@ -11,7 +11,7 @@ import { InputValidator } from '@/utils/inputValidation';
 import { countries } from '@/data/countries';
 import { useAuth } from '@/contexts/AuthContext';
 
-const IndividualSignup = () => {
+const IndividualSignupFixed = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -53,14 +53,12 @@ const IndividualSignup = () => {
       const sanitizedData = validation.sanitizedData;
 
       // Use the auth context signUp function for consistency
-      const result: { error: any; needsEmailVerification?: boolean } = await signUp(
+      const { error: authError, needsEmailVerification } = await signUp(
         sanitizedData.email,
         sanitizedData.password,
         sanitizedData.fullName,
         'individual'
       );
-
-      const { error: authError, needsEmailVerification = false } = result;
 
       if (authError) throw authError;
 
@@ -72,7 +70,7 @@ const IndividualSignup = () => {
           'current-user', // userId - will be resolved by the service
           'Complete Your Profile', // title
           'Please complete your individual profile to access all features.', // message
-          'info', // type
+          'profile_completion', // type
           'medium' // priority
         );
       } catch (notificationError) {
@@ -80,15 +78,13 @@ const IndividualSignup = () => {
         // Don't fail signup if notification creation fails
       }
 
+      toast.success('Account created successfully! Please check your email to verify your account.');
+      
       if (needsEmailVerification) {
-        toast.success('Account created! Please check your email to verify your account.');
-        toast.info('You will be redirected to the dashboard after email verification.');
-        // Still navigate to dashboard - verification banner will handle the rest
-        navigate('/individual-dashboard');
-      } else {
-        toast.success('Account created successfully! Welcome to your dashboard.');
-        navigate('/individual-dashboard');
+        toast.info('Please check your email and click the verification link to complete your registration.');
       }
+      
+      navigate('/individual-signin');
     } catch (error: any) {
       console.error('Signup error:', error);
       toast.error(error.message || 'Failed to create account. Please try again.');
@@ -108,7 +104,7 @@ const IndividualSignup = () => {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Account Type
           </Link>
-      </div>
+        </div>
 
         <Card className="border-0 shadow-2xl">
           <CardHeader className="text-center pb-6">
@@ -199,11 +195,11 @@ const IndividualSignup = () => {
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                <Input
-                  id="password"
+                  <Input
+                    id="password"
                     type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
                     placeholder="Create a password"
                     className={errors.password ? 'border-red-500' : ''}
                   />
@@ -223,12 +219,12 @@ const IndividualSignup = () => {
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
-                <Input
-                  id="confirmPassword"
+                  <Input
+                    id="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
-                  value={formData.confirmPassword}
-                  onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                  placeholder="Confirm your password"
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    placeholder="Confirm your password"
                     className={errors.confirmPassword ? 'border-red-500' : ''}
                   />
                   <Button
@@ -244,8 +240,8 @@ const IndividualSignup = () => {
                 {errors.confirmPassword && <p className="text-sm text-red-500">{errors.confirmPassword}</p>}
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-gradient-to-r from-[#040458] to-[#faa51a] hover:from-[#030347] hover:to-[#e6940f] text-white font-medium py-2.5"
                 disabled={loading}
               >
@@ -278,4 +274,4 @@ const IndividualSignup = () => {
   );
 };
 
-export default IndividualSignup;
+export default IndividualSignupFixed;
