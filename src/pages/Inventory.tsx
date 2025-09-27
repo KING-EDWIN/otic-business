@@ -888,7 +888,7 @@ const Inventory = () => {
 
         {/* Products with Tabs */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
             <div>
               <h2 className="text-2xl font-bold text-[#040458] flex items-center">
                 <Package className="h-6 w-6 mr-3 text-[#faa51a]" />
@@ -896,34 +896,47 @@ const Inventory = () => {
               </h2>
               <p className="text-gray-600 mt-1">Manage your inventory and stock levels</p>
             </div>
-            <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="text-sm">
-                {paginationInfo.startItem}-{paginationInfo.endItem} of {filteredProducts.length} products
-              </Badge>
-              <Button
-                onClick={() => navigate('/commodity-registration')}
-                className="bg-[#040458] hover:bg-[#040458]/90 text-white"
-              >
-                <Barcode className="h-4 w-4 mr-2" />
-                Register Commodity
-              </Button>
+            
+            {/* Mobile-first responsive button layout */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+              {/* Product count badge */}
+              <div className="flex justify-center sm:justify-start">
+                <Badge variant="outline" className="text-sm">
+                  {paginationInfo.startItem}-{paginationInfo.endItem} of {filteredProducts.length} products
+                </Badge>
+              </div>
+              
+              {/* Action buttons - responsive layout */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-2">
+                <Button
+                  onClick={() => navigate('/commodity-registration')}
+                  className="bg-[#040458] hover:bg-[#040458]/90 text-white text-sm sm:text-base"
+                >
+                  <Barcode className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Register Commodity</span>
+                  <span className="sm:hidden">Register</span>
+                </Button>
+                
                 <Button
                   onClick={() => setIsDialogOpen(true)}
-                  className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white"
+                  className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white text-sm sm:text-base"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                Quick Add
+                  <span className="hidden sm:inline">Quick Add</span>
+                  <span className="sm:hidden">Quick Add</span>
                 </Button>
-              
-              <Button
-                onClick={() => setShowOTICVisionRegistration(true)}
-                className="bg-[#040458] hover:bg-[#040458]/90 text-white"
-              >
-                <Camera className="h-4 w-4 mr-2" />
-                Use Camera
-              </Button>
-                          </div>
-                        </div>
+                
+                <Button
+                  onClick={() => setShowOTICVisionRegistration(true)}
+                  className="bg-[#040458] hover:bg-[#040458]/90 text-white text-sm sm:text-base"
+                >
+                  <Camera className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Use Camera</span>
+                  <span className="sm:hidden">Camera</span>
+                </Button>
+              </div>
+            </div>
+          </div>
 
           {/* Tabs for different product views */}
           <Tabs defaultValue="all" className="w-full">
