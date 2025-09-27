@@ -138,6 +138,182 @@ export class AccountDeletionService {
   }
 
   /**
+   * Restore a soft-deleted account (admin only)
+   */
+  static async restoreAccount(
+    deletedAccountId: string,
+    adminUserId: string,
+    reason: string = 'Admin requested account restoration'
+  ): Promise<{ success: boolean; error?: string; message?: string }> {
+    try {
+      console.log('🔄 Admin restoring account:', deletedAccountId, 'by admin:', adminUserId)
+
+      // Get the deleted account info
+      const { data: deletedAccount, error: fetchError } = await supabase
+        .from('deleted_users')
+        .select('*')
+        .eq('id', deletedAccountId)
+        .eq('is_recovered', false)
+        .single()
+
+      if (fetchError || !deletedAccount) {
+        console.error('Error fetching deleted account:', fetchError)
+        return { success: false, error: 'Deleted account not found or already recovered' }
+      }
+
+      // Call the database function to restore the account
+      const { data, error } = await supabase.rpc('restore_user_account', {
+        deleted_account_id_param: deletedAccountId,
+        admin_user_id_param: adminUserId,
+        restoration_reason_param: reason
+      })
+
+      if (error) {
+        console.error('Account restoration error:', error)
+        return { success: false, error: error.message }
+      }
+
+      if (data && data.success) {
+        console.log('✅ Account restored successfully by admin')
+        return { 
+          success: true, 
+          message: `Account ${deletedAccount.email} has been restored successfully`
+        }
+      } else {
+        return { 
+          success: false, 
+          error: data?.error || 'Unknown error during restoration' 
+        }
+      }
+    } catch (error: any) {
+      console.error('Error restoring account:', error)
+      return { success: false, error: error.message || 'Failed to restore account' }
+    }
+  }
+
+  /**
+   * Restore account with password verification (user-facing)
+   */
+  static async restoreAccountWithPassword(
+    email: string,
+    password: string,
+    reason: string = 'User requested account restoration'
+  ): Promise<{ success: boolean; error?: string; message?: string }> {
+    try {
+      console.log('🔄 User restoring account:', email)
+
+      // First verify the password by attempting to sign in
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (authError) {
+        console.error('Password verification failed:', authError)
+        return { success: false, error: 'Invalid password. Please check your credentials.' }
+      }
+
+      // Get the deleted account info
+      const { data: deletedAccount, error: fetchError } = await supabase
+        .from('deleted_users')
+        .select('*')
+        .eq('email', email)
+        .eq('is_recovered', false)
+        .single()
+
+      if (fetchError || !deletedAccount) {
+        console.error('Error fetching deleted account:', fetchError)
+        return { success: false, error: 'No recoverable account found for this email' }
+      }
+
+      // Call the database function to restore the account
+      const { data, error } = await supabase.rpc('restore_user_account', {
+        deleted_account_id_param: deletedAccount.id,
+        admin_user_id_param: authData.user.id, // User is restoring their own account
+        restoration_reason_param: reason
+      })
+
+      if (error) {
+        console.error('Account restoration error:', error)
+        return { success: false, error: error.message }
+      }
+
+      if (data && data.success) {
+        console.log('✅ Account restored successfully by user')
+        return { 
+          success: true, 
+          message: 'Your account has been restored successfully! Welcome back!'
+        }
+      } else {
+        return { 
+          success: false, 
+          error: data?.error || 'Unknown error during restoration' 
+        }
+      }
+    } catch (error: any) {
+      console.error('Error restoring account:', error)
+      return { success: false, error: error.message || 'Failed to restore account' }
+    }
+  }
+
+  /**
+   * Check if an email has a recoverable account
+   */
+  static async checkRecoverableAccountByEmail(email: string): Promise<{ 
+    hasRecoverableAccount: boolean; 
+    accountInfo?: any; 
+    error?: string 
+  }> {
+    try {
+      // First check for active recoverable accounts
+      const { data: activeData, error: activeError } = await supabase
+        .from('deleted_users')
+        .select('*')
+        .eq('email', email)
+        .eq('is_recovered', false)
+        .gt('recovery_expires_at', new Date().toISOString())
+        .single()
+
+      if (activeData) {
+        return { 
+          hasRecoverableAccount: true, 
+          accountInfo: activeData 
+        }
+      }
+
+      // If no active account, check for recently recovered accounts (within last 24 hours)
+      const { data: recoveredData, error: recoveredError } = await supabase
+        .from('deleted_users')
+        .select('*')
+        .eq('email', email)
+        .eq('is_recovered', true)
+        .gte('recovered_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .single()
+
+      if (recoveredData) {
+        return { 
+          hasRecoverableAccount: false, 
+          accountInfo: recoveredData,
+          error: 'Account was recently restored. Please try signing in again.'
+        }
+      }
+
+      if (activeError && activeError.code !== 'PGRST116' && recoveredError && recoveredError.code !== 'PGRST116') {
+        console.error('Error checking recoverable account:', activeError || recoveredError)
+        return { hasRecoverableAccount: false, error: (activeError || recoveredError).message }
+      }
+
+      return { 
+        hasRecoverableAccount: false, 
+        accountInfo: null 
+      }
+    } catch (error: any) {
+      console.error('Error checking recoverable account:', error)
+      return { hasRecoverableAccount: false, error: error.message }
+    }
+  }
+
+  /**
    * Permanently delete an account (admin only)
    */
   static async permanentDeleteAccount(

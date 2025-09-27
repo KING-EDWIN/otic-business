@@ -101,9 +101,14 @@ const Analytics = () => {
   }
 
   const calculateGrowth = (current: number, period: string) => {
-    // Simplified growth calculation - in real app, compare with previous period
-    const baseGrowth = Math.random() * 20 - 10 // Random growth between -10% and +10%
-    return Math.round(baseGrowth * 10) / 10
+    // For new accounts with no data, return 0
+    if (current === 0) {
+      return 0
+    }
+    
+    // In a real app, this would compare with previous period data
+    // For now, return 0 to avoid fake percentages
+    return 0
   }
 
   const generateSalesByDay = (salesData: any[], period: string) => {
@@ -153,29 +158,65 @@ const Analytics = () => {
   }
 
   const generateAIInsights = async () => {
-    // Simulate AI insights generation
-    const insights = [
-      {
-        type: 'sales_trend',
-        message: 'Sales are trending upward by 15% this week. Consider increasing inventory for top products.',
-        confidence: 0.85
-      },
-      {
-        type: 'inventory_alert',
-        message: '3 products are running low on stock. Reorder soon to avoid stockouts.',
-        confidence: 0.95
-      },
-      {
-        type: 'revenue_forecast',
-        message: 'Based on current trends, you could increase revenue by 20% by focusing on your top 3 products.',
-        confidence: 0.78
-      },
-      {
-        type: 'seasonal_pattern',
-        message: 'Historical data shows 25% higher sales on weekends. Consider weekend promotions.',
-        confidence: 0.82
+    // Generate insights based on real analytics data
+    const insights = []
+    
+    if (analyticsData) {
+      // Sales trend insight
+      if (analyticsData.salesGrowth > 0) {
+        insights.push({
+          type: 'sales_trend',
+          message: `Sales are trending upward by ${analyticsData.salesGrowth}% this period. Great performance!`,
+          confidence: 0.85
+        })
+      } else if (analyticsData.salesGrowth < 0) {
+        insights.push({
+          type: 'sales_trend',
+          message: `Sales are down by ${Math.abs(analyticsData.salesGrowth)}% this period. Consider reviewing your strategy.`,
+          confidence: 0.85
+        })
       }
-    ]
+      
+      // Inventory insight
+      if (analyticsData.lowStockItems > 0) {
+        insights.push({
+          type: 'inventory_alert',
+          message: `${analyticsData.lowStockItems} products are running low on stock. Consider reordering soon.`,
+          confidence: 0.95
+        })
+      } else {
+        insights.push({
+          type: 'inventory_status',
+          message: 'All products are well stocked. Good inventory management!',
+          confidence: 0.90
+        })
+      }
+      
+      // Revenue insight
+      if (analyticsData.revenueGrowth > 0) {
+        insights.push({
+          type: 'revenue_forecast',
+          message: `Revenue is growing by ${analyticsData.revenueGrowth}%. Consider expanding your top-performing products.`,
+          confidence: 0.78
+        })
+      }
+      
+      // Top products insight
+      if (analyticsData.topProducts && analyticsData.topProducts.length > 0) {
+        insights.push({
+          type: 'product_performance',
+          message: `Your top product "${analyticsData.topProducts[0].name}" is performing well. Consider promoting similar items.`,
+          confidence: 0.82
+        })
+      }
+    } else {
+      // No data insight for new accounts
+      insights.push({
+        type: 'onboarding',
+        message: 'Welcome! Start by adding products and making sales to see your analytics insights.',
+        confidence: 1.0
+      })
+    }
     
     setAiInsights(insights)
   }
@@ -310,7 +351,7 @@ const Analytics = () => {
                   <TrendingDown className="h-4 w-4 text-red-500" />
                 )}
                 <span className={`font-medium ${analyticsData?.salesGrowth && analyticsData.salesGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {analyticsData?.salesGrowth || 0}% from last period
+                  {analyticsData?.salesGrowth || 0}% {analyticsData?.salesGrowth === 0 ? 'No previous data' : 'from last period'}
                 </span>
               </div>
             </CardContent>
@@ -332,7 +373,7 @@ const Analytics = () => {
                   <TrendingDown className="h-4 w-4 text-red-500" />
                 )}
                 <span className={`font-medium ${analyticsData?.revenueGrowth && analyticsData.revenueGrowth > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {analyticsData?.revenueGrowth || 0}% from last period
+                  {analyticsData?.revenueGrowth || 0}% {analyticsData?.revenueGrowth === 0 ? 'No previous data' : 'from last period'}
                 </span>
               </div>
             </CardContent>

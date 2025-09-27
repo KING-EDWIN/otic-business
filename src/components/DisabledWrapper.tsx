@@ -1,5 +1,5 @@
 import React from 'react'
-import { useVerification } from '@/contexts/VerificationContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { Mail } from 'lucide-react'
 
@@ -14,7 +14,10 @@ const DisabledWrapper: React.FC<DisabledWrapperProps> = ({
   tooltipText = "Please verify your email to access this feature",
   className = ""
 }) => {
-  const { isEmailVerified } = useVerification()
+  const { user } = useAuth()
+  
+  // Check if email is verified
+  const isEmailVerified = user?.email_confirmed_at !== null
 
   if (isEmailVerified) {
     return <>{children}</>

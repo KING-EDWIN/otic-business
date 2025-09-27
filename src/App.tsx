@@ -5,8 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { BusinessManagementProvider } from "@/contexts/BusinessManagementContext";
-import { VerificationProvider } from "@/contexts/VerificationContext";
 import VerifiedRoute from "@/components/VerifiedRoute";
+import LoadingSpinner from "@/components/LoadingSpinner";
+import CacheService from "@/services/cacheService";
 import Index from "./pages/Index";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
@@ -27,16 +28,15 @@ import Payments from "./pages/Payments";
 import Settings from "./pages/Settings";
 import Customers from "./pages/Customers";
 import Reports from "./pages/Reports";
-import TestAuth from "./pages/TestAuth";
 import SimpleTest from "./pages/SimpleTest";
-import AuthTestPage from "./pages/AuthTestPage";
-import AuthTest from "./pages/AuthTest";
 import ProfileTest from "./pages/ProfileTest";
 import AdminApp from "./AdminApp";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import ContactManagement from "./pages/ContactManagement";
 import BusinessManagement from "./pages/BusinessManagement";
+import BusinessMembers from "./pages/BusinessMembers";
+import CreateBusiness from "./pages/CreateBusiness";
 import Invoices from "./pages/Invoices";
 import EmailVerification from "./pages/EmailVerification";
 import PasswordReset from "./pages/PasswordReset";
@@ -72,8 +72,42 @@ import Notifications from "./pages/Notifications";
 import OTICVision from "./pages/OTICVision";
 import Restock from "./pages/Restock";
 import StorageTest from "./pages/StorageTest";
+import MultiBusinessTest from "./pages/MultiBusinessTest";
+import BusinessPOSForIndividual from "./pages/BusinessPOSForIndividual";
+import TimeTracking from "./pages/TimeTracking";
+import TaskManagement from "./pages/TaskManagement";
+import WorkReports from "./pages/WorkReports";
+import CacheTest from "./pages/CacheTest";
+import SystemHealthTest from "./pages/SystemHealthTest";
 
-const queryClient = new QueryClient();
+// Create QueryClient with professional cache configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Default cache settings
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 15 * 60 * 1000, // 15 minutes (renamed from cacheTime in newer versions)
+      retry: (failureCount, error: any) => {
+        // Don't retry on 4xx errors (client errors)
+        if (error?.status >= 400 && error?.status < 500) {
+          return false;
+        }
+        // Retry up to 3 times for other errors
+        return failureCount < 3;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      refetchOnWindowFocus: false, // Disable automatic refetch on window focus
+      refetchOnReconnect: true, // Refetch when network reconnects
+      refetchOnMount: true, // Always refetch on component mount
+    },
+    mutations: {
+      retry: false, // Don't retry mutations by default
+    },
+  },
+});
+
+// Initialize cache service
+CacheService.initialize(queryClient);
 
 // Protected Route Component with manual email verification gate
 // Individual Protected Route
@@ -81,11 +115,7 @@ const IndividualProtectedRoute = ({ children }: { children: React.ReactNode }) =
   const { user, loading, profile } = useAuth();
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (!user || !profile || profile.user_type !== 'individual') {
@@ -100,13 +130,9 @@ const BusinessProtectedRoute = ({ children }: { children: React.ReactNode }) => 
   const { user, loading, profile } = useAuth();
   
   if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
-  
+
   if (!user || !profile || profile.user_type !== 'business') {
     return <Navigate to="/business-signin" />;
   }
@@ -138,7 +164,6 @@ const App = () => {
         >
           <AuthProvider>
             <BusinessManagementProvider>
-              <VerificationProvider>
             <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/features" element={<Features />} />
@@ -156,6 +181,9 @@ const App = () => {
                 <Route path="/tier-guide" element={<TierGuide />} />
                 <Route path="/individual-dashboard" element={<IndividualProtectedRoute><IndividualDashboard /></IndividualProtectedRoute>} />
                 <Route path="/individual-settings" element={<IndividualProtectedRoute><IndividualSettings /></IndividualProtectedRoute>} />
+                <Route path="/time-tracking" element={<IndividualProtectedRoute><TimeTracking /></IndividualProtectedRoute>} />
+                <Route path="/tasks" element={<IndividualProtectedRoute><TaskManagement /></IndividualProtectedRoute>} />
+                <Route path="/reports" element={<IndividualProtectedRoute><WorkReports /></IndividualProtectedRoute>} />
                 <Route path="/login-type" element={<LoginTypeSelection />} />
                 <Route path="/business-signin" element={<PublicRoute><BusinessSignIn /></PublicRoute>} />
                 <Route path="/individual-signin" element={<PublicRoute><IndividualSignIn /></PublicRoute>} />
@@ -186,6 +214,8 @@ const App = () => {
                 <Route path="/restock" element={<BusinessProtectedRoute><Restock /></BusinessProtectedRoute>} />
                 <Route path="/storage-test" element={<StorageTest />} />
                 <Route path="/business-management" element={<BusinessProtectedRoute><BusinessManagement /></BusinessProtectedRoute>} />
+                <Route path="/business-management/create" element={<BusinessProtectedRoute><CreateBusiness /></BusinessProtectedRoute>} />
+                <Route path="/business-management/:businessId/members" element={<BusinessProtectedRoute><BusinessMembers /></BusinessProtectedRoute>} />
                 <Route path="/invoices" element={<BusinessProtectedRoute><Invoices /></BusinessProtectedRoute>} />
                 {/* Email Verification and Password Reset Routes */}
                 <Route path="/verify-email" element={<EmailVerification />} />
@@ -199,14 +229,23 @@ const App = () => {
                 <Route path="/branch/:branchId/staff" element={<BusinessProtectedRoute><BranchStaff /></BusinessProtectedRoute>} />
                 <Route path="/branch/:branchId/inventory" element={<BusinessProtectedRoute><BranchInventory /></BusinessProtectedRoute>} />
                 <Route path="/branch/:branchId/ai-insights" element={<BusinessProtectedRoute><BranchAIInsights /></BusinessProtectedRoute>} />
-                <Route path="/test-auth" element={<TestAuth />} />
-                <Route path="/auth-test" element={<AuthTestPage />} />
                 <Route path="/simple-test" element={<SimpleTest />} />
                 <Route path="/profile-test" element={<ProfileTest />} />
+                <Route path="/multi-business-test" element={<BusinessProtectedRoute><MultiBusinessTest /></BusinessProtectedRoute>} />
+                <Route path="/cache-test" element={<CacheTest />} />
+                <Route path="/system-health-test" element={<SystemHealthTest />} />
+                
+                {/* Individual Business Access Routes */}
+                <Route path="/business/:businessId/pos" element={<IndividualProtectedRoute><BusinessPOSForIndividual /></IndividualProtectedRoute>} />
+                <Route path="/business/:businessId/inventory" element={<IndividualProtectedRoute><BusinessPOSForIndividual /></IndividualProtectedRoute>} />
+                <Route path="/business/:businessId/accounting" element={<IndividualProtectedRoute><BusinessPOSForIndividual /></IndividualProtectedRoute>} />
+                <Route path="/business/:businessId/payments" element={<IndividualProtectedRoute><BusinessPOSForIndividual /></IndividualProtectedRoute>} />
+                <Route path="/business/:businessId/customers" element={<IndividualProtectedRoute><BusinessPOSForIndividual /></IndividualProtectedRoute>} />
+                <Route path="/business/:businessId/dashboard" element={<IndividualProtectedRoute><BusinessPOSForIndividual /></IndividualProtectedRoute>} />
+                
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-              </VerificationProvider>
             </BusinessManagementProvider>
           </AuthProvider>
         </BrowserRouter>

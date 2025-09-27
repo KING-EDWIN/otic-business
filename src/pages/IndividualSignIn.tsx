@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabaseClient'
 import { getPasswordResetUrl, getUrl } from '@/services/environmentService'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 const IndividualSignIn = () => {
   const navigate = useNavigate()
@@ -43,7 +44,7 @@ const IndividualSignIn = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: getUrl(`/auth/callback?user_type=individual`),
+          redirectTo: getUrl(`/auth/callback?user_type=individual&action=signin`),
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -68,14 +69,7 @@ const IndividualSignIn = () => {
 
   // Show loading while auth is being checked
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#040458] to-[#faa51a]">
-        <div className="flex items-center space-x-2 text-white">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading...</span>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner />;
   }
 
   // Optimized sign-in handler with debounced error handling
@@ -259,8 +253,8 @@ const IndividualSignIn = () => {
               >
                 {loading ? (
                   <div className="flex items-center space-x-2">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Signing In...</span>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>🔐 Securing your access...</span>
                   </div>
                 ) : (
                   'Sign In to Professional Account'
@@ -277,8 +271,8 @@ const IndividualSignIn = () => {
                 >
                   {forgotPasswordLoading ? (
                     <div className="flex items-center space-x-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Sending...</span>
+                      <div className="w-4 h-4 border-2 border-[#faa51a] border-t-transparent rounded-full animate-spin"></div>
+                      <span>📧 Sending reset link...</span>
                     </div>
                   ) : (
                     'Forgot your password?'

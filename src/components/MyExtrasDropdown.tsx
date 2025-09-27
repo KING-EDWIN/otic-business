@@ -50,10 +50,12 @@ const MyExtrasDropdown = () => {
   // Safely get business management context
   let businesses = []
   let canCreateBusiness = false
+  let currentBusiness = null
   try {
     const businessContext = useBusinessManagement()
     businesses = businessContext.businesses
     canCreateBusiness = businessContext.canCreateBusiness
+    currentBusiness = businessContext.currentBusiness
   } catch (error) {
     console.log('BusinessManagementProvider not available, using empty array')
   }
@@ -220,7 +222,16 @@ const MyExtrasDropdown = () => {
       category: 'system',
       availableIn: ['free_trial', 'grow_intelligence', 'enterprise_advantage'],
       isPremium: true,
-      action: () => navigate('/business-management/members')
+      action: () => {
+        // Check if user has businesses, if not go to business management first
+        if (businesses.length === 0) {
+          navigate('/business-management')
+        } else if (currentBusiness) {
+          navigate(`/business-management/${currentBusiness.id}/members`)
+        } else {
+          navigate('/business-management')
+        }
+      }
     },
     {
       id: 'role_based_permissions',

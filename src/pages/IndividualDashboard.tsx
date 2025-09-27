@@ -1,505 +1,451 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabaseClient'
+import { IndividualBusinessAccessService, BusinessAccess } from '@/services/individualBusinessAccessService'
+import { IndividualUserService, TimeEntry as ServiceTimeEntry } from '@/services/individualUserService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { 
   User, 
-  DollarSign, 
+  Clock, 
   TrendingUp, 
-  TrendingDown, 
   Calendar,
-  CreditCard,
-  PiggyBank,
   Target,
-  Plus,
-  ArrowRight,
+  BarChart3,
+  Building2,
   LogOut,
   Settings,
-  BarChart3,
-  PieChart,
-  Receipt,
-  Wallet
+  Plus,
+  ArrowRight,
+  CheckCircle,
+  AlertCircle,
+  Timer,
+  Activity,
+  DollarSign,
+  Users,
+  Briefcase,
+  Package,
+  CreditCard
 } from 'lucide-react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts'
 import IndividualLoginStatus from '@/components/IndividualLoginStatus'
-import BusinessSwitcher from '@/components/BusinessSwitcher'
-import InvitationNotification from '@/components/InvitationNotification'
+import IndividualBusinessSwitcher from '@/components/IndividualBusinessSwitcher'
+import IndividualInvitationHandler from '@/components/IndividualInvitationHandler'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
-interface Expense {
+interface TimeEntry {
   id: string
-  category: string
-  amount: number
+  business_id: string
+  business_name: string
+  start_time: string
+  end_time?: string
+  duration?: number
   description: string
   date: string
-  type: 'expense' | 'income'
 }
 
-interface Budget {
-  category: string
-  budgeted: number
-  spent: number
-  remaining: number
+interface WorkStats {
+  totalHours: number
+  todayHours: number
+  thisWeekHours: number
+  activeBusinesses: number
+  completedTasks: number
 }
 
 const IndividualDashboard = () => {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
-  const [expenses, setExpenses] = useState<Expense[]>([])
-  const [budgets, setBudgets] = useState<Budget[]>([])
+  const [selectedBusiness, setSelectedBusiness] = useState<BusinessAccess | null>(null)
+  const [timeEntries, setTimeEntries] = useState<ServiceTimeEntry[]>([])
+  const [workStats, setWorkStats] = useState<WorkStats>({
+    totalHours: 0,
+    todayHours: 0,
+    thisWeekHours: 0,
+    activeBusinesses: 0,
+    completedTasks: 0
+  })
   const [loading, setLoading] = useState(true)
+  const [currentTime, setCurrentTime] = useState<Date>(new Date())
 
-  console.log('IndividualDashboard: Component rendered, user:', user?.id)
-
-  // Fetch real data from database
+  // Update current time every second
   useEffect(() => {
-    const fetchData = async () => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    if (user?.id) {
+      loadDashboardData()
+    }
+  }, [user?.id])
+
+  const loadDashboardData = async () => {
       if (!user?.id) return
       
       try {
         setLoading(true)
         
-        // Load real data from backend - no fallback data
-        console.log('IndividualDashboard: Loading live data from backend')
-        
-        // Load expenses from backend
-        const { data: expensesData, error: expensesError } = await supabase
-          .from('expenses')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-        
-        if (expensesError) {
-          console.error('Error loading expenses:', expensesError)
-          throw new Error(`Failed to load expenses: ${expensesError.message}`)
-        }
-        
-        // Load budgets from backend
-        const { data: budgetsData, error: budgetsError } = await supabase
-          .from('budgets')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-        
-        if (budgetsError) {
-          console.error('Error loading budgets:', budgetsError)
-          throw new Error(`Failed to load budgets: ${budgetsError.message}`)
-        }
-        
-        setExpenses(expensesData || [])
-        setBudgets(budgetsData || [])
+      // Load real dashboard stats
+      const stats = await IndividualUserService.getDashboardStats(user.id)
+      setWorkStats(stats)
+      
+      // Load time entries for display
+      const entries = await IndividualUserService.getTimeEntries(user.id, undefined, 10)
+      setTimeEntries(entries)
+
     } catch (error) {
-        console.error('Error fetching individual dashboard data:', error)
-        // Don't set fallback data - let error state handle this
+      console.error('Error loading dashboard data:', error)
     } finally {
         setLoading(false)
       }
     }
-
-    fetchData()
-  }, [user?.id])
-
-  const totalIncome = expenses.filter(e => e.type === 'income').reduce((sum, e) => sum + e.amount, 0)
-  const totalExpenses = expenses.filter(e => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0)
-  const netIncome = totalIncome - totalExpenses
 
   const handleSignOut = async () => {
     await signOut()
     navigate('/')
   }
 
-  // Chart data
-  const monthlyData = [
-    { month: 'Jan', income: 2500000, expenses: 395000 },
-    { month: 'Feb', income: 2500000, expenses: 420000 },
-    { month: 'Mar', income: 2500000, expenses: 380000 },
-    { month: 'Apr', income: 2500000, expenses: 450000 },
+  const handleBusinessSelect = (business: BusinessAccess) => {
+    setSelectedBusiness(business)
+  }
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { 
+      hour12: true, 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    })
+  }
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long',
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    })
+  }
+
+  const getGreeting = () => {
+    const hour = currentTime.getHours()
+    if (hour < 12) return 'Good morning'
+    if (hour < 17) return 'Good afternoon'
+    return 'Good evening'
+  }
+
+  const quickActions = [
+    {
+      id: 'time_tracking',
+      title: 'Time Tracking',
+      description: 'Track your work hours',
+      icon: <Timer className="h-5 w-5" />,
+      color: 'bg-blue-500',
+      action: () => navigate('/time-tracking')
+    },
+    {
+      id: 'task_management',
+      title: 'Task Management',
+      description: 'Manage your tasks',
+      icon: <CheckCircle className="h-5 w-5" />,
+      color: 'bg-green-500',
+      action: () => navigate('/tasks')
+    },
+    {
+      id: 'reports',
+      title: 'Work Reports',
+      description: 'View your work reports',
+      icon: <BarChart3 className="h-5 w-5" />,
+      color: 'bg-purple-500',
+      action: () => navigate('/reports')
+    },
+    {
+      id: 'profile',
+      title: 'Profile Settings',
+      description: 'Update your profile',
+      icon: <User className="h-5 w-5" />,
+      color: 'bg-orange-500',
+      action: () => navigate('/individual-settings')
+    }
   ]
 
-  const expenseData = budgets.map(budget => ({
-    name: budget.category,
-    value: budget.spent,
-    color: budget.remaining > 0 ? '#10b981' : '#ef4444'
-  }))
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-          {/* Header Skeleton */}
-        <header className="bg-white border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-10 h-10 bg-gray-200 rounded animate-pulse"></div>
-                <div>
-                  <div className="h-6 bg-gray-200 rounded w-32 mb-2 animate-pulse"></div>
-                  <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="h-10 bg-gray-200 rounded w-24 animate-pulse"></div>
-                <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Content Skeleton */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="space-y-6">
-            {/* Welcome Section Skeleton */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="h-8 bg-gray-200 rounded w-64 mb-4 animate-pulse"></div>
-              <div className="h-4 bg-gray-200 rounded w-96 animate-pulse"></div>
-            </div>
-
-            {/* Stats Cards Skeleton */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg p-6 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="w-6 h-6 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                  <div className="h-8 bg-gray-200 rounded w-20 mb-2 animate-pulse"></div>
-                  <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
-                </div>
-              ))}
-            </div>
-
-            {/* Charts Section Skeleton */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <div className="h-6 bg-gray-200 rounded w-48 mb-4 animate-pulse"></div>
-                <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
-              </div>
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <div className="h-6 bg-gray-200 rounded w-48 mb-4 animate-pulse"></div>
-                <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
-              </div>
-          </div>
-          
-            {/* Recent Activity Skeleton */}
-            <div className="bg-white rounded-lg p-6 shadow-sm">
-              <div className="h-6 bg-gray-200 rounded w-48 mb-4 animate-pulse"></div>
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-                    <div className="flex-1">
-                      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2 animate-pulse"></div>
-                    </div>
-                    <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
+    return <LoadingSpinner />
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 shadow-lg sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4">
+      <header className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
+              {/* Otic Logo */}
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-[#faa51a] to-[#040458] rounded-lg flex items-center justify-center">
-                  <User className="h-6 w-6 text-white" />
-                </div>
+                <img 
+                  src="/Layer 2.png" 
+                  alt="Otic Business Logo" 
+                  className="h-10 md:h-12 w-auto object-contain"
+                />
               <div>
-                  <h1 className="text-2xl font-bold text-[#040458]">Personal Finance</h1>
-                  <p className="text-sm text-gray-600">Manage your personal finances</p>
+                  <h1 className="text-xl font-bold text-[#040458]">Individual Dashboard</h1>
+                  <p className="text-sm text-gray-600">Personal workspace</p>
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <BusinessSwitcher />
+            
+            <div className="flex items-center space-x-4">
+              <IndividualBusinessSwitcher onBusinessSelect={handleBusinessSelect} />
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => navigate('/individual-settings')}
-                className="flex items-center space-x-2"
+                className="text-[#040458] border-[#faa51a] hover:bg-[#faa51a] hover:text-white"
               >
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
               </Button>
-              <IndividualLoginStatus />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSignOut}
+                className="text-gray-600 border-gray-300 hover:bg-gray-50"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Business Invitations */}
-        <div className="mb-8">
-          <InvitationNotification />
-        </div>
-
-        {/* Business Access for Employees */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
         <div className="mb-8">
           <Card className="bg-gradient-to-r from-[#040458] to-[#faa51a] text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold mb-2">Business Access</h2>
-                  <p className="text-white/90">
-                    Access your business dashboard to manage POS, Inventory, Accounting, and Customers
+                  <h2 className="text-2xl font-bold mb-2">
+                    {getGreeting()}, {user?.email?.split('@')[0]}! 👋
+                  </h2>
+                  <p className="text-white/90 mb-4">
+                    {formatDate(currentTime)} • {formatTime(currentTime)}
+                  </p>
+                  <p className="text-white/80">
+                    Track your work, manage tasks, and stay productive across all your business collaborations.
                   </p>
                 </div>
-                <Button
-                  onClick={() => navigate('/dashboard')}
-                  className="bg-white text-[#040458] hover:bg-gray-100 font-semibold px-6 py-3"
-                >
-                  <ArrowRight className="h-4 w-4 mr-2" />
-                  Go to Business Dashboard
-                </Button>
+                <div className="hidden md:block">
+                  <div className="text-right">
+                    <div className="text-3xl font-bold">{formatTime(currentTime)}</div>
+                    <div className="text-white/80">{formatDate(currentTime)}</div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
         
-        {/* Key Metrics */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Income</p>
-                  <p className="text-3xl font-bold text-green-600">UGX {totalIncome.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-gray-600">Total Hours</p>
+                  <p className="text-2xl font-bold text-[#040458]">{workStats.totalHours}h</p>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-green-600" />
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Clock className="h-6 w-6 text-blue-600" />
       </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                  <p className="text-3xl font-bold text-red-600">UGX {totalExpenses.toLocaleString()}</p>
+                  <p className="text-sm font-medium text-gray-600">Today</p>
+                  <p className="text-2xl font-bold text-[#040458]">{workStats.todayHours}h</p>
                 </div>
-                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                  <TrendingDown className="h-6 w-6 text-red-600" />
+                <div className="p-3 bg-green-100 rounded-full">
+                  <Activity className="h-6 w-6 text-green-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Net Income</p>
-                  <p className={`text-3xl font-bold ${netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    UGX {netIncome.toLocaleString()}
-                  </p>
+                  <p className="text-sm font-medium text-gray-600">This Week</p>
+                  <p className="text-2xl font-bold text-[#040458]">{workStats.thisWeekHours}h</p>
                 </div>
-                <div className={`w-12 h-12 ${netIncome >= 0 ? 'bg-green-100' : 'bg-red-100'} rounded-lg flex items-center justify-center`}>
-                  <DollarSign className={`h-6 w-6 ${netIncome >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                <div className="p-3 bg-purple-100 rounded-full">
+                  <TrendingUp className="h-6 w-6 text-purple-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
+          <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Savings Rate</p>
-                  <p className="text-3xl font-bold text-[#040458]">
-                    {totalIncome > 0 ? Math.round((netIncome / totalIncome) * 100) : 0}%
-                  </p>
+                  <p className="text-sm font-medium text-gray-600">Active Businesses</p>
+                  <p className="text-2xl font-bold text-[#040458]">{workStats.activeBusinesses}</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <PiggyBank className="h-6 w-6 text-blue-600" />
+                <div className="p-3 bg-orange-100 rounded-full">
+                  <Building2 className="h-6 w-6 text-orange-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Charts Section */}
-        <div className="grid lg:grid-cols-2 gap-8 mb-8">
-          {/* Income vs Expenses Chart */}
-          <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Quick Actions */}
+          <div className="lg:col-span-2">
+            <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <BarChart3 className="h-6 w-6 text-[#faa51a]" />
-                <span>Income vs Expenses</span>
+                  <Target className="h-5 w-5" />
+                  <span>Quick Actions</span>
               </CardTitle>
-              <CardDescription>Monthly overview of your finances</CardDescription>
+                <CardDescription>
+                  Manage your work and productivity
+                </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={monthlyData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip formatter={(value) => [`UGX ${value.toLocaleString()}`, '']} />
-                    <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={3} name="Income" />
-                    <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={3} name="Expenses" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Expense Categories Chart */}
-          <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <PieChart className="h-6 w-6 text-[#faa51a]" />
-                <span>Expense Categories</span>
-              </CardTitle>
-              <CardDescription>Breakdown of your spending</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsPieChart>
-                    <Pie
-                      data={expenseData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={120}
-                      paddingAngle={5}
-                      dataKey="value"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {quickActions.map((action) => (
+                    <Button
+                      key={action.id}
+                      variant="outline"
+                      onClick={action.action}
+                      className="h-auto p-4 flex items-start space-x-3 hover:bg-gray-50"
                     >
-                      {expenseData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => [`UGX ${value.toLocaleString()}`, '']} />
-                  </RechartsPieChart>
-                </ResponsiveContainer>
+                      <div className={`p-2 rounded-lg ${action.color} text-white`}>
+                        {action.icon}
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium">{action.title}</div>
+                        <div className="text-sm text-gray-600">{action.description}</div>
+                      </div>
+                    </Button>
+                  ))}
               </div>
             </CardContent>
           </Card>
-                </div>
 
-        {/* Budget Overview */}
-        <div className="grid lg:grid-cols-2 gap-8 mb-8">
-          <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
+            {/* Business Access */}
+            {selectedBusiness && (
+              <Card className="mt-6">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Target className="h-6 w-6 text-[#faa51a]" />
-                <span>Budget Overview</span>
+                    <Building2 className="h-5 w-5" />
+                    <span>Business Access: {selectedBusiness.business_name}</span>
               </CardTitle>
-              <CardDescription>Track your spending against budget</CardDescription>
+                  <CardDescription>
+                    Access business systems and data
+                  </CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="space-y-4">
-                {budgets.map((budget, index) => (
-                  <div key={index} className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-gray-700">{budget.category}</span>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-600">
-                          UGX {budget.spent.toLocaleString()} / UGX {budget.budgeted.toLocaleString()}
-                        </span>
-                        <Badge variant={budget.remaining >= 0 ? "default" : "destructive"}>
-                          {budget.remaining >= 0 ? 'On Track' : 'Over Budget'}
-                        </Badge>
-                      </div>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${budget.remaining >= 0 ? 'bg-green-500' : 'bg-red-500'}`}
-                        style={{ width: `${Math.min(100, (budget.spent / budget.budgeted) * 100)}%` }}
-                      ></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Transactions */}
-          <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Receipt className="h-6 w-6 text-[#faa51a]" />
-                <span>Recent Transactions</span>
-              </CardTitle>
-              <CardDescription>Your latest financial activity</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {expenses.slice(0, 5).map((expense) => (
-                  <div key={expense.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        expense.type === 'income' ? 'bg-green-100' : 'bg-red-100'
-                      }`}>
-                        {expense.type === 'income' ? (
-                          <TrendingUp className="h-5 w-5 text-green-600" />
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {['pos', 'inventory', 'accounting', 'payments', 'customers'].map((page) => (
+                      <Button
+                        key={page}
+                        variant="outline"
+                        onClick={() => navigate(`/business/${selectedBusiness.business_id}/${page}`)}
+                        className="h-auto p-4 flex flex-col items-center space-y-2"
+                        disabled={!selectedBusiness.permissions.includes(page)}
+                      >
+                        <div className="text-2xl">
+                          {page === 'pos' && <Briefcase />}
+                          {page === 'inventory' && <Package />}
+                          {page === 'accounting' && <DollarSign />}
+                          {page === 'payments' && <CreditCard />}
+                          {page === 'customers' && <Users />}
+                        </div>
+                        <div className="text-sm font-medium capitalize">{page}</div>
+                        {selectedBusiness.permissions.includes(page) ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
                         ) : (
-                          <TrendingDown className="h-5 w-5 text-red-600" />
+                          <AlertCircle className="h-4 w-4 text-red-500" />
                         )}
+                      </Button>
+                    ))}
+              </div>
+            </CardContent>
+          </Card>
+            )}
                 </div>
-                        <div>
-                        <p className="font-medium text-gray-900">{expense.description}</p>
-                        <p className="text-sm text-gray-500">{expense.category}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`font-semibold ${
-                        expense.type === 'income' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {expense.type === 'income' ? '+' : '-'}UGX {expense.amount.toLocaleString()}
-                      </p>
-                      <p className="text-sm text-gray-500">{expense.date}</p>
-                      </div>
-                    </div>
-                  ))}
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Invitations */}
+            <IndividualInvitationHandler />
+
+            {/* Recent Activity */}
+            <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                  <Activity className="h-5 w-5" />
+                  <span>Recent Activity</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="text-center py-8">
+                  <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No recent activity</p>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Your work activity will appear here
+                  </p>
                 </div>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Quick Actions */}
-        <Card className="bg-white/80 backdrop-blur-sm shadow-lg border-0">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Plus className="h-6 w-6 text-[#faa51a]" />
-              <span>Quick Actions</span>
-            </CardTitle>
-            <CardDescription>Common financial tasks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Button className="h-20 flex flex-col items-center justify-center space-y-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white">
-                <TrendingUp className="h-6 w-6" />
-                <span className="text-sm font-medium">Add Income</span>
-              </Button>
-              <Button className="h-20 flex flex-col items-center justify-center space-y-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white">
-                <TrendingDown className="h-6 w-6" />
-                <span className="text-sm font-medium">Add Expense</span>
-              </Button>
-              <Button className="h-20 flex flex-col items-center justify-center space-y-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white">
-                <Target className="h-6 w-6" />
-                <span className="text-sm font-medium">Set Budget</span>
-              </Button>
-              <Button className="h-20 flex flex-col items-center justify-center space-y-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white">
-                <BarChart3 className="h-6 w-6" />
-                <span className="text-sm font-medium">View Reports</span>
+            {/* Last Visited Business */}
+            {selectedBusiness && (
+              <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                    <Building2 className="h-5 w-5" />
+                    <span>Last Visited</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 bg-[#040458]/10 rounded-lg">
+                        <Building2 className="h-4 w-4 text-[#040458]" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium">{selectedBusiness.business_name}</div>
+                        <div className="text-sm text-gray-600 capitalize">
+                          {selectedBusiness.business_type} • {selectedBusiness.access_level}
+                    </div>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => navigate(`/business/${selectedBusiness.business_id}/dashboard`)}
+                      className="w-full bg-[#040458] hover:bg-[#030345] text-white"
+                    >
+                      <ArrowRight className="h-3 w-3 mr-1" />
+                      Go to Dashboard
               </Button>
             </div>
           </CardContent>
         </Card>
+            )}
+          </div>
       </div>
+      </main>
     </div>
   )
 }

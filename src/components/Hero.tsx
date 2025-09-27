@@ -7,7 +7,7 @@ import heroImage from "@/assets/female-african-store-attendant-smiling-600nw-189
 
 const Hero = () => {
   const navigate = useNavigate();
-  const { getDashboardRoute, user, profile, loading } = useAuth();
+  const { user, profile, loading, getDashboardRoute } = useAuth();
 
   const handleGetStarted = () => {
     console.log('🔍 Hero: Dashboard button clicked');
@@ -74,18 +74,20 @@ const Hero = () => {
               className="text-xl sm:text-2xl px-8 sm:px-9 py-5 sm:py-5 h-auto bg-[#faa51a] text-white hover:bg-[#faa51a]/90 font-semibold rounded-lg shadow-xl transition-all duration-300 w-full sm:w-auto"
               onClick={handleGetStarted}
             >
-              Start Free Trial
+              {user ? 'Dashboard' : 'Start Free Trial'}
               <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            <Button 
-              size="lg"
-              variant="outline"
-              className="text-xl sm:text-2xl px-8 sm:px-9 py-5 sm:py-5 h-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#040458] font-semibold rounded-lg shadow-xl transition-all duration-300 w-full sm:w-auto"
-              onClick={handleGetStartedGuide}
-            >
-              Get Started
-              <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-            </Button>
+            {!user && (
+              <Button 
+                size="lg"
+                variant="outline"
+                className="text-xl sm:text-2xl px-8 sm:px-9 py-5 sm:py-5 h-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#040458] font-semibold rounded-lg shadow-xl transition-all duration-300 w-full sm:w-auto"
+                onClick={handleGetStartedGuide}
+              >
+                Get Started
+                <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
+            )}
           </div>
 
           {/* Stats removed per request */}

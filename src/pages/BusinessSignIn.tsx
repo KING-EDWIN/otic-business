@@ -10,6 +10,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabaseClient';
 import { getPasswordResetUrl, getUrl } from '@/services/environmentService';
+import { AccountDeletionService } from '@/services/accountDeletionService';
+import AccountRestorationModal from '@/components/AccountRestorationModal';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 const BusinessSignIn = () => {
   const navigate = useNavigate();
@@ -20,6 +23,8 @@ const BusinessSignIn = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [showRestorationModal, setShowRestorationModal] = useState(false);
+  const [deletedAccountInfo, setDeletedAccountInfo] = useState<any>(null);
 
   // Redirect check with user type validation
   useEffect(() => {
@@ -43,6 +48,24 @@ const BusinessSignIn = () => {
       const { error: signInError } = await signIn(email, password, 'business');
       
       if (signInError) {
+        // Check if this might be a soft-deleted account
+        if (signInError.message?.includes('email') || signInError.message?.includes('password')) {
+          // Check for soft-deleted account
+          const { hasRecoverableAccount, accountInfo, error: accountError } = await AccountDeletionService.checkRecoverableAccountByEmail(email);
+          
+          if (hasRecoverableAccount && accountInfo) {
+            setDeletedAccountInfo(accountInfo);
+            setShowRestorationModal(true);
+            setLoading(false);
+            return;
+          } else if (accountError && accountError.includes('recently restored')) {
+            // Account was recently restored, show helpful message
+            setError('Your account was recently restored. Please try signing in again, or contact support if you continue to have issues.');
+            setLoading(false);
+            return;
+          }
+        }
+        
         // Handle account type errors with clear messaging
         if (signInError.accountType && signInError.accountType !== 'business') {
           setError(`This account is registered as an ${signInError.accountType} account. Please use the Individual Sign In form.`);
@@ -62,6 +85,11 @@ const BusinessSignIn = () => {
       setLoading(false);
     }
   }, [email, password, signIn, navigate]);
+
+  const handleRestoreSuccess = () => {
+    // After successful restoration, redirect to dashboard
+    navigate('/dashboard');
+  };
 
   // Forgot password handler
   const handleForgotPassword = useCallback(async () => {
@@ -97,7 +125,7 @@ const BusinessSignIn = () => {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: getUrl(`/auth/callback?user_type=business`),
+          redirectTo: getUrl(`/auth/callback?user_type=business&action=signin`),
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -122,14 +150,7 @@ const BusinessSignIn = () => {
 
   // Show loading while auth is being checked
   if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#040458] to-[#faa51a]">
-        <div className="flex items-center space-x-2 text-white">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading...</span>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
 
@@ -228,12 +249,12 @@ const BusinessSignIn = () => {
               >
                 {loading ? (
                   <div className="flex items-center space-x-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Signing In...</span>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>🔐 Securing your access...</span>
                   </div>
                 ) : (
-                'Sign In'
-              )}
+                  'Sign In'
+                )}
             </Button>
           </form>
 
@@ -247,8 +268,8 @@ const BusinessSignIn = () => {
             >
               {forgotPasswordLoading ? (
                   <div className="flex items-center space-x-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Sending...</span>
+                    <div className="w-4 h-4 border-2 border-[#faa51a] border-t-transparent rounded-full animate-spin"></div>
+                    <span>📧 Sending reset link...</span>
                   </div>
               ) : (
                 'Forgot your password?'
@@ -299,6 +320,20 @@ const BusinessSignIn = () => {
           </div>
           </CardContent>
         </Card>
+
+        {/* Account Restoration Modal */}
+        {showRestorationModal && deletedAccountInfo && (
+          <AccountRestorationModal
+            isOpen={showRestorationModal}
+            onClose={() => {
+              setShowRestorationModal(false);
+              setDeletedAccountInfo(null);
+            }}
+            onRestoreSuccess={handleRestoreSuccess}
+            email={email}
+            accountInfo={deletedAccountInfo}
+          />
+        )}
     </div>
   );
 };

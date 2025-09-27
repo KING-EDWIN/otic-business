@@ -122,11 +122,11 @@ const EmailVerification: React.FC = () => {
   const getStatusDescription = () => {
     switch (verificationStatus) {
       case 'success':
-        return 'Your email has been verified successfully. You will be redirected to your dashboard shortly.'
+        return '🎉 Congratulations! Your email has been verified successfully. You can now access all features of your account. You will be redirected to your dashboard shortly.'
       case 'expired':
         return 'This verification link has expired. Please request a new verification email.'
       case 'error':
-        return 'There was an error verifying your email. Please try again or request a new verification email.'
+        return '❌ Email not verified. There was an error verifying your email. Please contact support if this issue persists.'
       default:
         return 'Please wait while we verify your email address...'
     }
@@ -195,6 +195,15 @@ const EmailVerification: React.FC = () => {
 
           {(verificationStatus === 'error' || verificationStatus === 'expired') && (
             <div className="space-y-3">
+              <div className="text-center p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-700 font-medium">
+                  Email not verified, contact support.
+                </p>
+                <p className="text-xs text-red-600 mt-1">
+                  If you continue to experience issues, please reach out to our support team.
+                </p>
+              </div>
+
               <Button
                 onClick={verifyEmail}
                 disabled={isVerifying}
@@ -229,7 +238,7 @@ const EmailVerification: React.FC = () => {
               )}
 
               <Button
-                onClick={() => navigate('/signin')}
+                onClick={() => navigate('/login-type')}
                 variant="ghost"
                 className="w-full"
               >

@@ -5,26 +5,13 @@ import Hero from "@/components/Hero";
 import StepByStepGuide from "@/components/StepByStepGuide";
 import FeaturesOverview from "@/components/FeaturesOverview";
 import Footer from "@/components/Footer";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
 const Index = () => {
   const { loading } = useAuth();
-  const [forceRender, setForceRender] = useState(false);
 
-  // Force render after 3 seconds to prevent infinite loading
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setForceRender(true);
-    }, 3000);
-
-    return () => clearTimeout(timeout);
-  }, []);
-
-  if (loading && !forceRender) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+  if (loading) {
+    return <LoadingSpinner />;
   }
 
   return (

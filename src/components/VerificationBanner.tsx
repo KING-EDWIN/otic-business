@@ -2,13 +2,38 @@ import React, { useState } from 'react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Mail, X, CheckCircle } from 'lucide-react'
-import { useVerification } from '@/contexts/VerificationContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
+import { supabase } from '@/lib/supabaseClient'
 
 const VerificationBanner: React.FC = () => {
-  const { isEmailVerified, resendVerificationEmail } = useVerification()
+  const { user } = useAuth()
   const [isResending, setIsResending] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
+
+  // Check if email is verified
+  const isEmailVerified = user?.email_confirmed_at !== null
+
+  const resendVerificationEmail = async () => {
+    try {
+      if (!user?.email) {
+        return { success: false, error: 'No email found' }
+      }
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: user.email
+      })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to resend verification email' }
+    }
+  }
 
   const handleResendEmail = async () => {
     setIsResending(true)

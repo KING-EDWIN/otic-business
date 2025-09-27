@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Crown, Mail, HelpCircle, Trash2, MessageSquare, Users, Loader2 } from 'lucide-react'
+import { Crown, Mail, HelpCircle, Trash2, MessageSquare, Users, Loader2, FileText, Database, Activity } from 'lucide-react'
 
 // Lazy load heavy components
 const TierUpgradeRequests = lazy(() => import('@/components/TierUpgradeRequests'))
@@ -13,6 +13,10 @@ const AdminFAQManagement = lazy(() => import('@/components/AdminFAQManagement'))
 const AdminAccountDeletion = lazy(() => import('@/components/AdminAccountDeletion'))
 const ContactManagement = lazy(() => import('./ContactManagement'))
 const UserManagement = lazy(() => import('@/components/UserManagement'))
+const AdminAuditLogs = lazy(() => import('@/components/AdminAuditLogs'))
+const CacheDebugger = lazy(() => import('@/components/CacheDebugger'))
+const SystemHealthMonitor = lazy(() => import('@/components/SystemHealthMonitor'))
+const SystemStatusWidget = lazy(() => import('@/components/SystemStatusWidget'))
 
 const isDesktop = () => {
   if (typeof window === 'undefined') return true
@@ -28,6 +32,12 @@ const AdminConsole = () => {
   const [showUserDeletion, setShowUserDeletion] = useState(false)
   const [showContactManagement, setShowContactManagement] = useState(false)
   const [showUserManagement, setShowUserManagement] = useState(false)
+  const [showAuditLogs, setShowAuditLogs] = useState(false)
+  const [showCacheDebugger, setShowCacheDebugger] = useState(false)
+  const [showSystemHealth, setShowSystemHealth] = useState(false)
+  
+  // Mock admin ID for now - in real implementation, get from auth context
+  const adminId = '00000000-0000-0000-0000-000000000000'
 
   const desktopOnly = useMemo(() => isDesktop(), [])
 
@@ -77,6 +87,22 @@ const AdminConsole = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* System Status Overview */}
+        <Suspense fallback={
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <span>Loading system status...</span>
+              </div>
+            </CardContent>
+          </Card>
+        }>
+          <SystemStatusWidget 
+            onOpenHealthMonitor={() => setShowSystemHealth(true)}
+          />
+        </Suspense>
+
         <Card>
           <CardHeader>
             <CardTitle>Email Verification Management</CardTitle>
@@ -166,6 +192,54 @@ const AdminConsole = () => {
 
         <Card>
           <CardHeader>
+            <CardTitle>Audit Logs</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-gray-600">View comprehensive audit trail of all admin actions including email verifications, tier upgrades, and user management activities.</p>
+            <Button 
+              className="bg-[#040458] hover:bg-[#030345] text-white"
+              onClick={() => setShowAuditLogs(true)}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              View Audit Logs
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Cache Management</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-gray-600">Monitor and manage application cache, view query status, clear stale data, and debug cache-related issues.</p>
+            <Button 
+              className="bg-[#040458] hover:bg-[#030345] text-white"
+              onClick={() => setShowCacheDebugger(true)}
+            >
+              <Database className="h-4 w-4 mr-2" />
+              Open Cache Debugger
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>System Health Monitor</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-gray-600">Real-time monitoring of database connectivity, SMTP status, network speed, API health, and all system components.</p>
+            <Button 
+              className="bg-[#040458] hover:bg-[#030345] text-white"
+              onClick={() => setShowSystemHealth(true)}
+            >
+              <Activity className="h-4 w-4 mr-2" />
+              Open Health Monitor
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Account Deletion Management</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -218,7 +292,8 @@ const AdminConsole = () => {
       }>
         <EmailVerificationManager 
           isOpen={showEmailVerification} 
-          onClose={() => setShowEmailVerification(false)} 
+          onClose={() => setShowEmailVerification(false)}
+          adminId={adminId}
         />
       </Suspense>
 
@@ -329,6 +404,57 @@ const AdminConsole = () => {
           </div>
         </div>
       )}
+
+      {/* Audit Logs Modal */}
+      <Suspense fallback={
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-8">
+            <div className="flex items-center">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>Loading Audit Logs...</span>
+            </div>
+          </div>
+        </div>
+      }>
+        <AdminAuditLogs 
+          isOpen={showAuditLogs} 
+          onClose={() => setShowAuditLogs(false)} 
+        />
+      </Suspense>
+
+      {/* Cache Debugger Modal */}
+      <Suspense fallback={
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-8">
+            <div className="flex items-center">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>Loading Cache Debugger...</span>
+            </div>
+          </div>
+        </div>
+      }>
+        <CacheDebugger 
+          isOpen={showCacheDebugger} 
+          onClose={() => setShowCacheDebugger(false)} 
+        />
+      </Suspense>
+
+      {/* System Health Monitor Modal */}
+      <Suspense fallback={
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-8">
+            <div className="flex items-center">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              <span>Loading System Health Monitor...</span>
+            </div>
+          </div>
+        </div>
+      }>
+        <SystemHealthMonitor 
+          isOpen={showSystemHealth} 
+          onClose={() => setShowSystemHealth(false)} 
+        />
+      </Suspense>
     </div>
   )
 }

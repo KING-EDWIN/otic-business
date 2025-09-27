@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { useAuth } from '@/contexts/AuthContext'
 import { businessManagementService, Business, BusinessMember } from '@/services/businessManagementService'
 import { supabase } from '@/lib/supabaseClient'
+import CacheService from '@/services/cacheService'
 
 interface BusinessManagementContextType {
   businesses: Business[]
@@ -192,6 +193,10 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
     try {
       const result = await businessManagementService.createBusiness(data)
       if (result.success) {
+        // Invalidate cache after successful creation
+        if (user?.id) {
+          CacheService.invalidateBusinessCache(user.id)
+        }
         await loadBusinesses()
         if (result.business) {
           setCurrentBusiness(result.business)
@@ -283,6 +288,11 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
         role as any
       )
       if (result.success) {
+        // Invalidate cache after successful invitation
+        CacheService.invalidateInvitationCache(email)
+        if (user?.id) {
+          CacheService.invalidateBusinessCache(user.id)
+        }
         await loadBusinesses()
       }
       return result

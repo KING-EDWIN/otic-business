@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
@@ -47,7 +47,8 @@ import {
   Calendar,
   TrendingDown,
   Activity,
-  Layers
+  Layers,
+  AlertTriangle
 } from 'lucide-react'
 import { DataService } from '@/services/dataService'
 import { supabase } from '@/lib/supabaseClient'
@@ -79,6 +80,7 @@ const Dashboard = () => {
     lowStockItems: 0
   })
   const [statsLoading, setStatsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Chart controls state
   const [chartPeriod, setChartPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week')
@@ -89,23 +91,31 @@ const Dashboard = () => {
   const { dateRange, updateDateRange, minDate, maxDate, dateRangeString } = useDateRange()
 
   // Load stats using DataService
-  useEffect(() => {
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     if (!user?.id) return
     
     try {
       setStatsLoading(true)
-      const statsData = await DataService.getStats(user.id)
+      
+      // Add timeout to prevent infinite loading
+      const statsData = await Promise.race([
+        DataService.getStats(user.id),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Dashboard data fetch timeout')), 10000)
+        )
+      ]) as any
+      
       setStats(statsData)
       console.log('Loaded stats:', statsData)
-      } catch (error) {
+    } catch (error) {
       console.error('Error loading stats:', error)
-      // Don't set fallback data - let error state handle this
+      setError(error instanceof Error ? error.message : 'Failed to load dashboard data')
     } finally {
       setStatsLoading(false)
     }
-  }
+  }, [user?.id])
 
+  useEffect(() => {
     loadStats()
   }, [user?.id])
 
@@ -148,43 +158,11 @@ const Dashboard = () => {
     }
   }
 
-  // Generate chart data based on period and metric
+  // Generate chart data based on real analytics data
   const generateChartData = () => {
-    const baseData = {
-      day: [
-        { name: '6AM', value: 1200, sales: 8, profit: 400, stock: 45 },
-        { name: '9AM', value: 2400, sales: 12, profit: 800, stock: 42 },
-        { name: '12PM', value: 1800, sales: 9, profit: 600, stock: 38 },
-        { name: '3PM', value: 3200, sales: 16, profit: 1000, stock: 35 },
-        { name: '6PM', value: 2800, sales: 14, profit: 900, stock: 32 },
-        { name: '9PM', value: 1600, sales: 8, profit: 500, stock: 30 }
-      ],
-      week: [
-        { name: 'Mon', value: 12000, sales: 60, profit: 4000, stock: 280 },
-        { name: 'Tue', value: 15000, sales: 75, profit: 5000, stock: 275 },
-        { name: 'Wed', value: 18000, sales: 90, profit: 6000, stock: 270 },
-        { name: 'Thu', value: 14000, sales: 70, profit: 4600, stock: 265 },
-        { name: 'Fri', value: 22000, sales: 110, profit: 7200, stock: 260 },
-        { name: 'Sat', value: 16000, sales: 80, profit: 5200, stock: 255 },
-        { name: 'Sun', value: 10000, sales: 50, profit: 3200, stock: 250 }
-      ],
-      month: [
-        { name: 'Week 1', value: 65000, sales: 325, profit: 21000, stock: 1200 },
-        { name: 'Week 2', value: 72000, sales: 360, profit: 23000, stock: 1150 },
-        { name: 'Week 3', value: 68000, sales: 340, profit: 22000, stock: 1100 },
-        { name: 'Week 4', value: 75000, sales: 375, profit: 24000, stock: 1050 }
-      ],
-      year: [
-        { name: 'Jan', value: 280000, sales: 1400, profit: 90000, stock: 4800 },
-        { name: 'Feb', value: 320000, sales: 1600, profit: 102000, stock: 4600 },
-        { name: 'Mar', value: 350000, sales: 1750, profit: 112000, stock: 4400 },
-        { name: 'Apr', value: 300000, sales: 1500, profit: 96000, stock: 4200 },
-        { name: 'May', value: 380000, sales: 1900, profit: 121000, stock: 4000 },
-        { name: 'Jun', value: 420000, sales: 2100, profit: 134000, stock: 3800 }
-      ]
-    }
-
-    return baseData[chartPeriod] || baseData.week
+    // For now, return empty data for new accounts
+    // In the future, this would fetch real analytics data
+    return []
   }
 
   // Get chart configuration based on selected metric
@@ -267,6 +245,96 @@ const Dashboard = () => {
             <div className="space-y-6">
               <div className="h-64 bg-white/70 backdrop-blur-sm rounded-xl animate-pulse"></div>
               <div className="h-48 bg-white/70 backdrop-blur-sm rounded-xl animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Header */}
+        <div className="bg-white/70 backdrop-blur-sm border-b border-white/40 shadow-lg">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Building2 className="h-8 w-8 text-[#040458]" />
+                <h1 className="text-xl font-bold text-[#040458]">Dashboard</h1>
+              </div>
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/settings')}
+                  className="text-[#040458] border-[#faa51a] hover:bg-[#faa51a] hover:text-white"
+                >
+                  Settings
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={signOut}
+                  className="text-gray-600 border-gray-300 hover:bg-gray-50"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Error State */}
+        <div className="p-6">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-sm border border-red-200 p-8">
+              <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-6" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Unable to Load Dashboard</h2>
+              <p className="text-gray-600 mb-6">
+                We encountered an issue while loading your dashboard data. This could be due to a temporary connection issue or a problem with our servers.
+              </p>
+              
+              <div className="space-y-4">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-left">
+                  <h3 className="font-semibold text-red-800 mb-2">Error Details:</h3>
+                  <p className="text-sm text-red-700 font-mono">{error}</p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button 
+                    onClick={() => {
+                      setError(null)
+                      setStatsLoading(true)
+                      loadStats()
+                    }} 
+                    className="bg-[#040458] hover:bg-[#030345] text-white flex items-center space-x-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    <span>Try Again</span>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate('/settings')}
+                    className="border-[#faa51a] text-[#faa51a] hover:bg-[#faa51a] hover:text-white"
+                  >
+                    Check Settings
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open('mailto:support@oticbusiness.com?subject=Dashboard Loading Error', '_blank')}
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    Report Issue
+                  </Button>
+                </div>
+                
+                <div className="text-sm text-gray-500 mt-6">
+                  <p>If this problem persists, please contact our support team.</p>
+                  <p>Error ID: {Date.now().toString(36)}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -594,7 +662,7 @@ const Dashboard = () => {
                     <ShoppingCart className="h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
                   <div className="text-xl lg:text-3xl font-bold mb-1">{(stats as any).totalSales || 0}</div>
-                  <p className="text-xs lg:text-sm opacity-90">+20.1% from last month</p>
+                  <p className="text-xs lg:text-sm opacity-90">Sales this period</p>
             </CardContent>
           </Card>
 
@@ -606,7 +674,7 @@ const Dashboard = () => {
                     <DollarSign className="h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
                   <div className="text-lg lg:text-3xl font-bold mb-1">UGX {((stats as any).totalRevenue || 0).toLocaleString()}</div>
-                  <p className="text-xs lg:text-sm opacity-90">+15.3% from last month</p>
+                  <p className="text-xs lg:text-sm opacity-90">Revenue this period</p>
             </CardContent>
           </Card>
 

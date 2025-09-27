@@ -46,8 +46,10 @@ const AdminAccountDeletion: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalAccounts, setTotalAccounts] = useState(0)
   const [showPermanentDeleteDialog, setShowPermanentDeleteDialog] = useState(false)
+  const [showRestoreDialog, setShowRestoreDialog] = useState(false)
   const [selectedAccount, setSelectedAccount] = useState<DeletedAccount | null>(null)
   const [deleteReason, setDeleteReason] = useState('')
+  const [restoreReason, setRestoreReason] = useState('')
   const [accountsNeedingManualDeletion, setAccountsNeedingManualDeletion] = useState<any[]>([])
   const [showManualDeletionSection, setShowManualDeletionSection] = useState(false)
 
@@ -124,6 +126,34 @@ const AdminAccountDeletion: React.FC = () => {
     } catch (error) {
       console.error('Error permanently deleting account:', error)
       toast.error('Failed to permanently delete account')
+    }
+  }
+
+  const handleRestoreAccount = async () => {
+    if (!selectedAccount || !restoreReason.trim()) {
+      toast.error('Please provide a reason for account restoration')
+      return
+    }
+
+    try {
+      const result = await AccountDeletionService.restoreAccount(
+        selectedAccount.id,
+        '00000000-0000-0000-0000-000000000000', // Admin ID placeholder
+        restoreReason
+      )
+
+      if (result.success) {
+        toast.success(result.message || 'Account restored successfully!')
+        setShowRestoreDialog(false)
+        setSelectedAccount(null)
+        setRestoreReason('')
+        loadDeletedAccounts()
+      } else {
+        toast.error(result.error || 'Failed to restore account')
+      }
+    } catch (error) {
+      console.error('Error restoring account:', error)
+      toast.error('Failed to restore account')
     }
   }
 
@@ -374,53 +404,103 @@ const AdminAccountDeletion: React.FC = () => {
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           {account.status === 'ACTIVE' && (
-                            <Dialog open={showPermanentDeleteDialog} onOpenChange={setShowPermanentDeleteDialog}>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="destructive"
-                                  size="sm"
-                                  onClick={() => setSelectedAccount(account)}
-                                >
-                                  <Trash2 className="h-3 w-3 mr-1" />
-                                  Delete
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Permanently Delete Account</DialogTitle>
-                                  <DialogDescription>
-                                    This will permanently delete the account for {account.email}. 
-                                    This action cannot be undone.
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div>
-                                    <Label htmlFor="delete-reason">Reason for permanent deletion</Label>
-                                    <Textarea
-                                      id="delete-reason"
-                                      placeholder="Enter reason for permanent deletion..."
-                                      value={deleteReason}
-                                      onChange={(e) => setDeleteReason(e.target.value)}
-                                    />
+                            <>
+                              <Dialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => setSelectedAccount(account)}
+                                    className="bg-green-600 hover:bg-green-700 text-white"
+                                  >
+                                    <RefreshCw className="h-3 w-3 mr-1" />
+                                    Restore
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Restore Account</DialogTitle>
+                                    <DialogDescription>
+                                      This will restore the account for {account.email} and allow them to sign in again.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label htmlFor="restore-reason">Reason for restoration</Label>
+                                      <Textarea
+                                        id="restore-reason"
+                                        placeholder="Enter reason for account restoration..."
+                                        value={restoreReason}
+                                        onChange={(e) => setRestoreReason(e.target.value)}
+                                      />
+                                    </div>
+                                    <div className="flex justify-end space-x-2">
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => setShowRestoreDialog(false)}
+                                      >
+                                        Cancel
+                                      </Button>
+                                      <Button
+                                        onClick={handleRestoreAccount}
+                                        disabled={!restoreReason.trim()}
+                                        className="bg-green-600 hover:bg-green-700 text-white"
+                                      >
+                                        Restore Account
+                                      </Button>
+                                    </div>
                                   </div>
-                                  <div className="flex justify-end space-x-2">
-                                    <Button
-                                      variant="outline"
-                                      onClick={() => setShowPermanentDeleteDialog(false)}
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button
-                                      variant="destructive"
-                                      onClick={handlePermanentDelete}
-                                      disabled={!deleteReason.trim()}
-                                    >
-                                      Permanently Delete
-                                    </Button>
+                                </DialogContent>
+                              </Dialog>
+                              
+                              <Dialog open={showPermanentDeleteDialog} onOpenChange={setShowPermanentDeleteDialog}>
+                                <DialogTrigger asChild>
+                                  <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => setSelectedAccount(account)}
+                                  >
+                                    <Trash2 className="h-3 w-3 mr-1" />
+                                    Delete
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Permanently Delete Account</DialogTitle>
+                                    <DialogDescription>
+                                      This will permanently delete the account for {account.email}. 
+                                      This action cannot be undone.
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label htmlFor="delete-reason">Reason for permanent deletion</Label>
+                                      <Textarea
+                                        id="delete-reason"
+                                        placeholder="Enter reason for permanent deletion..."
+                                        value={deleteReason}
+                                        onChange={(e) => setDeleteReason(e.target.value)}
+                                      />
+                                    </div>
+                                    <div className="flex justify-end space-x-2">
+                                      <Button
+                                        variant="outline"
+                                        onClick={() => setShowPermanentDeleteDialog(false)}
+                                      >
+                                        Cancel
+                                      </Button>
+                                      <Button
+                                        variant="destructive"
+                                        onClick={handlePermanentDelete}
+                                        disabled={!deleteReason.trim()}
+                                      >
+                                        Permanently Delete
+                                      </Button>
+                                    </div>
                                   </div>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
+                                </DialogContent>
+                              </Dialog>
+                            </>
                           )}
                         </div>
                       </TableCell>

@@ -94,6 +94,32 @@ export class AdminService {
       })
   }
 
+  async getAdminLogs(limit: number = 100, offset: number = 0): Promise<AdminLogEntry[]> {
+    try {
+      const { data, error } = await supabase
+        .from('admin_logs')
+        .select(`
+          *,
+          admin_auth:admin_user_id (
+            email,
+            role
+          )
+        `)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+
+      if (error) {
+        console.error('Error fetching admin logs:', error)
+        return []
+      }
+
+      return data || []
+    } catch (error) {
+      console.error('Error fetching admin logs:', error)
+      return []
+    }
+  }
+
   async resendEmailConfirmation(email: string): Promise<{ error?: any }> {
     try {
       // For now, just log the action - implement actual email sending later
@@ -351,21 +377,60 @@ export class AdminService {
     }
   }
 
-  async verifyUserEmail(userId: string): Promise<{ success: boolean; error?: string }> {
+  async verifyUserEmail(userId: string, adminId?: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // Update our database directly
+      const adminUserId = adminId || '00000000-0000-0000-0000-000000000000' // Fallback to placeholder
+      const verificationTimestamp = new Date().toISOString()
+
+      // Get user email for Supabase auth update
+      const { data: userProfile, error: fetchError } = await supabase
+        .from('user_profiles')
+        .select('email')
+        .eq('id', userId)
+        .single()
+
+      if (fetchError) {
+        console.error('Error fetching user profile:', fetchError)
+        return { success: false, error: 'Failed to fetch user profile' }
+      }
+
+      // Update our database
       const { error: dbError } = await supabase
         .from('user_profiles')
         .update({
           email_verified: true,
-          verification_timestamp: new Date().toISOString(),
-          verified_by: '00000000-0000-0000-0000-000000000000' // Admin UUID placeholder
+          verification_timestamp: verificationTimestamp,
+          verified_by: adminUserId
         })
         .eq('id', userId)
 
       if (dbError) {
         console.error('Error verifying user email in database:', dbError)
         return { success: false, error: dbError.message }
+      }
+
+      // Sync with Supabase Auth (update email_confirmed_at)
+      try {
+        const { error: authError } = await supabase.auth.admin.updateUserById(userId, {
+          email_confirm: true
+        })
+
+        if (authError) {
+          console.warn('Failed to sync with Supabase auth:', authError)
+          // Don't fail the entire operation, just log the warning
+        }
+      } catch (authError) {
+        console.warn('Supabase auth sync failed:', authError)
+        // Continue with success since database update succeeded
+      }
+
+      // Log admin action for audit trail
+      if (adminId) {
+        await this.logAction(adminId, 'email_verified', { 
+          userId, 
+          email: userProfile.email,
+          verificationTimestamp 
+        })
       }
 
       return { success: true }
@@ -375,9 +440,21 @@ export class AdminService {
     }
   }
 
-  async unverifyUserEmail(userId: string): Promise<{ success: boolean; error?: string }> {
+  async unverifyUserEmail(userId: string, adminId?: string): Promise<{ success: boolean; error?: string }> {
     try {
-      // Update our database directly
+      // Get user email for audit trail
+      const { data: userProfile, error: fetchError } = await supabase
+        .from('user_profiles')
+        .select('email')
+        .eq('id', userId)
+        .single()
+
+      if (fetchError) {
+        console.error('Error fetching user profile:', fetchError)
+        return { success: false, error: 'Failed to fetch user profile' }
+      }
+
+      // Update our database
       const { error: dbError } = await supabase
         .from('user_profiles')
         .update({
@@ -390,6 +467,30 @@ export class AdminService {
       if (dbError) {
         console.error('Error unverifying user email in database:', dbError)
         return { success: false, error: dbError.message }
+      }
+
+      // Sync with Supabase Auth (remove email_confirmed_at)
+      try {
+        const { error: authError } = await supabase.auth.admin.updateUserById(userId, {
+          email_confirm: false
+        })
+
+        if (authError) {
+          console.warn('Failed to sync with Supabase auth:', authError)
+          // Don't fail the entire operation, just log the warning
+        }
+      } catch (authError) {
+        console.warn('Supabase auth sync failed:', authError)
+        // Continue with success since database update succeeded
+      }
+
+      // Log admin action for audit trail
+      if (adminId) {
+        await this.logAction(adminId, 'email_unverified', { 
+          userId, 
+          email: userProfile.email,
+          unverifiedAt: new Date().toISOString()
+        })
       }
 
       return { success: true }

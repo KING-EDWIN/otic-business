@@ -27,16 +27,38 @@ const OAuthCallback = () => {
       try {
         console.log('OAuth callback - user authenticated:', user.email)
         
+        // Get URL parameters to determine user type and action
+        const urlParams = new URLSearchParams(window.location.search)
+        const userType = urlParams.get('user_type') || 'business'
+        const action = urlParams.get('action') || 'signin'
+        
+        console.log('OAuth callback params:', { userType, action })
+        
         // Check if this is a Google OAuth user (they don't need email verification)
         const isGoogleUser = user.app_metadata?.provider === 'google'
         
         if (isGoogleUser) {
-          console.log('Google OAuth user detected, skipping email verification')
-          // Google users are already verified, go straight to dashboard
-          const dashboardRoute = getDashboardRoute()
-          console.log('Redirecting Google user to dashboard:', dashboardRoute)
-          navigate(dashboardRoute)
-          return
+          console.log('Google OAuth user detected, handling first-time flow')
+          
+          // For first-time Google users, check if profile exists
+          if (action === 'signup') {
+            // New user flow - redirect to profile completion
+            console.log('New Google user, redirecting to profile completion')
+            navigate('/complete-profile', {
+              state: {
+                userType,
+                isGoogleSignup: true,
+                googleUser: user
+              }
+            })
+            return
+          } else {
+            // Existing user flow - go to dashboard
+            console.log('Existing Google user, redirecting to dashboard')
+            const dashboardRoute = getDashboardRoute()
+            navigate(dashboardRoute)
+            return
+          }
         }
         
         // For regular signup users, handle email verification

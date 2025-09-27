@@ -1,10 +1,12 @@
 import React from 'react'
 import { Navigate } from 'react-router-dom'
-import { useVerification } from '@/contexts/VerificationContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Mail, Shield, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { supabase } from '@/lib/supabaseClient'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 interface VerifiedRouteProps {
   children: React.ReactNode
@@ -15,20 +17,42 @@ const VerifiedRoute: React.FC<VerifiedRouteProps> = ({
   children, 
   fallbackPath = '/dashboard' 
 }) => {
-  const { isEmailVerified, isLoading, resendVerificationEmail } = useVerification()
+  const { user, profile, loading } = useAuth()
 
-  // Show loading while checking verification status
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#040458]"></div>
-      </div>
-    )
+  // Show loading while checking auth status
+  if (loading) {
+    return <LoadingSpinner />
   }
+
+  // If no user, redirect to login
+  if (!user) {
+    return <Navigate to="/login-type" replace />
+  }
+
+  // Check if email is verified
+  const isEmailVerified = user.email_confirmed_at !== null
 
   // If email is verified, render the protected content
   if (isEmailVerified) {
     return <>{children}</>
+  }
+
+  // Resend verification email function
+  const resendVerificationEmail = async () => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: user.email!
+      })
+
+      if (error) {
+        return { success: false, error: error.message }
+      }
+
+      return { success: true }
+    } catch (error: any) {
+      return { success: false, error: error.message || 'Failed to resend verification email' }
+    }
   }
 
   // If not verified, show verification required page

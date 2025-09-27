@@ -60,8 +60,13 @@ const AIInsightsPage = () => {
       setError(null)
       console.log('🤖 AI Insights: Fetching comprehensive business data for user:', user.id)
       
-      // Use the new AI Data Service for comprehensive data fetching
-      const businessData = await AIDataService.getBusinessDataForAI(user.id)
+      // Add timeout to prevent infinite loading
+      const businessData = await Promise.race([
+        AIDataService.getBusinessDataForAI(user.id),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Data fetch timeout')), 10000)
+        )
+      ]) as any
       
       // Generate chart data
       const salesByDay = Array.from({ length: 7 }, (_, i) => {
@@ -121,8 +126,8 @@ const AIInsightsPage = () => {
       setAnalyticsData(analyticsData)
     } catch (error) {
       console.error('❌ AI Insights: Error fetching analytics data:', error)
-      setError(error instanceof Error ? error.message : 'An unknown error occurred')
-      toast.error('Failed to load AI insights data. Please check your connection.')
+      setError(error instanceof Error ? error.message : 'Failed to load AI insights data')
+      toast.error('Unable to load AI insights. Please try again or contact support if the issue persists.')
     } finally {
       setLoading(false)
     }
@@ -179,16 +184,90 @@ const AIInsightsPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-            <div className="text-center">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading AI Insights</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={fetchAnalyticsData} className="flex items-center space-x-2">
-            <RefreshCw className="h-4 w-4" />
-            <span>Try Again</span>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
+              <div className="flex flex-col space-y-3 lg:flex-row lg:items-center lg:space-x-4 lg:space-y-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/dashboard')}
+                  className="flex items-center space-x-2 w-fit"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">Back to Dashboard</span>
+                  <span className="sm:hidden">Back</span>
                 </Button>
-        </div>
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 lg:p-3 bg-gradient-to-r from-[#040458] to-[#1e1e6b] rounded-xl shadow-lg">
+                    <Brain className="h-6 w-6 lg:h-8 lg:w-8 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl lg:text-3xl font-bold bg-gradient-to-r from-[#040458] to-[#1e40af] bg-clip-text text-transparent">
+                      AI Business Insights
+                    </h1>
+                    <p className="text-xs lg:text-sm text-gray-600 font-medium">
+                      AI-powered business intelligence and forecasting
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Error State */}
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="bg-white rounded-lg shadow-sm border border-red-200 p-8">
+              <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-6" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Unable to Load AI Insights</h2>
+              <p className="text-gray-600 mb-6">
+                We encountered an issue while loading your AI insights data. This could be due to a temporary connection issue or a problem with our servers.
+              </p>
+              
+              <div className="space-y-4">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-left">
+                  <h3 className="font-semibold text-red-800 mb-2">Error Details:</h3>
+                  <p className="text-sm text-red-700 font-mono">{error}</p>
+                </div>
+                
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button 
+                    onClick={fetchAnalyticsData} 
+                    className="bg-[#040458] hover:bg-[#030345] text-white flex items-center space-x-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    <span>Try Again</span>
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => navigate('/dashboard')}
+                    className="border-[#faa51a] text-[#faa51a] hover:bg-[#faa51a] hover:text-white"
+                  >
+                    Go to Dashboard
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    onClick={() => window.open('mailto:support@oticbusiness.com?subject=AI Insights Loading Error', '_blank')}
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    Report Issue
+                  </Button>
+                </div>
+                
+                <div className="text-sm text-gray-500 mt-6">
+                  <p>If this problem persists, please contact our support team.</p>
+                  <p>Error ID: {Date.now().toString(36)}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     )
   }

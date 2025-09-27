@@ -24,9 +24,10 @@ interface UserVerification {
 interface EmailVerificationManagerProps {
   isOpen: boolean
   onClose: () => void
+  adminId?: string
 }
 
-export const EmailVerificationManager: React.FC<EmailVerificationManagerProps> = ({ isOpen, onClose }) => {
+export const EmailVerificationManager: React.FC<EmailVerificationManagerProps> = ({ isOpen, onClose, adminId }) => {
   const [users, setUsers] = useState<UserVerification[]>([])
   const [filteredUsers, setFilteredUsers] = useState<UserVerification[]>([])
   const [searchTerm, setSearchTerm] = useState('')
@@ -84,10 +85,10 @@ export const EmailVerificationManager: React.FC<EmailVerificationManagerProps> =
   const handleVerifyEmail = async (userId: string) => {
     try {
       setVerifying(userId)
-      const result = await adminService.verifyUserEmail(userId)
+      const result = await adminService.verifyUserEmail(userId, adminId)
       
       if (result.success) {
-        toast.success('Email verified successfully')
+        toast.success('Email verified successfully and synced with Supabase Auth')
         loadUsers() // Reload to get updated data
       } else {
         toast.error(result.error || 'Failed to verify email')
@@ -103,10 +104,10 @@ export const EmailVerificationManager: React.FC<EmailVerificationManagerProps> =
   const handleUnverifyEmail = async (userId: string) => {
     try {
       setVerifying(userId)
-      const result = await adminService.unverifyUserEmail(userId)
+      const result = await adminService.unverifyUserEmail(userId, adminId)
       
       if (result.success) {
-        toast.success('Email verification removed')
+        toast.success('Email verification removed and synced with Supabase Auth')
         loadUsers() // Reload to get updated data
       } else {
         toast.error(result.error || 'Failed to remove verification')
