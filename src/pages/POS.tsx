@@ -123,9 +123,11 @@ const POS = () => {
 
   useEffect(() => {
     // Always fetch products and initialize barcode reader
-    fetchProducts()
-    initializeBarcodeReader()
-  }, [currentBusiness?.id])
+    if (user?.id) {
+      fetchProducts()
+      initializeBarcodeReader()
+    }
+  }, [currentBusiness?.id, user?.id])
 
   // Debug logging for camera modal state
   useEffect(() => {
@@ -145,17 +147,23 @@ const POS = () => {
     try {
       setLoading(true)
       
-      if (!currentBusiness?.id) {
-        console.log('No business selected, no products available')
+      // Use currentBusiness?.id or fallback to user?.id for business users
+      const businessId = currentBusiness?.id || user?.id
+      
+      if (!businessId) {
+        console.log('No business ID available, no products available')
         setProducts([])
+        setLoading(false)
         return
       }
       
-      // Try to load from database first - business specific
+      console.log('🔄 Loading products for business ID:', businessId)
+      
+      // Try to load from database first - use user_id for products
       const { data: dbProducts, error } = await supabase
         .from('products')
         .select('*')
-        .eq('business_id', currentBusiness.id)
+        .eq('user_id', businessId)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -173,12 +181,12 @@ const POS = () => {
           min_stock: product.min_stock || 0,
           category_id: product.category_id,
           supplier_id: product.supplier_id,
-          user_id: product.business_id || '',
+          user_id: product.user_id || '',
           created_at: product.created_at,
           updated_at: product.updated_at
         }))
         setProducts(transformedProducts)
-        console.log('Loaded business-specific products for POS:', transformedProducts)
+        console.log('✅ Loaded products for POS:', transformedProducts.length, 'products')
       }
     } catch (error) {
       console.error('Error fetching products:', error)
