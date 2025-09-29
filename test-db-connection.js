@@ -43,8 +43,8 @@ async function testDatabaseConnection() {
     console.log('3. Testing products table...')
     const { data: productsData, error: productsError } = await supabase
       .from('products')
-      .select('id, name, business_id')
-      .eq('business_id', userData.business_id)
+      .select('id, name, user_id')
+      .eq('user_id', userData.id)
       .limit(5)
     
     if (productsError) {
@@ -57,8 +57,8 @@ async function testDatabaseConnection() {
     console.log('4. Testing sales table...')
     const { data: salesData, error: salesError } = await supabase
       .from('sales')
-      .select('id, total, business_id')
-      .eq('business_id', userData.business_id)
+      .select('id, total, user_id')
+      .eq('user_id', userData.id)
       .limit(5)
     
     if (salesError) {

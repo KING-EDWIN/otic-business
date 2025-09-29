@@ -174,9 +174,32 @@ export class DataService {
       return getOfflineStats()
     } else {
       try {
+        // Check if user is authenticated
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        
+        if (sessionError) {
+          console.error('Session error in getStats:', sessionError)
+          return {
+            totalSales: 0,
+            totalProducts: 0,
+            totalRevenue: 0,
+            lowStockItems: 0
+          }
+        }
+        
+        if (!session?.user) {
+          console.warn('No authenticated user in getStats')
+          return {
+            totalSales: 0,
+            totalProducts: 0,
+            totalRevenue: 0,
+            lowStockItems: 0
+          }
+        }
+        
         // ALWAYS use userId for queries - sales and products are keyed by user_id
         // businessId is only for business management, not data queries
-        console.log('Fetching stats with:', { userId, businessId, usingUserId: userId })
+        console.log('Fetching stats with:', { userId, businessId, usingUserId: userId, authenticatedUser: session.user.id })
 
         // Get sales data - ALWAYS use userId
         const { data: salesData, error: salesError } = await supabase
@@ -186,6 +209,10 @@ export class DataService {
 
         if (salesError) {
           console.warn('Sales query error:', salesError)
+          // If it's a 400 error, it might be RLS policy issue
+          if (salesError.code === 'PGRST301' || salesError.message?.includes('400')) {
+            console.warn('RLS policy blocking sales access - user may not be properly authenticated')
+          }
         }
 
         // Get products count - ALWAYS use userId

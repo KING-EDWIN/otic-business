@@ -16,6 +16,10 @@ interface Product {
   user_id: string
   created_at: string
   updated_at: string
+  // Additional properties for enhanced search and display
+  brand_name?: string
+  description?: string
+  category_name?: string
 }
 
 interface Sale {
@@ -183,7 +187,11 @@ const POS = () => {
           supplier_id: product.supplier_id,
           user_id: product.user_id || '',
           created_at: product.created_at,
-          updated_at: product.updated_at
+          updated_at: product.updated_at,
+          // Map database columns to interface properties
+          brand_name: product.brand || undefined,
+          description: product.description || undefined,
+          category_name: product.category || undefined
         }))
         setProducts(transformedProducts)
         console.log('✅ Loaded products for POS:', transformedProducts.length, 'products')
@@ -284,11 +292,13 @@ const POS = () => {
       return
     }
     
+    // Don't close the camera modal here - let the OTIC Vision Scanner handle it
+    // The scanner will auto-close after product detection
+    
     // Show product selection modal for all cases (single or multiple products)
     setDetectedVFTName(vftName)
     setAvailableProducts(products)
     setShowProductSelection(true)
-    setShowOTICVision(false) // Close the camera modal
   }
 
   const handleProductSelection = (selectedProduct: any) => {
@@ -477,10 +487,19 @@ const POS = () => {
     }
   }
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.barcode?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredProducts = products.filter(product => {
+    const searchLower = searchTerm.toLowerCase()
+    return (
+      product.name.toLowerCase().includes(searchLower) ||
+      product.barcode?.toLowerCase().includes(searchLower) ||
+      // Search by brand if available
+      (product.brand_name && product.brand_name.toLowerCase().includes(searchLower)) ||
+      // Search by product description if available
+      (product.description && product.description.toLowerCase().includes(searchLower)) ||
+      // Search by category if available
+      (product.category_name && product.category_name.toLowerCase().includes(searchLower))
+    )
+  })
 
   if (loading) {
     return (
@@ -565,11 +584,21 @@ const POS = () => {
                         <div className="flex-1 relative">
                           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                           <Input
-                            placeholder="Search products by name..."
+                            placeholder="Search by brand, product name, or barcode..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 h-12 border-gray-200 focus:border-[#faa51a] focus:ring-[#faa51a]/20"
+                            className="pl-10 pr-10 h-12 border-gray-200 focus:border-[#faa51a] focus:ring-[#faa51a]/20"
                           />
+                          {searchTerm && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSearchTerm('')}
+                              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                         <Button 
                           onClick={() => setShowBarcodeScanner(true)} 
@@ -584,13 +613,21 @@ const POS = () => {
 
                   {/* Products Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-                    {filteredProducts.map((product) => (
+                    {filteredProducts.length > 0 ? filteredProducts.map((product) => (
                       <Card key={product.id} className="hover:shadow-md transition-all duration-200 border-gray-100 hover:border-[#faa51a]/30">
                         <CardContent className="p-4">
                           <div className="space-y-3">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <h3 className="font-semibold text-gray-900 text-sm line-clamp-2">{product.name}</h3>
+                                <h3 className="font-semibold text-gray-900 text-sm line-clamp-2">
+                                  {product.brand_name ? `${product.brand_name} ${product.name}` : product.name}
+                                </h3>
+                                {product.description && (
+                                  <p className="text-xs text-gray-600 mt-1 line-clamp-1">{product.description}</p>
+                                )}
+                                {product.category_name && (
+                                  <p className="text-xs text-blue-600 mt-1 font-medium">{product.category_name}</p>
+                                )}
                                 <p className="text-xs text-gray-500 mt-1">Stock: {product.stock}</p>
                                 {product.barcode && (
                                   <p className="text-xs text-gray-400 mt-1">Barcode: {product.barcode}</p>
@@ -610,7 +647,24 @@ const POS = () => {
                           </div>
                         </CardContent>
                       </Card>
-                    ))}
+                    )) : (
+                      <div className="col-span-full text-center py-12">
+                        <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500 text-lg font-medium">No products found</p>
+                        <p className="text-gray-400 text-sm mt-2">
+                          {searchTerm ? `No products match "${searchTerm}"` : 'No products available'}
+                        </p>
+                        {searchTerm && (
+                          <Button
+                            onClick={() => setSearchTerm('')}
+                            variant="outline"
+                            className="mt-4"
+                          >
+                            Clear Search
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -883,10 +937,10 @@ const POS = () => {
                       </div>
                       <div>
                         <h4 className="font-semibold text-gray-900">
-                          {product.brand_name || 'Unknown Brand'}
+                          {product.brand_name || product.name || 'Unknown Brand'}
                         </h4>
                         <p className="text-sm text-gray-600">
-                          {product.product_name || 'Product'}
+                          {product.product_name || product.description || 'Product'}
                         </p>
                         {product.description && (
                           <p className="text-xs text-gray-500 mt-1">

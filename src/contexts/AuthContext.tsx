@@ -50,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initialized.current = true
 
     let mounted = true
+    let authStateChangeHandled = false
 
     // Initialize auth state
     const initializeAuth = async () => {
@@ -129,10 +130,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth()
 
+    // Set a timeout to prevent infinite loading
+    const loadingTimeout = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn('⚠️ Auth loading timeout - setting loading to false')
+        setLoading(false)
+      }
+    }, 10000) // 10 second timeout
+
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return
+        
+        // Skip if this is the initial session load (already handled by initializeAuth)
+        if (event === 'INITIAL_SESSION') {
+          if (!authStateChangeHandled) {
+            authStateChangeHandled = true
+            console.log('🔄 Initial session event - skipping (already handled by initializeAuth)')
+            return
+          }
+        }
         
         console.log('🔄 Auth state change:', event, session?.user?.email)
         
@@ -183,12 +201,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
           
           setLoading(false)
+        } else if (event === 'INITIAL_SESSION') {
+          // Handle initial session properly
+          if (session?.user) {
+            console.log('🔄 Initial session with user:', session.user.email)
+            // Don't duplicate the work done in initializeAuth
+            // Just ensure loading is false
+            setLoading(false)
+          } else {
+            console.log('🔄 Initial session - no user')
+            setLoading(false)
+          }
         }
       }
     )
 
     return () => {
       mounted = false
+      clearTimeout(loadingTimeout)
       subscription.unsubscribe()
     }
   }, [])

@@ -282,6 +282,12 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
           // Also call the callback for POS integration
           onProductDetected?.(vft.tag_name, topProducts)
           toast.success(`Found ${topProducts.length} products for "${vft.tag_name}"`)
+          
+          // Auto-close the scanner after successful detection
+          setTimeout(() => {
+            console.log('🎯 Auto-closing scanner after product detection')
+            onClose?.()
+          }, 1000) // Small delay to show the success message
         } else {
           // No products found for this VFT, silently ignore
           console.log('No products found for VFT:', vft.tag_name, '- ignoring detection')
