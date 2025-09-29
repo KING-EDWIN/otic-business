@@ -9,29 +9,29 @@ const Hero = () => {
   const navigate = useNavigate();
   const { user, profile, loading, getDashboardRoute } = useAuth();
 
-  const handleGetStarted = () => {
-    console.log('🔍 Hero: Dashboard button clicked');
-    console.log('🔍 Hero: Auth state:', { user: !!user, profile: !!profile, loading });
-    
-    // If still loading, wait a bit
-    if (loading) {
-      console.log('🔍 Hero: Still loading, waiting...');
-      setTimeout(() => {
-        const dashboardRoute = getDashboardRoute();
-        console.log('🔍 Hero: Navigating to:', dashboardRoute);
-        navigate(dashboardRoute);
-      }, 500);
-      return;
+  const handleStartFreeTrial = () => {
+    // For non-authenticated users: go to business signup
+    // For authenticated users: go to dashboard
+    if (user) {
+      const dashboardRoute = getDashboardRoute();
+      navigate(dashboardRoute);
+    } else {
+      navigate('/business-signup');
     }
-    
-    const dashboardRoute = getDashboardRoute();
-    console.log('🔍 Hero: Navigating to:', dashboardRoute);
-    navigate(dashboardRoute);
   };
 
-  const handleGetStartedGuide = () => {
-    // Navigate to get started guide
-    navigate('/get-started');
+  const handleGetStarted = () => {
+    // For non-authenticated users: go to tier selection
+    // For authenticated users: go to create account based on user type
+    if (user) {
+      if (profile?.user_type === 'business') {
+        navigate('/business-signup');
+      } else {
+        navigate('/individual-signup');
+      }
+    } else {
+      navigate('/tier-selection');
+    }
   };
 
   return (
@@ -72,22 +72,20 @@ const Hero = () => {
             <Button 
               size="lg"
               className="text-xl sm:text-2xl px-8 sm:px-9 py-5 sm:py-5 h-auto bg-[#faa51a] text-white hover:bg-[#faa51a]/90 font-semibold rounded-lg shadow-xl transition-all duration-300 w-full sm:w-auto"
-              onClick={handleGetStarted}
+              onClick={handleStartFreeTrial}
             >
               {user ? 'Dashboard' : 'Start Free Trial'}
               <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
-            {!user && (
-              <Button 
-                size="lg"
-                variant="outline"
-                className="text-xl sm:text-2xl px-8 sm:px-9 py-5 sm:py-5 h-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#040458] font-semibold rounded-lg shadow-xl transition-all duration-300 w-full sm:w-auto"
-                onClick={handleGetStartedGuide}
-              >
-                Get Started
-                <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-            )}
+            <Button 
+              size="lg"
+              variant="outline"
+              className="text-xl sm:text-2xl px-8 sm:px-9 py-5 sm:py-5 h-auto bg-transparent border-2 border-white text-white hover:bg-white hover:text-[#040458] font-semibold rounded-lg shadow-xl transition-all duration-300 w-full sm:w-auto"
+              onClick={handleGetStarted}
+            >
+              {user ? (profile?.user_type === 'business' ? 'Create Business Account' : 'Create Personal Account') : 'Get Started'}
+              <ChevronRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
           </div>
 
           {/* Stats removed per request */}

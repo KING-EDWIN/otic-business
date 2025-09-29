@@ -17,13 +17,13 @@ const About = () => {
           <div className="text-center max-w-4xl mx-auto">
             <div className="flex items-center justify-center mb-8">
               <img 
-                src="/Otic icon@2x.png" 
-                alt="Otic Business Logo" 
+                src="/ otic Vision blue.png" 
+                alt="Otic Vision Logo" 
                 className="h-20 w-20 mr-4"
               />
               <div className="text-left">
                 <h1 className="text-5xl lg:text-6xl font-bold mb-2">
-                  About Otic Business
+                  About Otic Vision
                 </h1>
                 <p className="text-xl lg:text-2xl opacity-90">
                   Empowering businesses with intelligent solutions

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { useBusinessManagement } from '@/contexts/BusinessManagementContext'
 import { DataService } from '@/services/dataService'
 import { AnalyticsSkeleton } from '@/components/ui/skeletons'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -46,6 +47,7 @@ interface AnalyticsData {
 
 const Analytics = () => {
   const { user } = useAuth()
+  const { currentBusiness } = useBusinessManagement()
   const navigate = useNavigate()
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -90,7 +92,7 @@ const Analytics = () => {
       }
 
       // Use DataService for analytics data
-      const analyticsData = await DataService.getAnalyticsData(user?.id, timeRange)
+      const analyticsData = await DataService.getAnalyticsData(user?.id, timeRange, currentBusiness?.id)
       setAnalyticsData(analyticsData)
     } catch (error) {
       console.error('Error fetching analytics:', error)

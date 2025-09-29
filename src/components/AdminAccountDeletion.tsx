@@ -22,9 +22,11 @@ import {
 import { AccountDeletionService } from '@/services/accountDeletionService'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'sonner'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface DeletedAccount {
   id: string
+  original_user_id: string
   email: string
   full_name: string
   business_name: string
@@ -40,6 +42,7 @@ interface DeletedAccount {
 }
 
 const AdminAccountDeletion: React.FC = () => {
+  const { user } = useAuth()
   const [deletedAccounts, setDeletedAccounts] = useState<DeletedAccount[]>([])
   const [loading, setLoading] = useState(false)
   const [searchEmail, setSearchEmail] = useState('')
@@ -50,8 +53,6 @@ const AdminAccountDeletion: React.FC = () => {
   const [selectedAccount, setSelectedAccount] = useState<DeletedAccount | null>(null)
   const [deleteReason, setDeleteReason] = useState('')
   const [restoreReason, setRestoreReason] = useState('')
-  const [accountsNeedingManualDeletion, setAccountsNeedingManualDeletion] = useState<any[]>([])
-  const [showManualDeletionSection, setShowManualDeletionSection] = useState(false)
 
   const limit = 20
 
@@ -77,37 +78,7 @@ const AdminAccountDeletion: React.FC = () => {
     }
   }
 
-  const loadAccountsNeedingManualDeletion = async () => {
-    try {
-      // Add timeout to prevent infinite loading
-      const queryPromise = supabase
-        .from('accounts_needing_manual_deletion')
-        .select('*')
-        .order('deleted_at', { ascending: true })
-
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Query timeout')), 10000)
-      )
-
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any
-
-      if (error) {
-        console.error('Error loading accounts needing manual deletion:', error)
-        toast.error('Failed to load accounts needing manual deletion')
-        return
-      }
-
-      return data || []
-    } catch (error: any) {
-      console.error('Error loading accounts needing manual deletion:', error)
-      if (error.message === 'Query timeout') {
-        toast.error('Request timed out. Please try again.')
-      } else {
-        toast.error('Failed to load accounts needing manual deletion')
-      }
-      return []
-    }
-  }
+  // Removed loadAccountsNeedingManualDeletion - using direct permanent deletion instead
 
   const handlePermanentDelete = async () => {
     if (!selectedAccount || !deleteReason.trim()) {
@@ -115,17 +86,31 @@ const AdminAccountDeletion: React.FC = () => {
       return
     }
 
+    // Use a default admin ID if no user is authenticated (for admin portal)
+    const adminId = user?.id || '00000000-0000-0000-0000-000000000000'
+
+    setLoading(true)
     try {
-      // For now, we'll just mark it as permanently deleted
-      // In a real implementation, you'd call the permanent delete service
-      toast.success(`Account ${selectedAccount.email} marked for permanent deletion`)
-      setShowPermanentDeleteDialog(false)
-      setSelectedAccount(null)
-      setDeleteReason('')
-      loadDeletedAccounts()
+      const result = await AccountDeletionService.permanentDeleteAccount(
+        selectedAccount.original_user_id,
+        adminId,
+        deleteReason
+      )
+
+      if (result.success) {
+        toast.success(`Account permanently deleted (${result.deletedRecords || 0} records removed)`)
+        setShowPermanentDeleteDialog(false)
+        setSelectedAccount(null)
+        setDeleteReason('')
+        loadDeletedAccounts()
+      } else {
+        toast.error(result.error || 'Failed to permanently delete account')
+      }
     } catch (error) {
       console.error('Error permanently deleting account:', error)
       toast.error('Failed to permanently delete account')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -135,10 +120,13 @@ const AdminAccountDeletion: React.FC = () => {
       return
     }
 
+    // Use a default admin ID if no user is authenticated (for admin portal)
+    const adminId = user?.id || '00000000-0000-0000-0000-000000000000'
+
     try {
       const result = await AccountDeletionService.restoreAccount(
         selectedAccount.id,
-        '00000000-0000-0000-0000-000000000000', // Admin ID placeholder
+        adminId,
         restoreReason
       )
 
@@ -172,21 +160,32 @@ const AdminAccountDeletion: React.FC = () => {
     }
   }
 
-  const getStatusBadge = (status: string, daysRemaining: number) => {
-    switch (status) {
-      case 'RECOVERED':
-        return <Badge variant="secondary">Recovered</Badge>
-      case 'EXPIRED':
-        return <Badge variant="destructive">Expired</Badge>
-      case 'ACTIVE':
-        return (
-          <Badge variant={daysRemaining > 7 ? 'default' : 'destructive'}>
-            {daysRemaining} days left
-          </Badge>
-        )
-      default:
-        return <Badge variant="outline">{status}</Badge>
+  const getStatusBadge = (account: DeletedAccount) => {
+    if (account.is_recovered) {
+      return <Badge variant="secondary">Recovered</Badge>
     }
+    
+    if (account.days_remaining <= 0) {
+      return <Badge variant="destructive">Expired</Badge>
+    }
+    
+    return (
+      <Badge variant={account.days_remaining > 7 ? 'default' : 'destructive'}>
+        {account.days_remaining} days left
+      </Badge>
+    )
+  }
+
+  const getAccountStatus = (account: DeletedAccount): 'EXPIRED' | 'RECOVERED' | 'ACTIVE' => {
+    if (account.is_recovered) {
+      return 'RECOVERED'
+    }
+    
+    if (account.days_remaining <= 0) {
+      return 'EXPIRED'
+    }
+    
+    return 'ACTIVE'
   }
 
   const filteredAccounts = deletedAccounts.filter(account =>
@@ -242,13 +241,16 @@ const AdminAccountDeletion: React.FC = () => {
         <Button
           onClick={async () => {
             try {
-              const accounts = await loadAccountsNeedingManualDeletion()
-              setAccountsNeedingManualDeletion(accounts)
-              setShowManualDeletionSection(true)
-              toast.success(`Found ${accounts.length} accounts needing manual deletion`)
+              const result = await AccountDeletionService.cleanupExpiredAccounts()
+              if (result.success) {
+                toast.success(`Cleaned up ${result.deletedCount || 0} expired accounts`)
+                loadDeletedAccounts() // Refresh the list
+              } else {
+                toast.error(result.error || 'Failed to cleanup expired accounts')
+              }
             } catch (error) {
-              console.error('Error loading accounts needing manual deletion:', error)
-              toast.error('Failed to load accounts needing manual deletion')
+              console.error('Error cleaning up expired accounts:', error)
+              toast.error('Failed to cleanup expired accounts')
             }
           }}
           variant="outline"
@@ -256,7 +258,7 @@ const AdminAccountDeletion: React.FC = () => {
           className="text-orange-600 border-orange-600 hover:bg-orange-50"
         >
           <Shield className="h-4 w-4 mr-2" />
-          Check Manual Deletion
+          Cleanup Expired
         </Button>
           <Button
             onClick={loadDeletedAccounts}
@@ -313,7 +315,7 @@ const AdminAccountDeletion: React.FC = () => {
               <div>
                 <p className="text-sm font-medium">Active Recovery</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {deletedAccounts.filter(a => a.status === 'ACTIVE').length}
+                  {deletedAccounts.filter(a => getAccountStatus(a) === 'ACTIVE').length}
                 </p>
               </div>
             </div>
@@ -327,7 +329,7 @@ const AdminAccountDeletion: React.FC = () => {
               <div>
                 <p className="text-sm font-medium">Recovered</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {deletedAccounts.filter(a => a.status === 'RECOVERED').length}
+                  {deletedAccounts.filter(a => getAccountStatus(a) === 'RECOVERED').length}
                 </p>
               </div>
             </div>
@@ -341,7 +343,7 @@ const AdminAccountDeletion: React.FC = () => {
               <div>
                 <p className="text-sm font-medium">Expired</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {deletedAccounts.filter(a => a.status === 'EXPIRED').length}
+                  {deletedAccounts.filter(a => getAccountStatus(a) === 'EXPIRED').length}
                 </p>
               </div>
             </div>
@@ -399,11 +401,11 @@ const AdminAccountDeletion: React.FC = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {getStatusBadge(account.status, account.days_remaining)}
+                        {getStatusBadge(account)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
-                          {account.status === 'ACTIVE' && (
+                          {getAccountStatus(account) === 'ACTIVE' && (
                             <>
                               <Dialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
                                 <DialogTrigger asChild>
@@ -513,81 +515,6 @@ const AdminAccountDeletion: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Manual Deletion Section */}
-      {showManualDeletionSection && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="flex items-center text-orange-600">
-              <Shield className="h-5 w-5 mr-2" />
-              Accounts Needing Manual Deletion
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {accountsNeedingManualDeletion.length === 0 ? (
-              <Alert>
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>
-                  No accounts currently need manual deletion. All expired accounts have been processed.
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <div>
-                <Alert className="mb-4">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    These accounts have been cleaned of all data but still exist in the auth.users table. 
-                    They need to be manually deleted through the Supabase dashboard.
-                  </AlertDescription>
-                </Alert>
-                
-                <div className="space-y-2">
-                  {accountsNeedingManualDeletion.map((account, index) => (
-                    <div key={account.user_id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                          <span className="text-orange-600 font-semibold text-sm">{index + 1}</span>
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{account.email}</p>
-                          <p className="text-sm text-gray-600">{account.full_name}</p>
-                          <p className="text-xs text-gray-500">
-                            Expired {account.days_expired} days ago
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Badge variant="outline" className="text-orange-600 border-orange-600">
-                          Manual Deletion Required
-                        </Badge>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            navigator.clipboard.writeText(account.email)
-                            toast.success('Email copied to clipboard')
-                          }}
-                        >
-                          Copy Email
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Instructions for Manual Deletion:</h4>
-                  <ol className="text-sm text-blue-800 space-y-1">
-                    <li>1. Go to Supabase Dashboard → Authentication → Users</li>
-                    <li>2. Search for each email listed above</li>
-                    <li>3. Select and delete each user</li>
-                    <li>4. Or run the cleanup script: <code className="bg-blue-100 px-1 rounded">node scripts/30-day-cleanup.js</code></li>
-                  </ol>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Pagination */}
       {totalAccounts > limit && (

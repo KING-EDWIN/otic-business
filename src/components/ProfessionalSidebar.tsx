@@ -144,7 +144,7 @@ const ProfessionalSidebar: React.FC<ProfessionalSidebarProps> = ({ isCollapsed, 
                 <Building2 className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold">Otic Business</h1>
+                <h1 className="text-lg font-bold">Otic Vision</h1>
                 <p className="text-xs text-gray-400">SME Solution</p>
               </div>
             </div>

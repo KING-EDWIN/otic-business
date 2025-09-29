@@ -124,13 +124,13 @@ export const TwoFactorVerification: React.FC<TwoFactorVerificationProps> = ({
           <div className="flex justify-center mb-4">
             <div className="flex items-center space-x-3">
               <img 
-                src="/Otic icon@2x.png" 
-                alt="Otic Business Logo" 
+                src="/ otic Vision blue.png" 
+                alt="Otic Vision Logo" 
                 className="h-12 w-12"
               />
               <div className="flex flex-col">
                 <span className="text-2xl font-bold text-[#040458]">Otic</span>
-                <span className="text-sm text-[#faa51a] -mt-1">Business</span>
+                <span className="text-sm text-[#faa51a] -mt-1">Vision</span>
               </div>
             </div>
           </div>

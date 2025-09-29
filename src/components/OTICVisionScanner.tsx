@@ -278,6 +278,7 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
           // Store found products for display in scanner
           setFoundProducts(topProducts)
           setDetectedVFTName(vft.tag_name)
+          console.log('✅ Found products set in state:', topProducts.length, 'products')
           // Also call the callback for POS integration
           onProductDetected?.(vft.tag_name, topProducts)
           toast.success(`Found ${topProducts.length} products for "${vft.tag_name}"`)
@@ -456,33 +457,54 @@ const OTICVisionScanner: React.FC<OTICVisionScannerProps> = ({
 
       {/* Found Products */}
       {foundProducts.length > 0 && (
-        <Card>
+        <Card className="border-2 border-[#faa51a] bg-orange-50">
           <CardHeader>
-            <CardTitle className="text-sm flex items-center">
-              <Target className="h-4 w-4 mr-2 text-[#faa51a]" />
+            <CardTitle className="text-lg flex items-center text-[#040458]">
+              <Target className="h-5 w-5 mr-2 text-[#faa51a]" />
               Found Products ({detectedVFTName})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {foundProducts.map((product, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-200">
+                <div key={index} className="flex items-center justify-between p-4 bg-white rounded-lg border border-orange-200 shadow-sm">
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-semibold text-gray-900 text-base">
                       {product.brand_name} {product.product_name}
                     </div>
-                    <div className="text-sm text-gray-600">
-                      Price: ${product.price} | Stock: {product.stock_quantity}
+                    <div className="text-sm text-gray-600 mt-1">
+                      Price: UGX {product.price?.toLocaleString() || '0'} | Stock: {product.stock_quantity || '0'}
                     </div>
+                    {product.description && (
+                      <div className="text-xs text-gray-500 mt-1">
+                        {product.description}
+                      </div>
+                    )}
                   </div>
-                  <Badge variant="outline" className="text-xs">
-                    {product.barcode || 'No Barcode'}
-                  </Badge>
+                  <div className="flex flex-col items-end space-y-2">
+                    <Badge variant="outline" className="text-xs bg-green-100 text-green-800">
+                      {product.barcode || 'No Barcode'}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      className="bg-[#040458] hover:bg-[#040458]/90 text-white text-xs h-8 px-3"
+                      onClick={() => {
+                        console.log('Adding product to cart:', product)
+                        // This will trigger the onProductDetected callback
+                        onProductDetected?.(detectedVFTName, [product])
+                      }}
+                    >
+                      Add to Cart
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
-            <div className="mt-3 text-xs text-gray-500 text-center">
-              Products will be added to POS automatically
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800 text-center">
+                <CheckCircle className="h-4 w-4 inline mr-1" />
+                Click "Add to Cart" to add products to your POS transaction
+              </p>
             </div>
           </CardContent>
         </Card>

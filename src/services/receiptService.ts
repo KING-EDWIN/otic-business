@@ -64,12 +64,10 @@ export class ReceiptService {
         .insert({
           receipt_number: receiptNumber,
           business_id: businessId,
-          user_id: userId,
           employee_id: employeeId,
           total_amount: totalAmount,
           payment_method: paymentMethod,
           payment_status: 'completed',
-          items: items,
           customer_info: customerInfo,
           tax_amount: taxAmount,
           discount_amount: discountAmount
@@ -101,7 +99,13 @@ export class ReceiptService {
         // Don't fail the operation, just log the error
       }
 
-      return { success: true, receipt }
+      // Return receipt with items for compatibility
+      const receiptWithItems = {
+        ...receipt,
+        items: items
+      }
+      
+      return { success: true, receipt: receiptWithItems }
     } catch (error) {
       console.error('Error in createReceipt:', error)
       return { success: false, error: 'An unexpected error occurred' }

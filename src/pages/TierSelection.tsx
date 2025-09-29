@@ -12,7 +12,7 @@ const TierSelection = () => {
   const tiers = [
     {
       name: "Start Smart",
-      price: "1,000,000 UGX",
+      price: "200,000 UGX",
       period: "Per Month",
       description: "Perfect for small businesses starting their digital transformation",
       badge: null,
@@ -30,7 +30,7 @@ const TierSelection = () => {
     },
     {
       name: "Grow with Intelligence",
-      price: "3,000,000 UGX",
+      price: "400,000 UGX",
       period: "Per Month",
       description: "Ideal for growing SMEs ready for advanced automation",
       badge: "Most Popular",
@@ -48,23 +48,24 @@ const TierSelection = () => {
       buttonVariant: "hero" as const
     },
     {
-      name: "Enterprise Advantage",
-      price: "5,000,000 UGX",
-      period: "Per Month",
-      description: "Enterprise solution for multi-branch operations",
+      name: "Enterprise Advantage: Your Custom Solution",
+      price: "Flexible Pricing",
+      period: "",
+      description: "Your challenges are unique. We partner with your leadership to deliver solutions tailored to your strategic roadmap, security, and growth goals. Every engagement begins with a deep-dive discovery session to map your ecosystem and define a clear path forward.",
       badge: "Enterprise",
       features: [
-        "Everything in Grow with Intelligence",
-        "Multi-branch synchronization",
-        "AI financial forecasting",
+        "Multi-branch operations",
+        "AI-driven financial forecasting",
         "Advanced compliance reporting",
-        "Unlimited users",
-        "Third-party API integrations",
+        "Unlimited users & third-party API integrations",
         "Audit logs & advanced permissions",
         "Dedicated account manager",
-        "24/7 phone support"
+        "24/7 support",
+        "Flexible, negotiable pricing for larger implementations",
+        "➡️ Get a Quote: +256 706 867547",
+        "➡️ Schedule a Call: +256 706 867547"
       ],
-      buttonText: "Choose Enterprise Advantage",
+      buttonText: "Contact Us",
       buttonVariant: "success" as const
     }
   ];
@@ -75,12 +76,17 @@ const TierSelection = () => {
 
   const handleContinue = () => {
     if (selectedTier) {
-      navigate('/payments', { 
-        state: { 
-          selectedTier: selectedTier,
-          tierDetails: tiers.find(t => t.name === selectedTier)
-        } 
-      });
+      if (selectedTier === "Enterprise Advantage: Your Custom Solution") {
+        // For Enterprise tier, open contact options
+        window.open('tel:+256706867547', '_self');
+      } else {
+        navigate('/business-signup', { 
+          state: { 
+            selectedTier: selectedTier,
+            tierDetails: tiers.find(t => t.name === selectedTier)
+          } 
+        });
+      }
     }
   };
 
@@ -96,8 +102,8 @@ const TierSelection = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <img 
-                src="/Otic icon@2x.png" 
-                alt="Otic Business Logo" 
+                src="/ otic Vision blue.png" 
+                alt="Otic Vision Logo" 
                 className="h-10 w-10"
               />
               <div>
@@ -216,7 +222,7 @@ const TierSelection = () => {
               </p>
               <Button 
                 variant="outline" 
-                className="border-white text-white hover:bg-white hover:text-[#040458]"
+                className="border-white text-white hover:bg-white hover:text-[#040458] bg-white/10 backdrop-blur-sm"
                 onClick={handleTierGuide}
               >
                 Get Personalized Recommendation
@@ -232,7 +238,7 @@ const TierSelection = () => {
               onClick={handleContinue}
               className="bg-[#040458] hover:bg-[#faa51a] text-white text-lg px-8 py-6"
             >
-              Continue with {selectedTier}
+              Continue with {selectedTier === "Enterprise Advantage: Your Custom Solution" ? "Contact Us" : selectedTier}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </div>

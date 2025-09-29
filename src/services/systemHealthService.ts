@@ -251,44 +251,40 @@ export class SystemHealthService {
     const startTime = Date.now()
     
     try {
-      // Test network speed and latency
-      const testUrls = [
-        'https://www.google.com',
-        'https://api.github.com',
-        'https://httpbin.org/get'
-      ]
+      // Test network connectivity using our own Supabase endpoint to avoid CORS issues
+      const testStart = Date.now()
+      
+      // Test Supabase connectivity (our own API)
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('count')
+        .limit(1)
 
-      const speedTests = await Promise.allSettled(
-        testUrls.map(async (url) => {
-          const testStart = Date.now()
-          const response = await fetch(url, { 
-            method: 'HEAD',
-            signal: AbortSignal.timeout(5000)
-          })
-          const testTime = Date.now() - testStart
-          return { url, responseTime: testTime, status: response.status }
-        })
-      )
-
-      const successfulTests = speedTests.filter(test => test.status === 'fulfilled').length
-      const avgResponseTime = speedTests
-        .filter(test => test.status === 'fulfilled')
-        .reduce((sum, test: any) => sum + test.value.responseTime, 0) / successfulTests
-
+      const testTime = Date.now() - testStart
       const responseTime = Date.now() - startTime
-      const status = avgResponseTime < 500 && successfulTests >= 2 ? 'healthy' :
-                    avgResponseTime < 1000 && successfulTests >= 1 ? 'warning' : 'error'
+      
+      if (error) {
+        return {
+          status: 'error',
+          message: `Network error: ${error.message}`,
+          responseTime,
+          lastChecked: new Date().toISOString(),
+          details: { error: error.message }
+        }
+      }
 
+      // Simulate network speed test using our own API
+      const status = testTime < 500 ? 'healthy' : testTime < 1000 ? 'warning' : 'error'
+      
       return {
         status,
-        message: `Network: ${avgResponseTime.toFixed(0)}ms avg, ${successfulTests}/${testUrls.length} tests passed`,
+        message: `Network operational (Supabase connectivity: ${Math.round(testTime)}ms)`,
         responseTime,
         lastChecked: new Date().toISOString(),
         details: {
-          avgResponseTime,
-          successfulTests,
-          totalTests: testUrls.length,
-          speedTests: speedTests.map(test => test.status === 'fulfilled' ? test.value : null)
+          supabaseResponseTime: Math.round(testTime),
+          connectivityTest: 'passed',
+          note: 'Using internal Supabase API to avoid CORS issues'
         }
       }
     } catch (error: any) {

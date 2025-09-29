@@ -419,10 +419,17 @@ export class BusinessManagementService {
 
       // Generate invitation token
       const token = crypto.randomUUID()
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
 
-      // Define employee permissions
-      const permissions = ['pos', 'inventory', 'accounting', 'customers']
+      // Get business name for the invitation message
+      const { data: business, error: businessError } = await supabase
+        .from('businesses')
+        .select('name')
+        .eq('id', businessId)
+        .single()
+
+      const businessName = business?.name || 'our business'
+      const expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + 7) // 7 days from now
 
       const { error } = await supabase
         .from('business_invitations')
@@ -430,10 +437,9 @@ export class BusinessManagementService {
           business_id: businessId,
           invited_email: email,
           role: 'employee',
-          invitation_type: 'employee',
-          permissions,
-          invited_by: user.id,
-          invitation_token: token,
+          status: 'pending',
+          message: `You have been invited to join ${businessName} as an employee. Please accept to get started!`,
+          invited_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString()
         })
 

@@ -268,8 +268,8 @@ const IndividualSettings = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <img 
-                src="/Otic icon@2x.png" 
-                alt="Otic Business Logo" 
+                src="/ otic Vision blue.png" 
+                alt="Otic Vision Logo" 
                 className="h-10 w-10"
               />
               <div>

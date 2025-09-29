@@ -111,7 +111,7 @@ class EnvironmentService {
   /**
    * Get the base URL for email redirects
    */
-  getBaseUrl(): string {
+  getPublicBaseUrl(): string {
     return this.config.baseUrl
   }
 
@@ -119,7 +119,7 @@ class EnvironmentService {
    * Get the full URL for a specific path
    */
   getUrl(path: string = ''): string {
-    const baseUrl = this.getBaseUrl()
+    const baseUrl = this.getPublicBaseUrl()
     const cleanPath = path.startsWith('/') ? path : `/${path}`
     return `${baseUrl}${cleanPath}`
   }
@@ -128,7 +128,7 @@ class EnvironmentService {
    * Get email redirect URL for auth callbacks
    */
   getAuthCallbackUrl(userType?: 'business' | 'individual'): string {
-    const baseUrl = this.getBaseUrl()
+    const baseUrl = this.getPublicBaseUrl()
     const userTypeParam = userType ? `?user_type=${userType}` : ''
     return `${baseUrl}/auth/callback${userTypeParam}`
   }
@@ -171,7 +171,7 @@ class EnvironmentService {
 export const environmentService = new EnvironmentService()
 
 // Export convenience functions
-export const getBaseUrl = () => environmentService.getBaseUrl()
+export const getBaseUrl = () => environmentService.getPublicBaseUrl()
 export const getUrl = (path?: string) => environmentService.getUrl(path)
 export const getAuthCallbackUrl = (userType?: 'business' | 'individual') => 
   environmentService.getAuthCallbackUrl(userType)

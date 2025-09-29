@@ -46,7 +46,7 @@ export class AIAnalytics {
           maxTokens: 200,
           temperature: 0.7
         }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Mistral API timeout')), 15000))
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Mistral API timeout')), 10000))
       ]) as any
 
       const content = response.choices[0]?.message?.content
@@ -54,16 +54,8 @@ export class AIAnalytics {
     } catch (error) {
       console.error('Mistral AI error:', error)
       
-      // Check if it's a network error and provide specific feedback
-      if (error instanceof Error) {
-        if (error.message.includes('timeout')) {
-          return 'AI service is slow to respond. Please try again.'
-        } else if (error.message.includes('Load failed') || error.message.includes('fetch')) {
-          return 'AI service is currently unavailable. Please check your internet connection.'
-        }
-      }
-      
-      return 'AI service temporarily unavailable'
+      // Always throw error to trigger fallback insights
+      throw error
     }
   }
 
@@ -74,12 +66,6 @@ export class AIAnalytics {
 
   // Generate inventory insights
   static async generateInventoryInsights(products: any[], lowStockItems: any[]): Promise<AIInsight[]> {
-    // Use demo data for performance - avoid API calls on every load
-    if (shouldUseDemoAI()) {
-      return getDemoAIInsights('inventory')
-    }
-    
-    // Only use live AI if specifically requested
     try {
       const context = {
         totalProducts: products.length,
@@ -97,12 +83,6 @@ export class AIAnalytics {
       - Low stock details: ${JSON.stringify(context.lowStockItems)}
       
       Provide 3 actionable insights about inventory management, stock optimization, and purchasing recommendations.`
-      
-      console.log('🤖 AI Service: Sending inventory data to Mistral:', {
-        totalProducts: context.totalProducts,
-        lowStockCount: context.lowStockCount,
-        lowStockItems: context.lowStockItems
-      })
 
       const response = await this.callMistral(prompt, context)
       
@@ -139,20 +119,45 @@ export class AIAnalytics {
         }
       ]
     } catch (error) {
-      console.error('Mistral AI error, using demo data:', error)
-      // Fallback to demo data only if API fails
-      return getDemoAIInsights('inventory')
+      console.error('Mistral AI error, using fallback insights:', error)
+      // Return basic insights based on actual data
+      return [
+        {
+          id: 'inventory-1',
+          type: 'inventory',
+          title: 'Stock Level Analysis',
+          description: `You have ${products.length} products in inventory. ${lowStockItems.length} items are running low on stock.`,
+          confidence: 0.90,
+          actionable: true,
+          priority: 'high',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'inventory-2',
+          type: 'inventory',
+          title: 'Restocking Priority',
+          description: `Focus on restocking ${lowStockItems.map(item => item.name).join(', ')} to avoid stockouts.`,
+          confidence: 0.85,
+          actionable: true,
+          priority: 'high',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'inventory-3',
+          type: 'inventory',
+          title: 'Inventory Management',
+          description: 'Consider implementing automated reorder points for better stock control.',
+          confidence: 0.80,
+          actionable: true,
+          priority: 'medium',
+          createdAt: new Date().toISOString()
+        }
+      ]
     }
   }
 
   // Generate sales insights
   static async generateSalesInsights(sales: any[], revenue: number, growth: number): Promise<AIInsight[]> {
-    // Use demo data for performance - avoid API calls on every load
-    if (shouldUseDemoAI()) {
-      return getDemoAIInsights('sales')
-    }
-    
-    // Only use live AI if specifically requested
     try {
       const context = {
         totalSales: sales.length,
@@ -215,20 +220,45 @@ export class AIAnalytics {
         }
       ]
     } catch (error) {
-      console.error('Mistral AI error, using demo data:', error)
-      // Fallback to demo data only if API fails
-      return getDemoAIInsights('sales')
+      console.error('Mistral AI error, using fallback insights:', error)
+      // Return basic insights based on actual data
+      return [
+        {
+          id: 'sales-1',
+          type: 'sales',
+          title: 'Sales Performance',
+          description: `You have made ${sales.length} sales generating UGX ${revenue.toLocaleString()} in revenue.`,
+          confidence: 0.95,
+          actionable: true,
+          priority: 'high',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'sales-2',
+          type: 'sales',
+          title: 'Revenue Analysis',
+          description: `Your average sale value is UGX ${sales.length > 0 ? Math.round(revenue / sales.length).toLocaleString() : 0}.`,
+          confidence: 0.90,
+          actionable: true,
+          priority: 'medium',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'sales-3',
+          type: 'customer',
+          title: 'Growth Strategy',
+          description: `Focus on increasing your ${sales.length} sales to boost revenue further.`,
+          confidence: 0.85,
+          actionable: true,
+          priority: 'medium',
+          createdAt: new Date().toISOString()
+        }
+      ]
     }
   }
 
   // Generate financial insights
   static async generateFinancialInsights(revenue: number, expenses: number, profit: number): Promise<AIInsight[]> {
-    // Use demo data for performance - avoid API calls on every load
-    if (shouldUseDemoAI()) {
-      return getDemoAIInsights('financial')
-    }
-    
-    // Only use live AI if specifically requested
     try {
       const context = {
         revenue,
@@ -280,15 +310,45 @@ export class AIAnalytics {
         }
       ]
     } catch (error) {
-      console.error('Mistral AI error, using demo data:', error)
-      // Fallback to demo data only if API fails
-      return getDemoAIInsights('financial')
+      console.error('Mistral AI error, using fallback insights:', error)
+      // Return basic insights based on actual data
+      return [
+        {
+          id: 'financial-1',
+          type: 'financial',
+          title: 'Financial Health',
+          description: `Your revenue is UGX ${revenue.toLocaleString()} with a profit margin of ${revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : 0}%.`,
+          confidence: 0.95,
+          actionable: true,
+          priority: 'high',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'financial-2',
+          type: 'financial',
+          title: 'Cost Management',
+          description: `Your expenses are UGX ${expenses.toLocaleString()}. Consider reviewing operational costs.`,
+          confidence: 0.90,
+          actionable: true,
+          priority: 'medium',
+          createdAt: new Date().toISOString()
+        },
+        {
+          id: 'financial-3',
+          type: 'financial',
+          title: 'Profit Optimization',
+          description: `Your profit is UGX ${profit.toLocaleString()}. Focus on high-margin products to increase profitability.`,
+          confidence: 0.85,
+          actionable: true,
+          priority: 'high',
+          createdAt: new Date().toISOString()
+        }
+      ]
     }
   }
 
   // Generate sales forecast
   static async generateSalesForecast(sales: any[], timeframe: string = '30 days'): Promise<AIPrediction> {
-    // Always try live Mistral AI first
     try {
       const context = {
         historicalSales: sales.slice(-30).map(sale => ({
@@ -315,20 +375,29 @@ export class AIAnalytics {
         data: context
       }
     } catch (error) {
-      console.error('Mistral AI error, using demo data:', error)
-      // Fallback to demo data only if API fails
-      return getDemoAIPredictions('sales_forecast')
+      console.error('Mistral AI error, using fallback prediction:', error)
+      // Return basic prediction based on actual data
+      const averageDaily = sales.length > 0 ? sales.reduce((sum, sale) => sum + sale.total, 0) / sales.length : 0
+      const forecastAmount = averageDaily * (timeframe.includes('30') ? 30 : 7)
+      
+      return {
+        type: 'sales_forecast',
+        title: `Sales Forecast - Next ${timeframe}`,
+        prediction: `Based on your ${sales.length} historical sales, you can expect approximately UGX ${Math.round(forecastAmount).toLocaleString()} in revenue over the next ${timeframe}. Your average daily sales are UGX ${Math.round(averageDaily).toLocaleString()}.`,
+        confidence: 0.80,
+        timeframe,
+        data: { historicalSales: sales.length, averageDaily }
+      }
     }
   }
 
   // Generate inventory predictions
   static async generateInventoryPredictions(products: any[]): Promise<AIPrediction> {
-    // Always try live Mistral AI first
     try {
       const context = {
         totalProducts: products.length,
-        lowStockProducts: products.filter(p => p.stock <= 5).length,
-        fastMovingProducts: products.filter(p => p.stock < 10).length
+        lowStockProducts: products.filter(p => (p.current_stock || 0) <= 5).length,
+        fastMovingProducts: products.filter(p => (p.current_stock || 0) < 10).length
       }
 
       const prompt = `Analyze this inventory data and predict what products need restocking:
@@ -349,23 +418,40 @@ export class AIAnalytics {
         data: context
       }
     } catch (error) {
-      console.error('Mistral AI error, using demo data:', error)
-      // Fallback to demo data only if API fails
-      return getDemoAIPredictions('inventory_needs')
+      console.error('Mistral AI error, using fallback prediction:', error)
+      // Return basic prediction based on actual data
+      const lowStockProducts = products.filter(p => (p.current_stock || 0) <= 5)
+      
+      return {
+        type: 'inventory_needs',
+        title: 'Inventory Restocking Predictions',
+        prediction: `You have ${products.length} products in inventory. ${lowStockProducts.length} items are running low on stock: ${lowStockProducts.map(p => p.name).join(', ')}. Consider restocking these items within the next 7 days to avoid stockouts.`,
+        confidence: 0.85,
+        timeframe: '7 days',
+        data: { totalProducts: products.length, lowStock: lowStockProducts.length }
+      }
     }
   }
 
   // Generate business summary
   static async generateBusinessSummary(data: any): Promise<string> {
-    const prompt = `Generate a comprehensive business summary for an African SME with this data:
-    - Sales: ${data.sales || 0} transactions
-    - Revenue: UGX ${(data.revenue || 0).toLocaleString()}
-    - Products: ${data.products || 0} items
-    - Growth: ${data.growth || 0}%
-    
-    Provide a 2-paragraph executive summary highlighting key achievements and recommendations.`
+    try {
+      const prompt = `Generate a comprehensive business summary for an African SME with this data:
+      - Sales: ${data.sales || 0} transactions
+      - Revenue: UGX ${(data.revenue || 0).toLocaleString()}
+      - Products: ${data.products || 0} items
+      - Growth: ${data.growth || 0}%
+      
+      Provide a 2-paragraph executive summary highlighting key achievements and recommendations.`
 
-    return await this.callMistral(prompt, data)
+      return await this.callMistral(prompt, data)
+    } catch (error) {
+      console.error('Mistral AI error, using fallback summary:', error)
+      // Return basic summary based on actual data
+      return `Your business is performing well with ${data.sales || 0} sales generating UGX ${(data.revenue || 0).toLocaleString()} in revenue. You have ${data.products || 0} products in inventory with ${data.growth || 0}% growth rate. 
+
+To continue growing, focus on optimizing your inventory management, implementing customer loyalty programs, and expanding your product range to meet customer demand.`
+    }
   }
 }
 

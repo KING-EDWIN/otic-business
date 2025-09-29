@@ -27,8 +27,8 @@ const UserTypeSelection = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <img 
-                src="/Otic icon@2x.png" 
-                alt="Otic Business Logo" 
+                src="/ otic Vision blue.png" 
+                alt="Otic Vision Logo" 
                 className="h-10 w-10"
               />
               <div>
@@ -188,7 +188,7 @@ const UserTypeSelection = () => {
           </Card>
         </div>
 
-        {/* Detailed Steps Section */}
+        {/* How It Works Section */}
         <div className="mt-20">
           <div className="text-center mb-16">
             <Badge className="mb-4 bg-[#faa51a]/10 text-[#faa51a] border-[#faa51a]/20">
@@ -201,163 +201,34 @@ const UserTypeSelection = () => {
               Follow these simple steps to get started with Otic Business and transform your business operations.
             </p>
           </div>
-
-          {/* Detailed Steps */}
-          <div className="space-y-12">
-            {/* Step 1 */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <div className="flex items-start space-x-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl font-bold text-white">1</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-[#040458] mb-4">Landing Page - Start Your Journey</h3>
-                  <div className="space-y-4 text-gray-700">
-                    <p className="text-lg">When you visit our landing page, you'll see a beautiful hero section with our main value proposition and a prominent "Start Free Trial" button.</p>
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-blue-900 mb-2">What happens when you click "Start Free Trial":</h4>
-                      <ul className="list-disc list-inside space-y-1 text-blue-800">
-                        <li>You'll be redirected to this account type selection page</li>
-                        <li>No registration required at this stage</li>
-                        <li>You can explore both account types before deciding</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 2 */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <div className="flex items-start space-x-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-[#faa51a] to-[#040458] rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl font-bold text-white">2</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-[#040458] mb-4">Choose Your Account Type</h3>
-                  <div className="space-y-4 text-gray-700">
-                    <p className="text-lg">Select the account type that best fits your needs. This determines which features and dashboard you'll have access to.</p>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="bg-orange-50 p-4 rounded-lg">
-                        <h4 className="font-semibold text-orange-900 mb-2">Business Account:</h4>
-                        <ul className="list-disc list-inside space-y-1 text-orange-800 text-sm">
-                          <li>Complete business management suite</li>
-                          <li>POS system and inventory management</li>
-                          <li>Team collaboration features</li>
-                          <li>Advanced analytics and reporting</li>
-                          <li>14-day free trial with full access</li>
-                        </ul>
-                      </div>
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <h4 className="font-semibold text-blue-900 mb-2">Individual Account:</h4>
-                        <ul className="list-disc list-inside space-y-1 text-blue-800 text-sm">
-                          <li>Track multiple businesses you manage</li>
-                          <li>Receive business invitations</li>
-                          <li>Professional profile management</li>
-                          <li>Access to business dashboards you're invited to</li>
-                          <li>Free to join and use</li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 3 */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <div className="flex items-start space-x-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl font-bold text-white">3</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-[#040458] mb-4">Sign Up & Verification</h3>
-                  <div className="space-y-4 text-gray-700">
-                    <p className="text-lg">Create your account with a simple and secure sign-up process designed for African businesses.</p>
-                    <div className="bg-green-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-green-900 mb-2">Sign-up process includes:</h4>
-                      <ul className="list-disc list-inside space-y-1 text-green-800">
-                        <li>Email address and password creation</li>
-                        <li>Account type confirmation (Business or Individual)</li>
-                        <li>Email verification for security</li>
-                        <li>Basic profile information setup</li>
-                        <li>Terms of service acceptance</li>
-                      </ul>
-                    </div>
-                    <div className="bg-yellow-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-yellow-900 mb-2">Security features:</h4>
-                      <ul className="list-disc list-inside space-y-1 text-yellow-800">
-                        <li>Bank-level encryption for all data</li>
-                        <li>Two-factor authentication available</li>
-                        <li>Secure password requirements</li>
-                        <li>Email verification required</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Step 4 */}
-            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100">
-              <div className="flex items-start space-x-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-[#faa51a] to-[#040458] rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-2xl font-bold text-white">4</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-[#040458] mb-4">Access Your Dashboard</h3>
-                  <div className="space-y-4 text-gray-700">
-                    <p className="text-lg">Once verified, you'll be redirected to your personalized dashboard with all the tools you need to manage your business effectively.</p>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="bg-purple-50 p-4 rounded-lg">
-                        <h4 className="font-semibold text-purple-900 mb-2">Business Dashboard Features:</h4>
-                        <ul className="list-disc list-inside space-y-1 text-purple-800 text-sm">
-                          <li>Sales analytics and performance metrics</li>
-                          <li>Inventory management system</li>
-                          <li>POS system for transactions</li>
-                          <li>Team management and permissions</li>
-                          <li>Financial reports and insights</li>
-                          <li>Customer relationship management</li>
-                        </ul>
-                      </div>
-                      <div className="bg-indigo-50 p-4 rounded-lg">
-                        <h4 className="font-semibold text-indigo-900 mb-2">Individual Dashboard Features:</h4>
-                        <ul className="list-disc list-inside space-y-1 text-indigo-800 text-sm">
-                          <li>Track multiple business accounts</li>
-                          <li>View business performance metrics</li>
-                          <li>Manage your professional profile</li>
-                          <li>Receive business invitations</li>
-                          <li>Access business-specific tools</li>
-                          <li>Professional networking features</li>
-                        </ul>
-                      </div>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-semibold text-gray-900 mb-2">Getting Started Tips:</h4>
-                      <ul className="list-disc list-inside space-y-1 text-gray-700">
-                        <li>Complete your profile setup for better experience</li>
-                        <li>Explore the tutorial section for feature guidance</li>
-                        <li>Set up your first business data (for business accounts)</li>
-                        <li>Invite team members (for business accounts)</li>
-                        <li>Customize your dashboard preferences</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Additional Info */}
-        <div className="mt-12 text-center">
-          <p className="text-gray-600 mb-4">
-            Not sure which account type is right for you?
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="ghost" className="text-[#faa51a] hover:bg-orange-50">
-              Learn More
-            </Button>
+        {/* System Header */}
+        <div className="mt-12 bg-gradient-to-r from-[#040458] to-[#faa51a] rounded-2xl p-8 text-white text-center">
+          <div className="flex items-center justify-center mb-6">
+            <img 
+              src="/ otic Vision blue.png" 
+              alt="Otic Vision Logo" 
+              className="h-16 w-16 mr-4"
+            />
+            <div>
+                <h3 className="text-3xl font-bold mb-2">Otic Vision System</h3>
+              <p className="text-lg opacity-90">The AI-Powered Business Platform</p>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="text-center">
+              <div className="text-2xl font-bold mb-2">14-Day</div>
+              <div className="text-sm opacity-90">Free Trial</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold mb-2">24/7</div>
+              <div className="text-sm opacity-90">Support</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold mb-2">100%</div>
+              <div className="text-sm opacity-90">Secure</div>
+            </div>
           </div>
         </div>
       </div>

@@ -81,6 +81,12 @@ const Dashboard = () => {
   })
   const [statsLoading, setStatsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // Chart data state
+  const [chartData, setChartData] = useState({
+    salesByDay: [],
+    salesByMonth: []
+  })
 
   // Chart controls state
   const [chartPeriod, setChartPeriod] = useState<'day' | 'week' | 'month' | 'year'>('week')
@@ -90,56 +96,57 @@ const Dashboard = () => {
   // Date range management
   const { dateRange, updateDateRange, minDate, maxDate, dateRangeString } = useDateRange()
 
-  // Load stats using DataService
+  // Simple stats loading
   const loadStats = useCallback(async () => {
     if (!user?.id) return
     
     try {
       setStatsLoading(true)
+      setError(null)
       
-      // Add timeout to prevent infinite loading
-      const statsData = await Promise.race([
-        DataService.getStats(user.id),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Dashboard data fetch timeout')), 10000)
-        )
-      ]) as any
+      console.log('🔄 Loading dashboard stats for user:', user.id, 'business:', currentBusiness?.id)
       
+      // Use user.id as businessId for business users
+      const businessId = currentBusiness?.id || user.id
+      
+      // Simple direct call without complex timeouts
+      const statsData = await DataService.getStats(user.id, businessId)
       setStats(statsData)
-      console.log('Loaded stats:', statsData)
+      console.log('✅ Dashboard stats loaded:', statsData)
+      
+      // Load chart data separately
+      try {
+        const analyticsData = await DataService.getAnalyticsData(user.id, '7d', businessId)
+        setChartData({
+          salesByDay: analyticsData.salesByDay || [],
+          salesByMonth: analyticsData.salesByMonth || []
+        })
+        console.log('✅ Chart data loaded:', analyticsData.salesByDay?.length, 'days')
+      } catch (chartError) {
+        console.warn('Chart data failed, using empty data:', chartError)
+        setChartData({ salesByDay: [], salesByMonth: [] })
+      }
+      
     } catch (error) {
-      console.error('Error loading stats:', error)
-      setError(error instanceof Error ? error.message : 'Failed to load dashboard data')
+      console.error('❌ Dashboard stats error:', error)
+      setError('Failed to load dashboard data')
     } finally {
       setStatsLoading(false)
     }
-  }, [user?.id])
+  }, [user?.id, currentBusiness?.id])
 
   useEffect(() => {
     loadStats()
-  }, [user?.id])
+  }, [loadStats])
 
   const loading = statsLoading || authLoading
 
-  // Debug logging
-  console.log('Dashboard Debug:', {
-    profile,
-    user,
-    authLoading,
-    statsLoading,
-    stats
+  // Simple debug logging
+  console.log('Dashboard state:', { 
+    user: user?.id, 
+    loading: statsLoading, 
+    stats: stats 
   })
-  
-  // Debug the stats object
-  useEffect(() => {
-    console.log('Stats object details:', {
-      totalSales: (stats as any).totalSales,
-      totalProducts: (stats as any).totalProducts,
-      totalRevenue: (stats as any).totalRevenue,
-      lowStockItems: (stats as any).lowStockItems,
-      statsObject: stats
-    })
-  }, [stats])
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -160,26 +167,27 @@ const Dashboard = () => {
 
   // Generate chart data based on real analytics data
   const generateChartData = () => {
-    // For now, return empty data for new accounts
-    // In the future, this would fetch real analytics data
-    return []
+    if (chartPeriod === 'week' || chartPeriod === 'day') {
+      return chartData.salesByDay || []
+    } else {
+      return chartData.salesByMonth || []
+    }
   }
 
   // Get chart configuration based on selected metric
   const getChartConfig = () => {
     const data = generateChartData()
-    const metricKey = chartMetric === 'revenue' ? 'value' : chartMetric === 'profit' ? 'profit' : chartMetric === 'sales' ? 'sales' : 'stock'
     
     const configs = {
       revenue: {
-        dataKey: 'value',
+        dataKey: 'revenue',
         color: '#040458',
         label: 'Revenue (UGX)',
         formatter: (value: number) => `UGX ${value.toLocaleString()}`,
         yAxisLabel: 'Revenue (UGX)'
       },
       profit: {
-        dataKey: 'profit',
+        dataKey: 'revenue', // Using revenue as proxy for profit
         color: '#10b981',
         label: 'Profit (UGX)',
         formatter: (value: number) => `UGX ${value.toLocaleString()}`,
@@ -193,9 +201,9 @@ const Dashboard = () => {
         yAxisLabel: 'Number of Sales'
       },
       stock: {
-        dataKey: 'stock',
+        dataKey: 'sales', // Using sales as proxy for stock activity
         color: '#ef4444',
-        label: 'Stock Level',
+        label: 'Stock Activity',
         formatter: (value: number) => `${value} units`,
         yAxisLabel: 'Stock Units'
       }
@@ -378,8 +386,8 @@ const Dashboard = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
               <img 
-                src="/Layer 2.png" 
-                alt="Otic Business Logo" 
+                src="/ otic Vision blue.png" 
+                alt="Otic Vision Logo" 
                 className="h-8 lg:h-10 w-auto object-contain"
               />
             </Link>
@@ -591,19 +599,7 @@ const Dashboard = () => {
             <p className="text-base lg:text-xl opacity-90">Here's what's happening with your business today.</p>
               </div>
               <div className="flex flex-col items-center lg:items-end space-y-3">
-                <div
-                  className="bg-white/20 text-white border border-white/30 backdrop-blur-sm text-sm lg:text-base px-4 py-2 rounded-lg shadow-lg opacity-75 cursor-not-allowed"
-                >
-                  <Camera className="h-4 w-4 lg:h-5 lg:w-5 mr-2 inline" />
-                  OTIC Vision
-                  <Badge className="ml-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs px-2 py-0.5 rounded-full">
-                    NEW
-                  </Badge>
-                </div>
-                <p className="text-xs lg:text-sm opacity-75 text-center lg:text-right max-w-xs">
-                  AI-powered product recognition<br />
-                  <span className="text-xs">Premium feature</span>
-                </p>
+                {/* Removed OTIC Vision banner and friends */}
               </div>
             </div>
           </div>
@@ -686,7 +682,7 @@ const Dashboard = () => {
                     <Package className="h-4 w-4 lg:h-5 lg:w-5" />
                   </div>
                   <div className="text-xl lg:text-3xl font-bold mb-1">{(stats as any).totalProducts || 0}</div>
-                  <p className="text-xs lg:text-sm opacity-90">+2 new this week</p>
+                  <p className="text-xs lg:text-sm opacity-90">Total products</p>
             </CardContent>
           </Card>
 

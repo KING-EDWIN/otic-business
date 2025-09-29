@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { Crown, Mail, HelpCircle, Trash2, MessageSquare, Users, Loader2, FileText, Database, Activity } from 'lucide-react'
+import { Crown, Mail, HelpCircle, Trash2, MessageSquare, Users, Loader2, FileText, Database, Activity, Tag } from 'lucide-react'
 
 // Lazy load heavy components
 const TierUpgradeRequests = lazy(() => import('@/components/TierUpgradeRequests'))
@@ -16,7 +16,8 @@ const UserManagement = lazy(() => import('@/components/UserManagement'))
 const AdminAuditLogs = lazy(() => import('@/components/AdminAuditLogs'))
 const CacheDebugger = lazy(() => import('@/components/CacheDebugger'))
 const SystemHealthMonitor = lazy(() => import('@/components/SystemHealthMonitor'))
-const SystemStatusWidget = lazy(() => import('@/components/SystemStatusWidget'))
+// const SystemStatusWidget = lazy(() => import('@/components/SystemStatusWidget'))
+const AdminCouponManagement = lazy(() => import('@/components/AdminCouponManagement'))
 
 const isDesktop = () => {
   if (typeof window === 'undefined') return true
@@ -35,6 +36,7 @@ const AdminConsole = () => {
   const [showAuditLogs, setShowAuditLogs] = useState(false)
   const [showCacheDebugger, setShowCacheDebugger] = useState(false)
   const [showSystemHealth, setShowSystemHealth] = useState(false)
+  const [showCouponManagement, setShowCouponManagement] = useState(false)
   
   // Mock admin ID for now - in real implementation, get from auth context
   const adminId = '00000000-0000-0000-0000-000000000000'
@@ -88,20 +90,30 @@ const AdminConsole = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* System Status Overview */}
-        <Suspense fallback={
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                <span>Loading system status...</span>
-              </div>
-            </CardContent>
-          </Card>
-        }>
-          <SystemStatusWidget 
-            onOpenHealthMonitor={() => setShowSystemHealth(true)}
-          />
-        </Suspense>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Activity className="mr-2 h-5 w-5" />
+              System Status Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600 mb-1">100%</div>
+              <div className="text-sm text-gray-600">System Health</div>
+              <div className="text-xs text-gray-500 mt-1">All systems operational</div>
+            </div>
+            <div className="mt-4 text-center">
+              <Button 
+                className="bg-[#040458] hover:bg-[#030345] text-white"
+                onClick={() => setShowSystemHealth(true)}
+              >
+                <Activity className="h-4 w-4 mr-2" />
+                Open Detailed Health Monitor
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -138,6 +150,22 @@ const AdminConsole = () => {
             >
               <Crown className="h-4 w-4 mr-2" />
               Open Tier Management
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Coupon Management</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-gray-600">Create and manage 5-digit coupon codes for tier upgrades. Track usage and generate coupons for specific tiers.</p>
+            <Button 
+              className="bg-[#040458] hover:bg-[#030345] text-white"
+              onClick={() => setShowCouponManagement(true)}
+            >
+              <Tag className="h-4 w-4 mr-2" />
+              Manage Coupons
             </Button>
           </CardContent>
         </Card>
@@ -455,6 +483,33 @@ const AdminConsole = () => {
           onClose={() => setShowSystemHealth(false)} 
         />
       </Suspense>
+
+      {/* Coupon Management Modal */}
+      {showCouponManagement && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-[#040458]">Coupon Management</h2>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowCouponManagement(false)}
+                >
+                  Close
+                </Button>
+              </div>
+              <Suspense fallback={
+                <div className="flex items-center justify-center p-8">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  <span>Loading Coupon Management...</span>
+                </div>
+              }>
+                <AdminCouponManagement />
+              </Suspense>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

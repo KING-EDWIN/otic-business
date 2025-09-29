@@ -184,8 +184,8 @@ const IndividualDashboard = () => {
               {/* Otic Logo */}
               <div className="flex items-center space-x-3">
                 <img 
-                  src="/Layer 2.png" 
-                  alt="Otic Business Logo" 
+                  src="/ otic Vision blue.png" 
+                  alt="Otic Vision Logo" 
                   className="h-10 md:h-12 w-auto object-contain"
                 />
               <div>
@@ -362,7 +362,7 @@ const IndividualDashboard = () => {
                         variant="outline"
                         onClick={() => navigate(`/business/${selectedBusiness.business_id}/${page}`)}
                         className="h-auto p-4 flex flex-col items-center space-y-2"
-                        disabled={!selectedBusiness.permissions.includes(page)}
+                        disabled={selectedBusiness.invitation_type === 'viewer' && page !== 'pos'}
                       >
                         <div className="text-2xl">
                           {page === 'pos' && <Briefcase />}
@@ -372,7 +372,7 @@ const IndividualDashboard = () => {
                           {page === 'customers' && <Users />}
                         </div>
                         <div className="text-sm font-medium capitalize">{page}</div>
-                        {selectedBusiness.permissions.includes(page) ? (
+                        {selectedBusiness.invitation_type === 'manager' || (selectedBusiness.invitation_type === 'viewer' && page === 'pos') ? (
                           <CheckCircle className="h-4 w-4 text-green-500" />
                         ) : (
                           <AlertCircle className="h-4 w-4 text-red-500" />

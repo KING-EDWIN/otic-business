@@ -53,9 +53,32 @@ const EmailVerification: React.FC = () => {
         setVerificationStatus('success')
         toast.success('Email verified successfully!')
         
-        // Redirect to appropriate dashboard after 2 seconds
-        setTimeout(() => {
-          navigate('/dashboard')
+        // Redirect to appropriate dashboard based on user type
+        setTimeout(async () => {
+          try {
+            // Get user profile to determine user type
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+              const { data: profile } = await supabase
+                .from('user_profiles')
+                .select('user_type')
+                .eq('id', user.id)
+                .single()
+              
+              if (profile?.user_type === 'individual') {
+                navigate('/individual-dashboard')
+              } else {
+                navigate('/dashboard')
+              }
+            } else {
+              // Fallback to business dashboard
+              navigate('/dashboard')
+            }
+          } catch (error) {
+            console.error('Error determining user type:', error)
+            // Fallback to business dashboard
+            navigate('/dashboard')
+          }
         }, 2000)
       }
     } catch (error: any) {

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useBusinessManagement } from '@/contexts/BusinessManagementContext'
-import { getOfflineProducts } from '@/services/offlineData'
 
 interface Product {
   id: string
@@ -128,6 +127,11 @@ const POS = () => {
     initializeBarcodeReader()
   }, [currentBusiness?.id])
 
+  // Debug logging for camera modal state
+  useEffect(() => {
+    console.log('🎥 Camera modal state changed:', showOTICVision)
+  }, [showOTICVision])
+
   const initializeBarcodeReader = () => {
     try {
       const reader = new BrowserMultiFormatReader()
@@ -142,9 +146,8 @@ const POS = () => {
       setLoading(true)
       
       if (!currentBusiness?.id) {
-        console.log('No business selected, using offline products')
-      const offlineProducts = getOfflineProducts()
-      setProducts(offlineProducts)
+        console.log('No business selected, no products available')
+        setProducts([])
         return
       }
       
@@ -157,10 +160,7 @@ const POS = () => {
 
       if (error) {
         console.error('Error loading products from database:', error)
-        // Fallback to offline data
-        const offlineProducts = getOfflineProducts()
-        setProducts(offlineProducts)
-        console.log('Using offline products for POS:', offlineProducts)
+        setProducts([])
       } else {
         // Transform database products to match POS interface
         const transformedProducts = (dbProducts || []).map(product => ({
@@ -182,10 +182,7 @@ const POS = () => {
       }
     } catch (error) {
       console.error('Error fetching products:', error)
-      // Fallback to offline data
-      const offlineProducts = getOfflineProducts()
-      setProducts(offlineProducts)
-      console.log('Using offline products for POS:', offlineProducts)
+      setProducts([])
     } finally {
       setLoading(false)
     }
@@ -391,15 +388,11 @@ const POS = () => {
     try {
       setProcessing(true)
       
-      // Get current business ID
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('business_id')
-        .eq('id', user?.id)
-        .single()
-
-      if (!profile?.business_id) {
-        throw new Error('Business ID not found')
+      // For business users, the user ID IS the business ID
+      const businessId = user?.id
+      
+      if (!businessId) {
+        throw new Error('User ID not found')
       }
 
       // Prepare receipt items
@@ -413,7 +406,7 @@ const POS = () => {
 
       // Create receipt
       const receiptResult = await ReceiptService.createReceipt(
-        profile.business_id,
+        businessId,
         user?.id || '',
         user?.id || '', // Employee ID (same as user for now)
         receiptItems,
@@ -452,9 +445,9 @@ const POS = () => {
       
       if (result.success) {
         // Create sale notification
-        if (profile?.business_id && user?.id) {
+        if (businessId && user?.id) {
           await NotificationService.createSaleNotification(
-            profile.business_id,
+            businessId,
             user.id,
             calculateTotal(),
             paymentMethod
@@ -548,7 +541,10 @@ const POS = () => {
                       {/* Prominent Camera Button */}
                       <div className="flex justify-center">
                         <Button 
-                          onClick={() => setShowOTICVision(true)} 
+                          onClick={() => {
+                            console.log('🎥 Camera button clicked, setting showOTICVision to true')
+                            setShowOTICVision(true)
+                          }} 
                           className="bg-[#faa51a] hover:bg-[#faa51a]/90 text-white h-16 px-12 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                         >
                           <Camera className="h-6 w-6 mr-3" />
@@ -825,12 +821,18 @@ const POS = () => {
 
       {/* OTIC Vision Scanner Modal */}
       {showOTICVision && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full h-full max-w-6xl max-h-[95vh] overflow-y-auto">
+            <div className="bg-white rounded-lg p-6 h-full overflow-y-auto">
               <OTICVisionScanner
-                onProductDetected={handleOTICVisionProductDetected}
-                onClose={() => setShowOTICVision(false)}
+                onClose={() => {
+                  console.log('🎥 Closing camera modal')
+                  setShowOTICVision(false)
+                }}
+                onProductDetected={(vftName, products) => {
+                  console.log('🎯 Product detected:', vftName, products)
+                  handleOTICVisionProductDetected(vftName, products)
+                }}
               />
             </div>
           </div>
@@ -925,11 +927,11 @@ const POS = () => {
               {/* Receipt Header */}
               <div className="text-center mb-6">
                 <img 
-                  src="/Otic icon@2x.png" 
-                  alt="Otic Business Logo" 
+                  src="/ otic Vision blue.png" 
+                  alt="Otic Vision Logo" 
                   className="h-12 w-12 mx-auto mb-2"
                 />
-                <h2 className="text-xl font-bold text-[#040458]">Otic Business</h2>
+                <h2 className="text-xl font-bold text-[#040458]">Otic Vision</h2>
                 <p className="text-sm text-gray-600">Digital Receipt</p>
                 <p className="text-xs text-gray-500 mt-1">
                   Receipt #: {currentReceipt.receipt_number}

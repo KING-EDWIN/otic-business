@@ -40,21 +40,27 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
   const [canCreateBusiness, setCanCreateBusiness] = useState(false)
   const loadedBusinessMembersRef = useRef<string | null>(null)
 
-  // Load businesses when user changes
+  // Load businesses when user changes (only for business users)
   useEffect(() => {
-    console.log('BusinessManagementContext - useEffect triggered:', { user: !!user })
-    
     if (user) {
-      console.log('User available, loading businesses')
-      loadBusinesses()
+      if (profile) {
+        // Only load businesses for business users
+        if (profile.user_type === 'business') {
+          loadBusinesses()
+        } else {
+          setBusinesses([])
+          setCurrentBusiness(null)
+          setBusinessMembers([])
+          setLoading(false)
+        }
+      }
     } else {
-      console.log('User not available, clearing businesses...')
       setBusinesses([])
       setCurrentBusiness(null)
       setBusinessMembers([])
       setLoading(false)
     }
-  }, [user?.id])
+  }, [user?.id, profile?.user_type])
 
   // Set current business from localStorage on mount
   useEffect(() => {
@@ -77,26 +83,22 @@ export const BusinessManagementProvider: React.FC<{ children: React.ReactNode }>
       }
     } else if (businesses.length === 0 && user && profile) {
       // If no businesses found but user is authenticated, try to create a default one
-      console.log('No businesses found for authenticated user, will create default business')
+      // This will be handled by loadBusinesses function
     }
   }, [businesses.length]) // Remove user and profile dependencies to prevent double loading
 
   const loadBusinesses = async () => {
     try {
       setLoading(true)
-      console.log('Loading businesses for user:', user?.id)
       
-      // Get user businesses directly - no timeout complexity
+      // Get user businesses directly
       const userBusinesses = await businessManagementService.getUserBusinesses()
-      console.log('Loaded businesses:', userBusinesses.length, userBusinesses)
       
       // If user has no businesses, create a default one
       if (userBusinesses.length === 0 && user) {
-        console.log('No businesses found, creating default business')
         await createDefaultBusiness()
         // Reload businesses after creating default
         const updatedBusinesses = await businessManagementService.getUserBusinesses()
-        console.log('Updated businesses after creation:', updatedBusinesses.length, updatedBusinesses)
         setBusinesses(updatedBusinesses)
       } else {
         setBusinesses(userBusinesses)

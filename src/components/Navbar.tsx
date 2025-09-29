@@ -49,8 +49,8 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img 
-              src="/Layer 2.png" 
-              alt="Otic Business Logo" 
+              src="/ otic Vision blue.png" 
+              alt="Otic Vision Logo" 
               className="h-10 md:h-12 w-auto object-contain"
             />
           </Link>

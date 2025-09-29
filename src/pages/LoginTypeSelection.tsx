@@ -20,20 +20,13 @@ const LoginTypeSelection = () => {
       <div className="w-full max-w-4xl">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-6">
-            <img 
-              src="/Otic icon@2x.png" 
-              alt="Otic Business Logo" 
-              className="h-16 w-16 mr-4"
-            />
-            <div>
-              <h1 className="text-4xl lg:text-5xl font-bold text-white mb-2">
-                Welcome to Otic Business
-              </h1>
-              <p className="text-xl text-white/90">
-                Choose your account type to continue
-              </p>
-            </div>
+          <div className="mb-6">
+            <h1 className="text-4xl lg:text-5xl font-bold text-white mb-2">
+              Welcome to Otic Vision
+            </h1>
+            <p className="text-xl text-white/90">
+              Choose your account type to continue
+            </p>
           </div>
         </div>
 

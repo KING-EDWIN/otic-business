@@ -100,6 +100,25 @@ const BusinessSignIn = () => {
 
     setForgotPasswordLoading(true);
     try {
+      // First check if the account exists
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id, email, user_type')
+        .eq('email', email)
+        .single();
+
+      if (profileError || !profile) {
+        toast.error('No account found with this email address. Please check your email or create a new account.');
+        return;
+      }
+
+      // Check if it's a business account
+      if (profile.user_type !== 'business') {
+        toast.error('This email is registered as an individual account. Please use the Individual Sign In form.');
+        return;
+      }
+
+      // Now send the password reset email
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: getPasswordResetUrl(),
       });
@@ -172,9 +191,13 @@ const BusinessSignIn = () => {
 
       <Card className="w-full max-w-md bg-white/95 backdrop-blur-sm border-0 shadow-2xl">
         <CardHeader className="text-center pb-6">
-          <div className="flex justify-center mb-4">
-            <Building2 className="h-12 w-12 text-[#040458]" />
-            </div>
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/ otic Vision blue.png" 
+              alt="Otic Vision Logo" 
+              className="h-16 w-16 object-contain"
+            />
+          </div>
           <CardTitle className="text-2xl font-bold text-gray-900">Business Sign In</CardTitle>
           <CardDescription className="text-gray-600">
             Access your business dashboard

@@ -1,28 +1,34 @@
 import { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Building2, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ArrowLeft, Building2, ArrowRight, Eye, EyeOff, CheckCircle, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { InputValidator } from '@/utils/inputValidation';
 import { countries } from '@/data/countries';
 import { supabase } from '@/lib/supabaseClient';
+import { getOAuthConfig } from '@/config/oauth';
 // Helper function to get URL
 const getUrl = (path: string) => `${window.location.origin}${path}`;
 
 const BusinessSignup = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [consentAccepted, setConsentAccepted] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
+  const [createdAccount, setCreatedAccount] = useState<any>(null);
   const [formData, setFormData] = useState({
     companyName: '',
     industrySector: '',
@@ -66,6 +72,13 @@ const BusinessSignup = () => {
         'emailAddress', 'physicalAddress', 'keyContactPerson', 'phoneNumber',
         'password', 'confirmPassword'
       ];
+
+      // Check consent
+      if (!consentAccepted) {
+        toast.error('Please accept the Data Privacy and Protection Policy to continue');
+        setLoading(false);
+        return;
+      }
       
       // Add custom industry to validation if "Other" is selected
       if (formData.industrySector === 'Other') {
@@ -119,8 +132,15 @@ const BusinessSignup = () => {
         // Don't throw - notification failure shouldn't break signup
       }
 
-      toast.success('Business account created successfully! Please check your email to verify your account.');
-      navigate('/dashboard');
+      // Show success state instead of navigating away
+      setSignupSuccess(true);
+      setCreatedAccount({
+        companyName: sanitizedData.companyName,
+        emailAddress: sanitizedData.emailAddress,
+        industrySector: sanitizedData.industrySector === 'Other' ? sanitizedData.customIndustry : sanitizedData.industrySector,
+        cityOfOperation: sanitizedData.cityOfOperation,
+        countryOfOperation: sanitizedData.countryOfOperation
+      });
     } catch (error: any) {
       console.error('Signup error:', error);
       toast.error(error.message || 'Failed to create business account');
@@ -134,14 +154,18 @@ const BusinessSignup = () => {
     try {
       setLoading(true);
       
+      // Get OAuth configuration for current domain
+      const oauthConfig = getOAuthConfig()
+      
       // Use Supabase's built-in OAuth with proper configuration
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: getUrl(`/auth/callback?user_type=business&action=signup`),
+          redirectTo: `${oauthConfig.redirectUri}?user_type=business&action=signup`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
+            hd: 'oticbusiness.com', // Restrict to oticbusiness.com domain
           },
           scopes: 'openid email profile',
         },
@@ -187,8 +211,8 @@ const BusinessSignup = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <img 
-                src="/Layer 2.png" 
-                alt="Otic Business Logo" 
+                src="/ otic Vision blue.png" 
+                alt="Otic Vision Logo" 
                 className="h-10 w-10 object-contain"
               />
               <div>
@@ -218,7 +242,8 @@ const BusinessSignup = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            {!signupSuccess && (
+              <form onSubmit={handleSubmit} className="space-y-6">
               {/* Company Name */}
               <div className="space-y-2">
                 <Label htmlFor="companyName" className="text-sm font-medium">
@@ -488,11 +513,33 @@ const BusinessSignup = () => {
                 <span>Continue with Google</span>
               </Button>
 
+              {/* Privacy Policy Consent */}
+              <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg border">
+                <Checkbox
+                  id="privacy-consent"
+                  checked={consentAccepted}
+                  onCheckedChange={(checked) => setConsentAccepted(checked as boolean)}
+                  className="mt-1"
+                />
+                <div className="flex-1">
+                  <label htmlFor="privacy-consent" className="text-sm font-medium text-gray-700 cursor-pointer">
+                    I agree to the{' '}
+                    <Link to="/privacy" target="_blank" className="text-[#040458] hover:underline">
+                      Data Privacy and Protection Policy
+                    </Link>
+                    {' '}and consent to the collection, processing, and storage of my personal data as outlined in the policy.
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    By checking this box, you acknowledge that you have read and understood our privacy policy.
+                  </p>
+                </div>
+              </div>
+
               {/* Submit Button */}
               <Button 
                 type="submit" 
                 className="w-full bg-[#040458] hover:bg-[#faa51a] text-white text-lg py-6"
-                disabled={loading}
+                disabled={loading || !consentAccepted}
               >
                 {loading ? (
                   <div className="flex items-center space-x-2">
@@ -506,7 +553,106 @@ const BusinessSignup = () => {
                   </div>
                 )}
               </Button>
-            </form>
+              </form>
+            )}
+
+            {/* Success State */}
+            {signupSuccess && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <Card className="w-full max-w-md mx-auto">
+                  <CardHeader className="text-center">
+                    <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle className="h-8 w-8 text-green-600" />
+                    </div>
+                    <CardTitle className="text-2xl font-bold text-green-600">
+                      Account Created Successfully!
+                    </CardTitle>
+                    <CardDescription className="text-gray-600">
+                      Your business account has been created. Please confirm your email to continue.
+                    </CardDescription>
+                  </CardHeader>
+                  
+                  <CardContent className="space-y-6">
+                    {/* Account Summary */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h3 className="font-semibold text-blue-800 mb-2">Account Details:</h3>
+                      <div className="space-y-1 text-sm text-blue-700">
+                        <p><strong>Company:</strong> {createdAccount?.companyName}</p>
+                        <p><strong>Email:</strong> {createdAccount?.emailAddress}</p>
+                        <p><strong>Industry:</strong> {createdAccount?.industrySector}</p>
+                        <p><strong>Location:</strong> {createdAccount?.cityOfOperation}, {createdAccount?.countryOfOperation}</p>
+                      </div>
+                    </div>
+
+                    {/* Email Verification Info */}
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Mail className="h-4 w-4 text-yellow-600" />
+                        <span className="text-sm font-medium text-yellow-800">Email Verification Required</span>
+                      </div>
+                      <p className="text-sm text-yellow-700">
+                        We've sent a verification link to <strong>{createdAccount?.emailAddress}</strong>. 
+                        Please check your inbox and click the verification link to activate your account.
+                      </p>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="space-y-3">
+                      <Button 
+                        onClick={() => navigate('/business-signin')}
+                        className="w-full bg-[#040458] hover:bg-[#030345] text-white"
+                      >
+                        I Confirmed My Email - Sign In
+                      </Button>
+                      
+                      <Button 
+                        variant="outline"
+                        onClick={() => navigate('/business-payment')}
+                        className="w-full border-[#faa51a] text-[#faa51a] hover:bg-[#faa51a] hover:text-white"
+                      >
+                        Skip to Payment
+                      </Button>
+                    </div>
+
+                    {/* Help Text */}
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500">
+                        Didn't receive the email? Check your spam folder or{' '}
+                        <button 
+                          onClick={() => navigate('/business-signin')}
+                          className="text-[#040458] hover:underline"
+                        >
+                          try signing in
+                        </button>
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* Alternative Signup Option */}
+            {!signupSuccess && (
+            <div className="mt-6 text-center">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">or</span>
+                </div>
+              </div>
+              <div className="mt-4">
+                <Button
+                  variant="outline"
+                  className="w-full border-[#faa51a] text-[#faa51a] hover:bg-[#faa51a] hover:text-white"
+                  onClick={() => navigate('/individual-signup')}
+                >
+                  Create Personal Account
+                </Button>
+              </div>
+            </div>
+            )}
 
             {/* Terms */}
             <div className="mt-6 text-center text-sm text-gray-600">

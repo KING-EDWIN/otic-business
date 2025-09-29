@@ -314,38 +314,39 @@ export class AccountDeletionService {
   }
 
   /**
-   * Permanently delete an account (admin only)
+   * Permanently delete an account and ALL its data (admin only)
    */
   static async permanentDeleteAccount(
     userId: string, 
     adminUserId: string,
     reason: string = 'Admin requested permanent deletion'
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; deletedRecords?: number }> {
     try {
       console.log('💀 Permanent delete requested by admin:', adminUserId, 'for user:', userId)
 
-      // First soft delete to preserve data
-      const softDeleteResult = await this.softDeleteAccount(userId, reason)
-      
-      if (!softDeleteResult.success) {
-        return softDeleteResult
-      }
-
-      // Then immediately mark as permanently deleted (no recovery)
-      const { error } = await supabase
-        .from('deleted_users')
-        .update({ 
-          is_recovered: true, // Mark as "recovered" to prevent actual recovery
-          recovery_expires_at: NOW() // Expire immediately
-        })
-        .eq('original_user_id', userId)
+      // Call the database function to permanently delete ALL user data
+      const { data, error } = await supabase.rpc('permanent_delete_user_data', {
+        user_id_param: userId,
+        admin_user_id_param: adminUserId
+      })
 
       if (error) {
-        console.error('Error marking as permanently deleted:', error)
+        console.error('Permanent delete error:', error)
         return { success: false, error: error.message }
       }
 
-      return { success: true }
+      if (data && data.success) {
+        console.log('✅ Account and all data permanently deleted')
+        return { 
+          success: true, 
+          deletedRecords: data.deleted_records || 0
+        }
+      } else {
+        return { 
+          success: false, 
+          error: data?.error || 'Unknown error during permanent deletion' 
+        }
+      }
     } catch (error: any) {
       console.error('Error in permanent delete:', error)
       return { success: false, error: error.message || 'Failed to permanently delete account' }
@@ -356,6 +357,115 @@ export class AccountDeletionService {
    * Get deleted accounts for admin (with pagination)
    */
   static async getDeletedAccounts(
+    page: number = 1,
+    limit: number = 10
+  ): Promise<{ success: boolean; data?: any[]; total?: number; error?: string }> {
+    try {
+      const { data, error } = await supabase.rpc('get_deleted_accounts', {
+        page_param: page,
+        limit_param: limit
+      })
+
+      if (error) {
+        console.error('Error getting deleted accounts:', error)
+        return { success: false, error: error.message }
+      }
+
+      if (data && data.length > 0) {
+        const result = data[0]
+        return {
+          success: true,
+          data: result.accounts || [],
+          total: result.total_count || 0
+        }
+      }
+
+      return { success: true, data: [], total: 0 }
+    } catch (error: any) {
+      console.error('Error in getDeletedAccounts:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  /**
+   * Cleanup expired accounts (permanent deletion)
+   */
+  static async cleanupExpiredAccounts(): Promise<{ success: boolean; deletedCount?: number; error?: string }> {
+    try {
+      const { data, error } = await supabase.rpc('cleanup_expired_accounts')
+
+      if (error) {
+        console.error('Error cleaning up expired accounts:', error)
+        return { success: false, error: error.message }
+      }
+
+      if (data && data.success) {
+        return {
+          success: true,
+          deletedCount: data.deleted_count || 0
+        }
+      }
+
+      return { success: false, error: 'Unknown error during cleanup' }
+    } catch (error: any) {
+      console.error('Error in cleanupExpiredAccounts:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  /**
+   * Permanently delete ALL accounts (nuclear option)
+   */
+  static async permanentDeleteAllAccounts(): Promise<{ success: boolean; deletedCount?: number; error?: string }> {
+    try {
+      const { data, error } = await supabase.rpc('permanent_delete_all_accounts')
+
+      if (error) {
+        console.error('Error permanently deleting all accounts:', error)
+        return { success: false, error: error.message }
+      }
+
+      if (data && data.success) {
+        return {
+          success: true,
+          deletedCount: data.deleted_count || 0
+        }
+      }
+
+      return { success: false, error: 'Unknown error during mass deletion' }
+    } catch (error: any) {
+      console.error('Error in permanentDeleteAllAccounts:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  /**
+   * Create test deleted account for admin portal testing
+   */
+  static async createTestDeletedAccount(): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { data, error } = await supabase.rpc('create_test_deleted_account')
+
+      if (error) {
+        console.error('Error creating test deleted account:', error)
+        return { success: false, error: error.message }
+      }
+
+      if (data && data.success) {
+        return { success: true }
+      }
+
+      return { success: false, error: 'Unknown error creating test account' }
+    } catch (error: any) {
+      console.error('Error in createTestDeletedAccount:', error)
+      return { success: false, error: error.message }
+    }
+  }
+
+  /**
+   * Get deleted accounts for admin (with pagination) - OLD METHOD
+   */
+  static async getDeletedAccountsOld(
     page: number = 1, 
     limit: number = 20
   ): Promise<{ 
@@ -429,141 +539,6 @@ export class AccountDeletionService {
     }
   }
 
-  /**
-   * Create a test deleted account for debugging
-   */
-  static async createTestDeletedAccount(): Promise<{ success: boolean; error?: string }> {
-    try {
-      console.log('🧪 Creating test deleted account...')
-      
-      const { data, error } = await supabase
-        .from('deleted_users')
-        .insert([{
-          original_user_id: '00000000-0000-0000-0000-000000000000', // Test UUID
-          email: 'test@example.com',
-          full_name: 'Test User',
-          business_name: 'Test Business',
-          user_type: 'business',
-          tier: 'free_trial',
-          phone: '+256700000000',
-          deletion_reason: 'Test deletion for debugging',
-          deleted_by: '00000000-0000-0000-0000-000000000000',
-          deleted_at: new Date().toISOString(),
-          recovery_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-          is_recovered: false
-        }])
-        .select()
 
-      if (error) {
-        console.error('Error creating test deleted account:', error)
-        return { success: false, error: error.message }
-      }
 
-      console.log('✅ Test deleted account created:', data)
-      return { success: true }
-    } catch (error: any) {
-      console.error('Error creating test deleted account:', error)
-      return { success: false, error: error.message || 'Failed to create test deleted account' }
-    }
-  }
-
-  /**
-   * Permanently delete ALL deleted accounts (bypass 30-day recovery period)
-   */
-  static async permanentDeleteAllAccounts(): Promise<{ success: boolean; deletedCount?: number; error?: string }> {
-    try {
-      console.log('🗑️ Permanently deleting ALL deleted accounts...')
-
-      // First, get all deleted accounts to delete them completely
-      const { data: deletedAccounts, error: fetchError } = await supabase
-        .from('deleted_users')
-        .select('email, original_user_id')
-
-      if (fetchError) {
-        console.error('Error fetching deleted accounts:', fetchError)
-        return { success: false, error: fetchError.message }
-      }
-
-      const deletedCount = deletedAccounts?.length || 0
-      console.log(`Found ${deletedCount} deleted accounts to permanently remove`)
-
-      // Delete each account completely using the complete deletion function
-      let successCount = 0
-      let errorCount = 0
-      const errors: string[] = []
-
-      for (const account of deletedAccounts || []) {
-        try {
-          const { data, error } = await supabase.rpc('delete_user_completely', {
-            user_email: account.email
-          })
-
-          if (error) {
-            console.error(`Error deleting ${account.email}:`, error)
-            errors.push(`${account.email}: ${error.message}`)
-            errorCount++
-          } else {
-            console.log(`✅ Completely deleted: ${account.email}`)
-            successCount++
-          }
-        } catch (error: any) {
-          console.error(`Exception deleting ${account.email}:`, error)
-          errors.push(`${account.email}: ${error.message}`)
-          errorCount++
-        }
-      }
-
-      // Now delete all records from deleted_users table
-      const { error: deleteError } = await supabase
-        .from('deleted_users')
-        .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all records
-
-      if (deleteError) {
-        console.error('Error cleaning deleted_users table:', deleteError)
-        errors.push(`Failed to clean deleted_users table: ${deleteError.message}`)
-      }
-
-      if (errorCount > 0) {
-        return { 
-          success: false, 
-          error: `Failed to delete ${errorCount} accounts. Errors: ${errors.join('; ')}`,
-          deletedCount: successCount
-        }
-      }
-
-      console.log(`✅ Permanently deleted ${successCount} accounts completely`)
-      return { 
-        success: true, 
-        deletedCount: successCount
-      }
-    } catch (error: any) {
-      console.error('Error in permanent delete all:', error)
-      return { success: false, error: error.message || 'Failed to permanently delete all accounts' }
-    }
-  }
-
-  /**
-   * Clean up expired deleted accounts (run as cron job)
-   */
-  static async cleanupExpiredAccounts(): Promise<{ success: boolean; deletedCount?: number; error?: string }> {
-    try {
-      console.log('🧹 Cleaning up expired deleted accounts...')
-
-      const { data, error } = await supabase.rpc('cleanup_expired_deleted_accounts')
-
-      if (error) {
-        console.error('Cleanup error:', error)
-        return { success: false, error: error.message }
-      }
-
-      const deletedCount = data || 0
-      console.log(`✅ Cleaned up ${deletedCount} expired accounts`)
-
-      return { success: true, deletedCount }
-    } catch (error: any) {
-      console.error('Error cleaning up expired accounts:', error)
-      return { success: false, error: error.message || 'Failed to cleanup expired accounts' }
-    }
-  }
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { useBusinessManagement } from '@/contexts/BusinessManagementContext'
 import { DataService } from '@/services/dataService'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -28,6 +29,7 @@ import { AIAnalytics } from '@/services/aiService'
 
 const AIAnalyticsPage = () => {
   const { user } = useAuth()
+  const { currentBusiness } = useBusinessManagement()
   const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [aiResponse, setAiResponse] = useState('')
@@ -57,7 +59,7 @@ const AIAnalyticsPage = () => {
       setLoading(true)
       
       // Fetch analytics data using DataService
-      const analyticsData = await DataService.getAnalyticsData(user.id, '30d')
+      const analyticsData = await DataService.getAnalyticsData(user.id, '30d', currentBusiness?.id)
       
       setBusinessData({
         totalSales: analyticsData.totalSales,

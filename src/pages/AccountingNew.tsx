@@ -293,8 +293,8 @@ const AccountingNew: React.FC = () => {
               <div className="h-8 w-px bg-gray-300" />
               <div className="flex items-center space-x-3">
                 <img 
-                  src="/Otic icon@2x.png" 
-                  alt="Otic Business Logo" 
+                  src="/ otic Vision blue.png" 
+                  alt="Otic Vision Logo" 
                   className="h-8 w-8"
                 />
                 <div>
@@ -331,8 +331,8 @@ const AccountingNew: React.FC = () => {
           <div className="p-6">
             <div className="flex items-center space-x-3 mb-8">
               <img 
-                src="/Otic icon@2x.png" 
-                alt="Otic Business Logo" 
+                src="/ otic Vision blue.png" 
+                alt="Otic Vision Logo" 
                 className="h-8 w-8"
               />
               <div>

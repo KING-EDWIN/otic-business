@@ -28,7 +28,7 @@ const VideoModal = ({ isOpen, onClose, videoUrl }: VideoModalProps) => {
       <div className="relative w-full max-w-4xl mx-4 bg-black rounded-lg overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-[#040458]">
-          <h3 className="text-xl font-bold text-white">Otic Business Demo</h3>
+          <h3 className="text-xl font-bold text-white">Otic Vision Demo</h3>
           <div className="flex items-center space-x-2">
             <Button
               variant="ghost"
@@ -58,7 +58,7 @@ const VideoModal = ({ isOpen, onClose, videoUrl }: VideoModalProps) => {
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-              title="Otic Business Demo Video"
+              title="Otic Vision Demo Video"
             />
           </div>
         </div>
@@ -67,7 +67,7 @@ const VideoModal = ({ isOpen, onClose, videoUrl }: VideoModalProps) => {
         <div className="p-4 bg-gray-900">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-300">
-              Watch how Otic Business transforms your SME operations
+              Watch how Otic Vision transforms your SME operations
             </p>
             <Button
               onClick={onClose}

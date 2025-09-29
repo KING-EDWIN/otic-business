@@ -1,8 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from 'sonner'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import CacheService from '@/services/cacheService'
 
 interface User {
   id: string
@@ -44,70 +42,102 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null)
   const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const initialized = useRef(false)
 
   useEffect(() => {
+    // Prevent multiple initializations
+    if (initialized.current) return
+    initialized.current = true
+
     let mounted = true
 
-    const getInitialSession = async () => {
+    // Initialize auth state
+    const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        console.log('🔐 Initializing auth state...')
         
-        if (mounted) {
-          setSession(session)
-          setUser(session?.user ? {
-            id: session.user.id,
-            email: session.user.email || '',
-            email_confirmed_at: session.user.email_confirmed_at,
-            created_at: session.user.created_at
-          } : null)
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('Session error:', error)
+          if (mounted) {
+            setLoading(false)
+            setUser(null)
+            setProfile(null)
+            setSession(null)
+          }
+          return
+        }
+
+        if (session?.user) {
+          console.log('✅ Session found for user:', session.user.email)
           
-          if (session?.user) {
-            try {
-              const { data: profileData, error } = await supabase
-                .from('user_profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single()
-              
-              if (mounted) {
-                if (error) {
-                  console.warn('Profile fetch error:', error)
-                  setProfile(null)
-                } else {
-                  setProfile(profileData)
-                }
-                setLoading(false)
-              }
-            } catch (error) {
-              console.warn('Profile fetch failed:', error)
-              if (mounted) {
+          if (mounted) {
+            setSession(session)
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              email_confirmed_at: session.user.email_confirmed_at,
+              created_at: session.user.created_at
+            })
+          }
+
+          // Load profile
+          try {
+            const { data: profileData, error: profileError } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single()
+
+            if (mounted) {
+              if (profileError) {
+                console.warn('Profile fetch error:', profileError)
                 setProfile(null)
-                setLoading(false)
+              } else {
+                console.log('✅ Profile loaded:', profileData.email)
+                setProfile(profileData)
               }
+              setLoading(false)
             }
-          } else {
+          } catch (error) {
+            console.warn('Profile fetch failed:', error)
+            if (mounted) {
+              setProfile(null)
+              setLoading(false)
+            }
+          }
+        } else {
+          console.log('ℹ️ No session found')
+          if (mounted) {
+            setSession(null)
+            setUser(null)
             setProfile(null)
             setLoading(false)
           }
         }
       } catch (error) {
-        console.error('Error getting initial session:', error)
+        console.error('Auth initialization error:', error)
         if (mounted) {
           setLoading(false)
+          setUser(null)
+          setProfile(null)
+          setSession(null)
         }
       }
     }
 
-    getInitialSession()
+    initializeAuth()
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return
         
-        console.log('Auth state change:', event, session?.user?.id)
+        console.log('🔄 Auth state change:', event, session?.user?.email)
         
         if (event === 'SIGNED_OUT') {
+          console.log('🚪 User signed out')
           setSession(null)
           setUser(null)
           setProfile(null)
@@ -115,37 +145,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return
         }
         
-        setSession(session)
-        setUser(session?.user ? {
-          id: session.user.id,
-          email: session.user.email || '',
-          email_confirmed_at: session.user.email_confirmed_at,
-          created_at: session.user.created_at
-        } : null)
-        
-        if (session?.user) {
-          try {
-            const { data: profileData, error } = await supabase
-              .from('user_profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single()
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (session?.user) {
+            console.log('✅ User signed in/refreshed:', session.user.email)
             
-            if (error) {
-              console.warn('Profile fetch error:', error)
+            setSession(session)
+            setUser({
+              id: session.user.id,
+              email: session.user.email || '',
+              email_confirmed_at: session.user.email_confirmed_at,
+              created_at: session.user.created_at
+            })
+
+            // Load profile
+            try {
+              const { data: profileData, error: profileError } = await supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('id', session.user.id)
+                .single()
+
+              if (profileError) {
+                console.warn('Profile fetch error:', profileError)
+                setProfile(null)
+              } else {
+                console.log('✅ Profile loaded:', profileData.email)
+                setProfile(profileData)
+              }
+            } catch (error) {
+              console.warn('Profile fetch failed:', error)
               setProfile(null)
-            } else {
-              setProfile(profileData)
             }
-          } catch (error) {
-            console.warn('Profile fetch failed:', error)
+          } else {
+            setSession(null)
+            setUser(null)
             setProfile(null)
           }
-        } else {
-          setProfile(null)
+          
+          setLoading(false)
         }
-        
-        setLoading(false)
       }
     )
 
@@ -196,43 +234,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/verify-email`
+          data: {
+            user_type: userType,
+            business_name: businessName
+          }
         }
       })
 
       if (authError) {
+        console.error('Auth signup failed:', authError)
         return { error: authError }
       }
 
       if (!authData.user) {
-        return { error: { message: 'Failed to create user account' } }
+        console.error('No user returned from signup')
+        return { error: { message: 'Signup failed - no user created' } }
       }
 
-      // Create user profile
-      const { error: profileError } = await supabase
+      console.log('✅ Auth user created:', authData.user.email)
+
+      // Create profile
+      const { data: profileData, error: profileError } = await supabase
         .from('user_profiles')
         .insert({
           id: authData.user.id,
           email: email,
           full_name: businessName,
-          business_name: userType === 'business' ? businessName : null,
-          tier: 'free_trial',
+          business_name: userType === 'business' ? businessName : undefined,
           user_type: userType,
-          email_verified: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          tier: 'free_trial',
+          email_verified: false
         })
+        .select()
+        .single()
 
       if (profileError) {
-        console.error('Profile creation error:', profileError)
-        return { error: { message: 'Failed to create user profile' } }
+        console.error('Profile creation failed:', profileError)
+        return { error: profileError }
       }
 
-      toast.success('Account created! Please check your email to verify your account.')
-      return { 
-        error: null,
-        needsEmailVerification: true 
-      }
+      console.log('✅ Profile created:', profileData.email)
+      return { error: null, data: { user: authData.user, profile: profileData } }
     } catch (error: any) {
       console.error('Error in signup process:', error)
       return { error: { message: error.message || 'Signup failed' } }
@@ -241,31 +283,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      // Clear all cache first
-      CacheService.clearAllUserCache()
-      
-      // Clear local state
-      setUser(null)
-      setProfile(null)
-      setSession(null)
-      
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut()
-      
-      if (error) {
-        console.error('Sign out error:', error)
-        throw error
-      }
-      
-      console.log('✅ Sign out successful - cache cleared')
-      
+      console.log('🚪 Signing out user')
+      await supabase.auth.signOut()
+      // The auth state change listener will handle the rest
     } catch (error) {
-      console.error('❌ Sign out error:', error)
-      // Even if there's an error, clear local state
-      setUser(null)
-      setProfile(null)
-      setSession(null)
-      window.location.href = '/'
+      console.error('Sign out error:', error)
     }
   }
 
@@ -275,48 +297,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: { message: 'No user logged in' } }
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('user_profiles')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .update(updates)
         .eq('id', user.id)
+        .select()
+        .single()
 
       if (error) {
+        console.error('Profile update failed:', error)
         return { error }
       }
 
-      // Update local profile state
-      if (profile) {
-        setProfile({ ...profile, ...updates })
-      }
-
-      return { error: null }
-    } catch (error) {
-      return { error }
+      setProfile(data)
+      console.log('✅ Profile updated successfully')
+      return { error: null, data }
+    } catch (error: any) {
+      console.error('Profile update error:', error)
+      return { error: { message: error.message || 'Profile update failed' } }
     }
   }
 
   const getDashboardRoute = () => {
-    if (!user) {
-      return '/login-type'
-    }
+    if (!profile) return '/login-type'
     
-    // If user exists but profile is still loading, wait a bit
-    if (!profile && loading) {
-      return '/login-type'
-    }
-    
-    // If user exists but no profile after loading is complete, go to login
-    if (!profile && !loading) {
-      return '/login-type'
-    }
-    
-    if (profile.user_type === 'business') {
-      return '/dashboard'
-    } else {
-      return '/individual-dashboard'
+    switch (profile.user_type) {
+      case 'business':
+        return '/dashboard'
+      case 'individual':
+        return '/individual-dashboard'
+      default:
+        return '/login-type'
     }
   }
 

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabaseClient'
 import CacheService from '@/services/cacheService'
+import { IndividualBusinessAccessService } from '@/services/individualBusinessAccessService'
 
 export interface TimeEntry {
   id: string

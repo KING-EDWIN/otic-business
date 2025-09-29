@@ -17,8 +17,8 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         {/* Otic Logo with Pulse Animation */}
         <div className="flex justify-center mb-8">
           <img 
-            src="/Layer 2.png" 
-            alt="Otic Business Logo" 
+            src="/ otic Vision blue.png" 
+            alt="Otic Vision Logo" 
             className="h-20 md:h-24 w-auto object-contain animate-pulse opacity-60"
             style={{ animationDuration: '1.5s' }}
           />

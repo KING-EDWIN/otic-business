@@ -124,6 +124,25 @@ const IndividualSignIn = () => {
 
     setForgotPasswordLoading(true)
     try {
+      // First check if the account exists
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id, email, user_type')
+        .eq('email', email)
+        .single()
+
+      if (profileError || !profile) {
+        toast.error('No account found with this email address. Please check your email or create a new account.')
+        return
+      }
+
+      // Check if it's an individual account
+      if (profile.user_type !== 'individual') {
+        toast.error('This email is registered as a business account. Please use the Business Sign In form.')
+        return
+      }
+
+      // Now send the password reset email
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: getPasswordResetUrl(),
       })
@@ -148,8 +167,8 @@ const IndividualSignIn = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-4">
               <img 
-                src="/Layer 2.png" 
-                alt="Otic Business Logo" 
+                src="/ otic Vision blue.png" 
+                alt="Otic Vision Logo" 
                 className="h-8 w-8 sm:h-10 sm:w-10 object-contain"
               />
               <div>

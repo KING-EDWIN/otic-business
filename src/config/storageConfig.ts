@@ -98,7 +98,7 @@ export const ENV_CONFIG = {
     },
     BRANDING: {
       COMPANY_NAME: 'Otic Business',
-      LOGO_URL: '/Layer 2.png',
+      LOGO_URL: '/ otic Vision blue.png',
       FAVICON_URL: '/favicon.ico',
     }
   }

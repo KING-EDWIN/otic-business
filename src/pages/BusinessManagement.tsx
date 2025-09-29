@@ -377,6 +377,7 @@ const BusinessManagement: React.FC = () => {
                         size="sm"
                         variant="outline"
                         onClick={() => handleManageMembers(business.id)}
+                        title="Manage Members"
                       >
                         <Users className="h-3 w-3" />
                       </Button>

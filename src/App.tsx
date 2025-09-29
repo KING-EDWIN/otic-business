@@ -39,6 +39,7 @@ import BusinessMembers from "./pages/BusinessMembers";
 import CreateBusiness from "./pages/CreateBusiness";
 import Invoices from "./pages/Invoices";
 import EmailVerification from "./pages/EmailVerification";
+import EmailVerificationSuccess from "./pages/EmailVerificationSuccess";
 import PasswordReset from "./pages/PasswordReset";
 import EmailTest from "./pages/EmailTest";
 import Terms from "./pages/Terms";
@@ -47,6 +48,8 @@ import UserTypeSelection from "./pages/UserTypeSelection";
 import BusinessSignup from "./pages/BusinessSignup";
 import IndividualSignup from "./pages/IndividualSignup";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentForm from "./pages/PaymentForm";
+import BusinessPaymentPage from "./pages/BusinessPaymentPage";
 import MyExtras from "./pages/MyExtras";
 import FAQ from "./pages/FAQ";
 import TrialConfirmation from "./pages/TrialConfirmation";
@@ -74,6 +77,7 @@ import Restock from "./pages/Restock";
 import StorageTest from "./pages/StorageTest";
 import MultiBusinessTest from "./pages/MultiBusinessTest";
 import BusinessPOSForIndividual from "./pages/BusinessPOSForIndividual";
+import BusinessDashboardForIndividual from "./pages/BusinessDashboardForIndividual";
 import TimeTracking from "./pages/TimeTracking";
 import TaskManagement from "./pages/TaskManagement";
 import WorkReports from "./pages/WorkReports";
@@ -188,6 +192,8 @@ const App = () => {
                 <Route path="/business-signin" element={<PublicRoute><BusinessSignIn /></PublicRoute>} />
                 <Route path="/individual-signin" element={<PublicRoute><IndividualSignIn /></PublicRoute>} />
                 <Route path="/payments/success" element={<PaymentSuccess />} />
+                <Route path="/payment-form" element={<BusinessProtectedRoute><PaymentForm /></BusinessProtectedRoute>} />
+                <Route path="/business-payment" element={<BusinessPaymentPage />} />
                 <Route path="/get-started" element={<GetStarted />} />
                 <Route path="/complete-profile" element={<CompleteProfile />} />
                 <Route path="/auth/callback" element={<OAuthCallback />} />
@@ -219,6 +225,7 @@ const App = () => {
                 <Route path="/invoices" element={<BusinessProtectedRoute><Invoices /></BusinessProtectedRoute>} />
                 {/* Email Verification and Password Reset Routes */}
                 <Route path="/verify-email" element={<EmailVerification />} />
+                <Route path="/verify-email-success" element={<EmailVerificationSuccess />} />
                 <Route path="/reset-password" element={<PasswordReset />} />
                 <Route path="/email-test" element={<EmailTest />} />
                 {/* Branch Management Routes */}
@@ -236,12 +243,12 @@ const App = () => {
                 <Route path="/system-health-test" element={<SystemHealthTest />} />
                 
                 {/* Individual Business Access Routes */}
-                <Route path="/business/:businessId/pos" element={<IndividualProtectedRoute><BusinessPOSForIndividual /></IndividualProtectedRoute>} />
-                <Route path="/business/:businessId/inventory" element={<IndividualProtectedRoute><BusinessPOSForIndividual /></IndividualProtectedRoute>} />
-                <Route path="/business/:businessId/accounting" element={<IndividualProtectedRoute><BusinessPOSForIndividual /></IndividualProtectedRoute>} />
-                <Route path="/business/:businessId/payments" element={<IndividualProtectedRoute><BusinessPOSForIndividual /></IndividualProtectedRoute>} />
-                <Route path="/business/:businessId/customers" element={<IndividualProtectedRoute><BusinessPOSForIndividual /></IndividualProtectedRoute>} />
-                <Route path="/business/:businessId/dashboard" element={<IndividualProtectedRoute><BusinessPOSForIndividual /></IndividualProtectedRoute>} />
+                <Route path="/business/:businessId/pos" element={<IndividualProtectedRoute><BusinessDashboardForIndividual /></IndividualProtectedRoute>} />
+                <Route path="/business/:businessId/inventory" element={<IndividualProtectedRoute><BusinessDashboardForIndividual /></IndividualProtectedRoute>} />
+                <Route path="/business/:businessId/accounting" element={<IndividualProtectedRoute><BusinessDashboardForIndividual /></IndividualProtectedRoute>} />
+                <Route path="/business/:businessId/payments" element={<IndividualProtectedRoute><BusinessDashboardForIndividual /></IndividualProtectedRoute>} />
+                <Route path="/business/:businessId/customers" element={<IndividualProtectedRoute><BusinessDashboardForIndividual /></IndividualProtectedRoute>} />
+                <Route path="/business/:businessId/dashboard" element={<IndividualProtectedRoute><BusinessDashboardForIndividual /></IndividualProtectedRoute>} />
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

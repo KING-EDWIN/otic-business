@@ -7,14 +7,18 @@ export class DataService {
   private static isOffline = isOfflineMode()
 
   // Products
-  static async getProducts(userId?: string) {
+  static async getProducts(userId?: string, businessId?: string) {
     if (this.isOffline) {
       return getOfflineProducts()
     } else {
+      // Use businessId if provided, otherwise fall back to userId
+      const filterField = businessId ? 'business_id' : 'user_id'
+      const filterValue = businessId || userId || ''
+
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('user_id', userId || '')
+        .eq(filterField, filterValue)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -123,10 +127,14 @@ export class DataService {
   }
 
   // Sales
-  static async getSales(userId?: string) {
+  static async getSales(userId?: string, businessId?: string) {
     if (this.isOffline) {
       return getOfflineSales()
     } else {
+      // Use businessId if provided, otherwise fall back to userId
+      const filterField = businessId ? 'business_id' : 'user_id'
+      const filterValue = businessId || userId || ''
+
       const { data, error } = await supabase
         .from('sales')
         .select(`
@@ -137,7 +145,7 @@ export class DataService {
             product:products (name)
           )
         `)
-        .eq('user_id', userId || '')
+        .eq(filterField, filterValue)
         .order('created_at', { ascending: false })
 
       if (error) throw error
@@ -161,38 +169,63 @@ export class DataService {
   }
 
   // Statistics
-  static async getStats(userId?: string) {
+  static async getStats(userId?: string, businessId?: string) {
     if (this.isOffline) {
       return getOfflineStats()
     } else {
       try {
-        // Get sales data
-        const { data: salesData } = await supabase
+        // ALWAYS use userId for queries - sales and products are keyed by user_id
+        // businessId is only for business management, not data queries
+        console.log('Fetching stats with:', { userId, businessId, usingUserId: userId })
+
+        // Get sales data - ALWAYS use userId
+        const { data: salesData, error: salesError } = await supabase
           .from('sales')
           .select('total')
-          .eq('user_id', userId || '')
+          .eq('user_id', userId)
 
-        // Get products count and low stock count efficiently
-        const { count: totalProducts } = await supabase
+        if (salesError) {
+          console.warn('Sales query error:', salesError)
+        }
+
+        // Get products count - ALWAYS use userId
+        const { count: totalProducts, error: productsError } = await supabase
           .from('products')
           .select('*', { count: 'exact', head: true })
-          .eq('user_id', userId || '')
+          .eq('user_id', userId)
 
-        const { count: lowStockItems } = await supabase
+        if (productsError) {
+          console.warn('Products query error:', productsError)
+        }
+
+        // Get low stock count - ALWAYS use userId
+        const { count: lowStockItems, error: lowStockError } = await supabase
           .from('products')
           .select('*', { count: 'exact', head: true })
-          .eq('user_id', userId || '')
+          .eq('user_id', userId)
           .lte('current_stock', 5)
+
+        if (lowStockError) {
+          console.warn('Low stock query error:', lowStockError)
+        }
 
         // Calculate stats
         const totalSales = salesData?.length || 0
-        const totalRevenue = salesData?.reduce((sum, sale) => sum + sale.total, 0) || 0
+        const totalRevenue = salesData?.reduce((sum, sale) => sum + (sale.total || 0), 0) || 0
+
+        console.log('Stats calculation result:', {
+          userId,
+          totalProducts: totalProducts || 0,
+          totalSales,
+          totalRevenue,
+          lowStockItems: lowStockItems || 0
+        })
 
         return {
           totalSales,
-          totalProducts,
+          totalProducts: totalProducts || 0,
           totalRevenue,
-          lowStockItems
+          lowStockItems: lowStockItems || 0
         }
       } catch (error) {
         console.error('Error fetching stats:', error)
@@ -207,7 +240,7 @@ export class DataService {
   }
 
   // Analytics
-  static async getAnalyticsData(userId?: string, timeRange: string = '7d') {
+  static async getAnalyticsData(userId?: string, timeRange: string = '7d', businessId?: string) {
     if (this.isOffline) {
       // Return mock analytics data for offline mode
       return {
@@ -258,7 +291,10 @@ export class DataService {
             break
         }
 
-        // Fetch sales data
+        // ALWAYS use userId for data queries - sales and products are keyed by user_id
+        console.log('Analytics query using userId:', userId)
+
+        // Fetch sales data - ALWAYS use userId
         const { data: salesData } = await supabase
           .from('sales')
           .select(`
@@ -269,15 +305,15 @@ export class DataService {
               product:products (name)
             )
           `)
-          .eq('user_id', userId || '')
+          .eq('user_id', userId)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString())
 
-        // Fetch products data
+        // Fetch products data - ALWAYS use userId
         const { data: productsData } = await supabase
           .from('products')
           .select('*')
-          .eq('user_id', userId || '')
+          .eq('user_id', userId)
 
         // Calculate analytics from real data
         const totalSales = salesData?.length || 0
@@ -292,11 +328,11 @@ export class DataService {
         previousPeriodStart.setDate(previousPeriodStart.getDate() - periodDays)
         previousPeriodEnd.setDate(previousPeriodEnd.getDate() - periodDays)
         
-        // Get previous period sales for growth calculation
+        // Get previous period sales for growth calculation - ALWAYS use userId
         const { data: previousSalesData } = await supabase
           .from('sales')
           .select('total')
-          .eq('user_id', userId || '')
+          .eq('user_id', userId)
           .gte('created_at', previousPeriodStart.toISOString())
           .lte('created_at', previousPeriodEnd.toISOString())
         

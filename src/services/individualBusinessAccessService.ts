@@ -5,11 +5,18 @@ export interface BusinessAccess {
   business_id: string
   business_name: string
   business_type: string
-  access_level: 'limited' | 'standard' | 'full'
-  permissions: string[]
-  is_active: boolean
+  access_level: string
+  invitation_type: string
+  invitation_status: string
   granted_at: string
-  last_accessed?: string
+  created_at?: string
+  permission_settings?: {
+    pos: boolean
+    inventory: boolean
+    accounting: boolean
+    payments: boolean
+    customers: boolean
+  }
 }
 
 export interface BusinessInvitation {
@@ -29,24 +36,25 @@ export class IndividualBusinessAccessService {
   static async getAccessibleBusinesses(userId: string): Promise<BusinessAccess[]> {
     try {
       const { data, error } = await supabase
-        .from('business_individual_access')
+        .from('individual_business_access')
         .select(`
           id,
           business_id,
           access_level,
-          permissions,
-          is_active,
+          invitation_type,
+          invitation_status,
           granted_at,
-          last_accessed,
-          businesses!inner (
+          created_at,
+          permission_settings,
+          business_signups!inner (
             id,
-            name,
-            business_type
+            business_name,
+            company_name
           )
         `)
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .order('last_accessed', { ascending: false, nullsFirst: false })
+        .eq('individual_id', userId)
+        .eq('invitation_status', 'accepted')
+        .order('granted_at', { ascending: false })
 
       if (error) {
         console.error('Error fetching accessible businesses:', error)
@@ -56,13 +64,13 @@ export class IndividualBusinessAccessService {
       return data?.map(item => ({
         id: item.id,
         business_id: item.business_id,
-        business_name: item.businesses.name,
-        business_type: item.businesses.business_type,
+        business_name: item.business_signups?.business_name || item.business_signups?.company_name || 'Unknown Business',
+        business_type: 'business',
         access_level: item.access_level,
-        permissions: item.permissions || [],
-        is_active: item.is_active,
+        invitation_type: item.invitation_type,
+        invitation_status: item.invitation_status,
         granted_at: item.granted_at,
-        last_accessed: item.last_accessed
+        created_at: item.created_at
       })) || []
     } catch (error) {
       console.error('Error in getAccessibleBusinesses:', error)
@@ -86,10 +94,6 @@ export class IndividualBusinessAccessService {
           businesses!inner (
             id,
             name
-          ),
-          invited_by_user:invited_by (
-            id,
-            email
           )
         `)
         .eq('invited_email', userEmail)
@@ -105,8 +109,8 @@ export class IndividualBusinessAccessService {
       return data?.map(item => ({
         id: item.id,
         business_id: item.business_id,
-        business_name: item.businesses.name,
-        invited_by_name: item.invited_by_user?.email || 'Unknown',
+        business_name: item.businesses?.name || 'Unknown Business',
+        invited_by_name: 'Business Owner',
         role: item.role,
         status: item.status,
         message: item.message,
@@ -140,14 +144,14 @@ export class IndividualBusinessAccessService {
 
       // Create business access record
       const { error: accessError } = await supabase
-        .from('business_individual_access')
+        .from('individual_business_access')
         .insert({
           business_id: invitation.business_id,
-          user_id: userId,
+          individual_id: userId,
           invitation_id: invitationId,
-          access_level: 'standard',
-          permissions: ['pos', 'inventory', 'accounting', 'payments', 'customers'],
-          granted_by: invitation.invited_by
+          access_level: 'manager',
+          invitation_type: 'viewer',
+          invitation_status: 'accepted'
         })
 
       if (accessError) {
@@ -159,8 +163,7 @@ export class IndividualBusinessAccessService {
       const { error: updateError } = await supabase
         .from('business_invitations')
         .update({
-          status: 'accepted',
-          responded_at: new Date().toISOString()
+          status: 'accepted'
         })
         .eq('id', invitationId)
 
@@ -182,8 +185,7 @@ export class IndividualBusinessAccessService {
       const { error } = await supabase
         .from('business_invitations')
         .update({
-          status: 'declined',
-          responded_at: new Date().toISOString()
+          status: 'declined'
         })
         .eq('id', invitationId)
 
@@ -203,10 +205,10 @@ export class IndividualBusinessAccessService {
   static async updateLastAccessed(businessId: string, userId: string): Promise<void> {
     try {
       await supabase
-        .from('business_individual_access')
-        .update({ last_accessed: new Date().toISOString() })
+        .from('individual_business_access')
+        .update({ updated_at: new Date().toISOString() })
         .eq('business_id', businessId)
-        .eq('user_id', userId)
+        .eq('individual_id', userId)
     } catch (error) {
       console.error('Error updating last accessed:', error)
     }
@@ -216,18 +218,19 @@ export class IndividualBusinessAccessService {
   static async hasPageAccess(businessId: string, userId: string, page: string): Promise<boolean> {
     try {
       const { data, error } = await supabase
-        .from('business_individual_access')
-        .select('permissions')
+        .from('individual_business_access')
+        .select('access_level, invitation_type')
         .eq('business_id', businessId)
-        .eq('user_id', userId)
-        .eq('is_active', true)
+        .eq('individual_id', userId)
+        .eq('invitation_status', 'accepted')
         .single()
 
       if (error || !data) {
         return false
       }
 
-      return data.permissions?.includes(page) || false
+      // Simple access check based on invitation_type
+      return data.invitation_type === 'viewer' || data.invitation_type === 'manager'
     } catch (error) {
       console.error('Error checking page access:', error)
       return false

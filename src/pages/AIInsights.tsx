@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { AIDataService } from '@/services/aiDataService'
 import { toast } from 'sonner'
+import { useProgressiveLoading } from '@/hooks/useProgressiveLoading'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -41,38 +43,46 @@ interface AnalyticsData {
 }
 
 const AIInsightsPage = () => {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const navigate = useNavigate()
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState('30d')
+
+  // Redirect to business signin if no user
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/business-signin')
+    }
+  }, [authLoading, user, navigate])
 
   const fetchAnalyticsData = useCallback(async () => {
     if (!user?.id) {
-      console.log('No user ID available')
-      setLoading(false)
-      return
+      throw new Error('No user ID available')
     }
     
-    try {
-      setLoading(true)
-      setError(null)
-      console.log('🤖 AI Insights: Fetching comprehensive business data for user:', user.id)
-      
-      // Add timeout to prevent infinite loading
-      const businessData = await Promise.race([
-        AIDataService.getBusinessDataForAI(user.id),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Data fetch timeout')), 10000)
-        )
-      ]) as any
-      
-      // Generate chart data
-      const salesByDay = Array.from({ length: 7 }, (_, i) => {
+    console.log('🤖 AI Insights: Fetching comprehensive business data for user:', user.id)
+    return await AIDataService.getBusinessDataForAI(user.id)
+  }, [user?.id])
+
+  const {
+    data: analyticsData,
+    loading,
+    error,
+    progress,
+    hasInitialData,
+    retry
+  } = useProgressiveLoading(fetchAnalyticsData, {
+    initialTimeout: 3000,
+    fallbackTimeout: 8000,
+    retryAttempts: 2,
+    retryDelay: 2000,
+    enabled: !!user?.id // Only enable when user is available
+  })
+
+  // Generate chart data when analytics data is available
+  const salesByDay = analyticsData ? Array.from({ length: 7 }, (_, i) => {
         const date = new Date()
         date.setDate(date.getDate() - (6 - i))
-        const daySales = businessData.sales.filter(sale => {
+    const daySales = analyticsData.sales.filter(sale => {
           const saleDate = new Date(sale.created_at)
           return saleDate.toDateString() === date.toDateString()
         })
@@ -82,12 +92,12 @@ const AIInsightsPage = () => {
           sales: daySales.length,
           revenue: daySales.reduce((sum, sale) => sum + (sale.total || 0), 0)
         }
-      })
+  }) : []
 
-      const salesByMonth = Array.from({ length: 12 }, (_, i) => {
+  const salesByMonth = analyticsData ? Array.from({ length: 12 }, (_, i) => {
         const date = new Date()
         date.setMonth(date.getMonth() - (11 - i))
-        const monthSales = businessData.sales.filter(sale => {
+    const monthSales = analyticsData.sales.filter(sale => {
           const saleDate = new Date(sale.created_at)
           return saleDate.getMonth() === date.getMonth() && 
                  saleDate.getFullYear() === date.getFullYear()
@@ -98,48 +108,10 @@ const AIInsightsPage = () => {
           sales: monthSales.length,
           revenue: monthSales.reduce((sum, sale) => sum + (sale.total || 0), 0)
         }
-      })
+  }) : []
 
-      const analyticsData = {
-        totalSales: businessData.totalSales,
-        totalRevenue: businessData.totalRevenue,
-        totalProducts: businessData.totalProducts,
-        averageOrderValue: businessData.averageOrderValue,
-        salesGrowth: businessData.salesGrowth,
-        revenueGrowth: businessData.revenueGrowth,
-        topProducts: businessData.topProducts,
-        salesByDay,
-        salesByMonth,
-        lowStockItems: businessData.lowStockItems.length,
-        products: businessData.products,
-        sales: businessData.sales
-      }
-
-      console.log('✅ AI Insights: Analytics data prepared:', {
-        totalProducts: analyticsData.totalProducts,
-        totalSales: analyticsData.totalSales,
-        totalRevenue: analyticsData.totalRevenue,
-        lowStockItems: analyticsData.lowStockItems,
-        productsWithStock: businessData.products.filter(p => (p.current_stock || 0) > 0).length
-      })
-
-      setAnalyticsData(analyticsData)
-    } catch (error) {
-      console.error('❌ AI Insights: Error fetching analytics data:', error)
-      setError(error instanceof Error ? error.message : 'Failed to load AI insights data')
-      toast.error('Unable to load AI insights. Please try again or contact support if the issue persists.')
-    } finally {
-      setLoading(false)
-    }
-  }, [user?.id])
-
-  useEffect(() => {
-    if (user?.id) {
-      fetchAnalyticsData()
-  }
-  }, [user?.id, fetchAnalyticsData])
-
-  if (loading) {
+  // Show loading state while auth is loading or when no user
+  if (authLoading || (!user && !hasInitialData)) {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Header Skeleton */}
@@ -158,24 +130,61 @@ const AIInsightsPage = () => {
           </div>
         </header>
 
-        {/* Content Skeleton */}
+        {/* Content */}
         <main className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <div className="h-8 w-64 bg-gray-200 rounded animate-pulse mb-2"></div>
-            <div className="h-4 w-96 bg-gray-200 rounded animate-pulse"></div>
+          <div className="space-y-6">
+            {/* Progress Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <RefreshCw className="h-5 w-5 animate-spin" />
+                  <span>Loading AI Insights</span>
+                </CardTitle>
+                <CardDescription>
+                  Analyzing your business data to generate intelligent insights
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Progress</span>
+                    <span className="text-sm text-gray-500">{progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-gradient-to-r from-[#040458] to-[#faa51a] h-2 rounded-full transition-all duration-500 ease-out" 
+                      style={{ width: `${progress}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {progress < 30 ? '🔍 Fetching business data...' : 
+                     progress < 60 ? '📊 Processing analytics...' : 
+                     progress < 90 ? '🤖 Generating AI insights...' : '✨ Finalizing...'}
+                  </p>
           </div>
+              </CardContent>
+            </Card>
 
+            {/* Loading Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white rounded-lg shadow-sm p-6">
-                <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-4"></div>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-6">
+                    <div className="animate-pulse space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="h-6 w-32 bg-gray-200 rounded"></div>
+                        <div className="h-8 w-16 bg-gray-200 rounded"></div>
+                      </div>
                 <div className="space-y-3">
-                  <div className="h-4 w-full bg-gray-200 rounded animate-pulse"></div>
-                  <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse"></div>
-                  <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 w-full bg-gray-200 rounded"></div>
+                        <div className="h-4 w-3/4 bg-gray-200 rounded"></div>
+                        <div className="h-4 w-1/2 bg-gray-200 rounded"></div>
           </div>
           </div>
+                  </CardContent>
+                </Card>
             ))}
+            </div>
           </div>
         </main>
       </div>
@@ -236,12 +245,12 @@ const AIInsightsPage = () => {
                 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Button 
-                    onClick={fetchAnalyticsData} 
+                    onClick={retry} 
                     className="bg-[#040458] hover:bg-[#030345] text-white flex items-center space-x-2"
                   >
-                    <RefreshCw className="h-4 w-4" />
-                    <span>Try Again</span>
-                  </Button>
+            <RefreshCw className="h-4 w-4" />
+            <span>Try Again</span>
+                </Button>
                   
                   <Button 
                     variant="outline"
@@ -266,7 +275,7 @@ const AIInsightsPage = () => {
                 </div>
               </div>
             </div>
-          </div>
+        </div>
         </main>
       </div>
     )
@@ -402,7 +411,7 @@ const AIInsightsPage = () => {
           <AIInsights 
             type="sales" 
             data={{
-              sales: analyticsData?.salesByDay || [],
+              sales: salesByDay,
               revenue: analyticsData?.totalRevenue || 0,
               growth: analyticsData?.salesGrowth || 0
             }}
@@ -429,7 +438,7 @@ const AIInsightsPage = () => {
           <AIPredictions 
             type="sales_forecast" 
             data={{
-              sales: analyticsData?.salesByDay || [],
+              sales: salesByDay,
               timeframe: '30 days'
             }}
           />

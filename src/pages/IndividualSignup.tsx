@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ArrowLeft, User, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { InputValidator } from '@/utils/inputValidation';
@@ -18,6 +19,7 @@ const IndividualSignup = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [consentAccepted, setConsentAccepted] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -77,6 +79,13 @@ const IndividualSignup = () => {
     setErrors({});
 
     try {
+      // Check consent
+      if (!consentAccepted) {
+        toast.error('Please accept the Data Privacy and Protection Policy to continue');
+        setLoading(false);
+        return;
+      }
+
       // Validate inputs
       const validation = InputValidator.validateIndividualSignup(formData);
       if (!validation.isValid) {
@@ -116,10 +125,8 @@ const IndividualSignup = () => {
       }
 
       if (needsEmailVerification) {
-        toast.success('Account created! Please check your email to verify your account.');
-        toast.info('You will be redirected to the dashboard after email verification.');
-        // Still navigate to dashboard - verification banner will handle the rest
-        navigate('/individual-dashboard');
+        // Navigate to email verification success page
+        navigate('/verify-email-success?type=individual');
       } else {
         toast.success('Account created successfully! Welcome to your dashboard.');
         navigate('/individual-dashboard');
@@ -308,10 +315,32 @@ const IndividualSignup = () => {
                 <span>Continue with Google</span>
               </Button>
 
+              {/* Privacy Policy Consent */}
+              <div className="flex items-start space-x-3 p-4 bg-gray-50 rounded-lg border">
+                <Checkbox
+                  id="privacy-consent"
+                  checked={consentAccepted}
+                  onCheckedChange={(checked) => setConsentAccepted(checked as boolean)}
+                  className="mt-1"
+                />
+                <div className="flex-1">
+                  <label htmlFor="privacy-consent" className="text-sm font-medium text-gray-700 cursor-pointer">
+                    I agree to the{' '}
+                    <Link to="/privacy" target="_blank" className="text-[#040458] hover:underline">
+                      Data Privacy and Protection Policy
+                    </Link>
+                    {' '}and consent to the collection, processing, and storage of my personal data as outlined in the policy.
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    By checking this box, you acknowledge that you have read and understood our privacy policy.
+                  </p>
+                </div>
+              </div>
+
               <Button 
                 type="submit" 
                 className="w-full bg-gradient-to-r from-[#040458] to-[#faa51a] hover:from-[#030347] hover:to-[#e6940f] text-white font-medium py-2.5"
-                disabled={loading}
+                disabled={loading || !consentAccepted}
               >
                 {loading ? (
                   <div className="flex items-center justify-center">

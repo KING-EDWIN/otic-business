@@ -283,8 +283,8 @@ const Reports: React.FC = () => {
               <div className="h-8 w-px bg-gray-300" />
               <div className="flex items-center space-x-3">
                 <img 
-                  src="/Layer 2.png" 
-                  alt="Otic Business Logo" 
+                  src="/ otic Vision blue.png" 
+                  alt="Otic Vision Logo" 
                   className="h-8 w-8 object-contain"
                 />
                 <div>

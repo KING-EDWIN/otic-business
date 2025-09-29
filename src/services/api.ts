@@ -289,10 +289,28 @@ export class OticAPI {
 
       // Update product stock quantities
       for (const item of saleData.items) {
+        // First get the current stock
+        const { data: product, error: fetchError } = await supabase
+          .from('products')
+          .select('current_stock')
+          .eq('id', item.product_id)
+          .eq('user_id', saleData.user_id)
+          .single()
+
+        if (fetchError) {
+          console.error('Error fetching product stock:', fetchError)
+          continue
+        }
+
+        // Calculate new stock
+        const newStock = Math.max(0, (product.current_stock || 0) - item.quantity)
+
+        // Update the stock
         const { error: stockError } = await supabase
           .from('products')
           .update({ 
-            stock: supabase.raw(`stock - ${item.quantity}`)
+            current_stock: newStock,
+            updated_at: new Date().toISOString()
           })
           .eq('id', item.product_id)
           .eq('user_id', saleData.user_id)

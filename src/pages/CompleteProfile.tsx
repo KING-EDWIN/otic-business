@@ -10,6 +10,35 @@ import { Building2, ArrowLeft, Check } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabaseClient'
 
+// Function to send congratulatory email for Google signups
+const sendGoogleSignupCongratulatoryEmail = async (email: string, businessName: string) => {
+  try {
+    // Use Supabase's email service to send congratulatory email
+    const { error } = await supabase.functions.invoke('send-email', {
+      body: {
+        to: email,
+        subject: '🎉 Welcome to Otic Vision - Google Signup Success!',
+        template: 'google-signup-success',
+        data: {
+          email: email,
+          business_name: businessName,
+          dashboard_url: `${window.location.origin}/dashboard`
+        }
+      }
+    })
+
+    if (error) {
+      console.error('Error sending congratulatory email:', error)
+      throw error
+    }
+
+    console.log('Congratulatory email sent successfully to:', email)
+  } catch (error) {
+    console.error('Failed to send congratulatory email:', error)
+    throw error
+  }
+}
+
 const CompleteProfile = () => {
   const [formData, setFormData] = useState({
     businessName: '',
@@ -192,6 +221,17 @@ const CompleteProfile = () => {
         }
       }
 
+      // Send congratulatory email for Google signups
+      const locationState = location.state as any
+      if (locationState?.isGoogleSignup) {
+        try {
+          await sendGoogleSignupCongratulatoryEmail(user.email!, formData.businessName)
+        } catch (emailError) {
+          console.warn('Failed to send congratulatory email:', emailError)
+          // Don't fail the whole process for email errors
+        }
+      }
+
       setSuccess(true)
       setTimeout(() => {
         navigate('/dashboard')
@@ -217,13 +257,13 @@ const CompleteProfile = () => {
               <div className="flex justify-center mb-4">
                 <div className="flex items-center space-x-3">
                   <img
-                    src="/Otic icon@2x.png"
-                    alt="Otic Business Logo"
+                    src="/ otic Vision blue.png"
+                    alt="Otic Vision Logo"
                     className="h-12 w-12"
                   />
                   <div className="flex flex-col">
                     <span className="text-2xl font-bold text-[#040458]">Otic</span>
-                    <span className="text-sm text-[#faa51a] -mt-1">Business</span>
+                    <span className="text-sm text-[#faa51a] -mt-1">Vision</span>
                   </div>
                 </div>
               </div>
@@ -249,8 +289,8 @@ const CompleteProfile = () => {
           <div className="flex justify-center mb-4">
             <div className="flex items-center space-x-3">
               <img
-                src="/Otic icon@2x.png"
-                alt="Otic Business Logo"
+                src="/ otic Vision blue.png"
+                alt="Otic Vision Logo"
                 className="h-12 w-12"
               />
               <div className="flex flex-col">

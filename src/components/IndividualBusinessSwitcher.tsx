@@ -74,6 +74,10 @@ const IndividualBusinessSwitcher: React.FC<IndividualBusinessSwitcherProps> = ({
           return new Date(b.last_accessed).getTime() - new Date(a.last_accessed).getTime()
         })
       )
+      
+      // Navigate directly to business dashboard (Canva-style seamless access)
+      navigate(`/business/${business.business_id}/dashboard`)
+      
     } catch (error) {
       console.error('Error selecting business:', error)
     }

@@ -308,8 +308,8 @@ const FAQ = () => {
               {/* Logo */}
               <div className="flex items-center space-x-3">
               <img 
-                  src="/Layer 2.png" 
-                  alt="Otic Business Logo" 
+                  src="/ otic Vision blue.png" 
+                  alt="Otic Vision Logo" 
                   className="h-10 w-10 object-contain"
                 />
                 <div className="flex flex-col">
@@ -348,8 +348,8 @@ const FAQ = () => {
               {/* Logo */}
               <div className="flex items-center space-x-3">
               <img 
-                  src="/Layer 2.png" 
-                  alt="Otic Business Logo" 
+                  src="/ otic Vision blue.png" 
+                  alt="Otic Vision Logo" 
                   className="h-8 w-8 object-contain"
                 />
                 <div className="flex flex-col">
